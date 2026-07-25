@@ -234,8 +234,14 @@ function HostPage() {
         <div className="grid gap-4 sm:grid-cols-3">
           <Stat icon={<Users className="h-4 w-4" />} label="Waiting" value={String(waiting)} />
           <Stat icon={<BellRing className="h-4 w-4" />} label="Notified" value={String(notified)} />
-          <Stat icon={<Clock className="h-4 w-4" />} label="Avg wait" value={`${avgWait}m`} />
+        <Stat icon={<Clock className="h-4 w-4" />} label="Avg wait" value={`${avgWait}m`} />
         </div>
+
+        <CheckInPanel
+          reservations={reservations}
+          tables={tables}
+          onCheckIn={checkInReservation}
+        />
 
         <div className="mt-8 grid gap-6 lg:grid-cols-3">
           <Card className="border-white/10 bg-card/70 p-6 backdrop-blur">
