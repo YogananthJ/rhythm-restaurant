@@ -133,15 +133,23 @@ function Hero() {
         </p>
 
         <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
-          <button className="group inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow transition-all hover:brightness-110">
+          <Link
+            to="/auth"
+            className="group inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow transition-all hover:brightness-110"
+          >
             Start free trial
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-          </button>
-          <button className="inline-flex items-center gap-2 rounded-lg border border-border bg-surface/60 px-5 py-2.5 text-sm font-semibold text-foreground backdrop-blur transition-colors hover:bg-surface-elevated">
+          </Link>
+          <Link
+            to="/t/$token"
+            params={{ token: "c55585185c03e23f" }}
+            className="inline-flex items-center gap-2 rounded-lg border border-border bg-surface/60 px-5 py-2.5 text-sm font-semibold text-foreground backdrop-blur transition-colors hover:bg-surface-elevated"
+          >
             <QrCode className="h-4 w-4" />
             View live demo
-          </button>
+          </Link>
         </div>
+
 
         <p className="mt-4 text-xs text-muted-foreground">
           No credit card · Deploy in under 10 minutes
@@ -494,14 +502,21 @@ function CTA() {
           on your data in minutes.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          <button className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow transition-all hover:brightness-110">
+          <Link
+            to="/auth"
+            className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow transition-all hover:brightness-110"
+          >
             Start free trial
             <ArrowRight className="h-4 w-4" />
-          </button>
-          <button className="inline-flex items-center gap-2 rounded-lg border border-border bg-background/60 px-5 py-2.5 text-sm font-semibold text-foreground backdrop-blur transition-colors hover:bg-surface-elevated">
+          </Link>
+          <Link
+            to="/book"
+            className="inline-flex items-center gap-2 rounded-lg border border-border bg-background/60 px-5 py-2.5 text-sm font-semibold text-foreground backdrop-blur transition-colors hover:bg-surface-elevated"
+          >
             Talk to the team
-          </button>
+          </Link>
         </div>
+
       </div>
     </section>
   );
