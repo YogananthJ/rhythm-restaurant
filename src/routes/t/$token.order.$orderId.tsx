@@ -61,6 +61,8 @@ function OrderStatus() {
     const row = Array.isArray(data) ? data[0] : null;
     if (row) setFeedback({ rating: row.rating, comment: row.comment });
   }, [orderId, accessToken]);
+
+  const load = useCallback(async () => {
     const { data, error } = await supabase.rpc("get_guest_order", {
       p_order_id: orderId,
       p_access_token: accessToken,
