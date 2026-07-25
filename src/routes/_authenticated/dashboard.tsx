@@ -16,6 +16,7 @@ import {
   QrCode,
   Utensils,
   Users,
+  Brain,
 } from "lucide-react";
 
 
