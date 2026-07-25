@@ -170,6 +170,10 @@ function Dashboard() {
             <Button asChild variant="outline" size="sm">
               <Link to="/tables"><QrCode className="mr-1.5 h-4 w-4" /> QR</Link>
             </Button>
+            <Button asChild variant="outline" size="sm">
+              <Link to="/menu"><Utensils className="mr-1.5 h-4 w-4" /> Menu</Link>
+            </Button>
+
 
             <Button asChild variant="outline" size="sm">
               <Link to="/kds"><ChefHat className="mr-1.5 h-4 w-4" /> KDS</Link>
