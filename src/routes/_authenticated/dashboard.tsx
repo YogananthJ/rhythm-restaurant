@@ -471,6 +471,52 @@ function Kpi({ icon, label, value }: { icon: React.ReactNode; label: string; val
   );
 }
 
+function MiniStat({
+  label,
+  value,
+  tone = "muted",
+}: {
+  label: string;
+  value: string;
+  tone?: "primary" | "accent" | "warn" | "muted";
+}) {
+  const toneClass =
+    tone === "primary"
+      ? "border-primary/25 bg-primary/5 text-primary"
+      : tone === "accent"
+        ? "border-accent/25 bg-accent/5 text-accent"
+        : tone === "warn"
+          ? "border-amber-400/30 bg-amber-500/10 text-amber-300"
+          : "border-white/10 bg-white/[0.02] text-foreground";
+  return (
+    <div className={`rounded-xl border p-3 ${toneClass}`}>
+      <div className="text-[10px] uppercase tracking-wider opacity-80">{label}</div>
+      <div className="mt-1 text-xl font-semibold tracking-tight text-foreground">{value}</div>
+    </div>
+  );
+}
+
+function eventLabel(ev: ResEvent) {
+  if (ev.event_type === "created") return "New reservation";
+  if (ev.event_type === "deleted") return "Reservation deleted";
+  if (ev.event_type === "table_assigned") return "Table assigned";
+  if (ev.event_type === "status_change") return `${ev.from_status ?? "?"} → ${ev.to_status ?? "?"}`;
+  return ev.event_type;
+}
+
+function eventDetail(ev: ResEvent) {
+  const d = ev.details ?? {};
+  const guest = (d as { guest_name?: string }).guest_name;
+  const party = (d as { party_size?: number }).party_size;
+  const at = (d as { requested_at?: string }).requested_at;
+  if (guest) {
+    const time = at ? new Date(at).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "";
+    return `${guest}${party ? ` · party of ${party}` : ""}${time ? ` · ${time}` : ""}`;
+  }
+  return `Reservation ${ev.reservation_id.slice(0, 8).toUpperCase()}`;
+}
+
+
 function tableTone(status: string) {
   switch (status) {
     case "seated":
