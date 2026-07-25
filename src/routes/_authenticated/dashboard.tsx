@@ -12,6 +12,7 @@ import {
   ChefHat,
   CircleDot,
   Clock,
+  FileText,
   LogOut,
   Sparkles,
   QrCode,
