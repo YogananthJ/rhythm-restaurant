@@ -72,6 +72,19 @@ Mission-control surface that analyzes the live floor instead of just displaying 
 - Guest order tracker (`/t/:token/order/:orderId`) grows a star-rating + comment form the moment the order is `ready`/`served`/`closed`; already-submitted reviews render read-only.
 - New "Guest sentiment · 24h" panel on `/intel` — average score, rating breakdown bars, positive/neutral/negative counts, and a live scroll of the latest written comments (color-coded by rating), all wired to realtime.
 
+### Day 8 — Autopilot (`/autopilot`) — AI Restaurant Operating System
+The mission-control brain that continuously watches the floor and proposes moves before problems escalate. Tesla-Autopilot-for-restaurants.
+- **Live Restaurant Brain**: subscribes to `orders`, `order_items`, `dining_tables`, `menu_items`, `waitlist`, `guest_feedback`; rebuilds a live snapshot on every change.
+- **Explainable Health Score (0–100)**: deterministic client-side algorithm with per-signal contributions (Kitchen Load, Queue, Occupancy, Menu Coverage, Ticket Age, Guest Satisfaction, Revenue) — every point is traceable.
+- **Action Cards**: new `generateAutopilotPlan` server fn (Gemini 2.5 Flash, JSON-mode) returns structured actions with Problem / Root Cause / Business Impact / Recommended Action / Confidence / Estimated Improvement / signals. **Approve** executes the recommended action against the live database (86 an item, re-enable an item, mark table cleaning, seat a waitlist guest, flag a ticket); **Dismiss** hides it. Nothing runs automatically.
+- **Risk Radar**: probability-scored predictions with ETA and suggested intervention.
+- **Digital Twin Simulator**: what-if toggles (hide item, add cook, close table, accept large reservation, rush intensity slider) instantly recompute health, avg wait, queue, kitchen backlog, projected revenue, and satisfaction.
+- **Emergency Mode**: when health < 50 the whole surface flips red, header banner announces recovery focus.
+- **Restaurant Memory**: 24h event timeline (orders, seating, walk-ins) — the day the restaurant lived.
+- **Judge Mode**: demo toggle that seeds realistic activity into the real database every ~7s (orders, kitchen advances, table cycling) so the whole system lights up live during a demo. Off by default.
+- Autopilot sweeps every 45s automatically; "Run now" for on-demand.
+- Dashboard header links to `/autopilot`.
+
 ## Surfaces
 | Route | For | What it does |
 |---|---|---|
