@@ -107,6 +107,15 @@ function Dashboard() {
     occupancyPct: 0,
   });
   const [resEvents, setResEvents] = useState<ResEvent[]>([]);
+  const [kitchen, setKitchen] = useState<KitchenStats>({
+    avgReadyMin: 0,
+    medianReadyMin: 0,
+    overdue: 0,
+    completed12h: 0,
+    inFlight: 0,
+    throughput: [],
+    slowest: [],
+  });
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? ""));
