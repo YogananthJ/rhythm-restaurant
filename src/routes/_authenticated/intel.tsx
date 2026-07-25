@@ -77,6 +77,26 @@ type TimelineEvent = {
   orderId?: string | null;
 };
 
+type IncidentRow = {
+  id: string;
+  restaurant_id: string;
+  fingerprint: string;
+  title: string;
+  priority: "low" | "medium" | "high";
+  root_cause: string;
+  business_impact: string;
+  action: string;
+  status: "open" | "dismissed" | "resolved";
+  resolved_at: string | null;
+  resolved_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+function fingerprintIncident(title: string) {
+  return title.toLowerCase().trim().replace(/\s+/g, " ").slice(0, 180);
+}
+
 const ACTIVE_STATUSES = new Set(["placed", "preparing", "ready"]);
 
 export const Route = createFileRoute("/_authenticated/intel")({
