@@ -101,8 +101,9 @@ function IntelPage() {
   const [ai, setAi] = useState<{ feed: IntelInsight[]; incidents: IntelIncident[]; recommendations: IntelRecommendation[] } | null>(null);
   const [aiBusy, setAiBusy] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
-  const [dismissed, setDismissed] = useState<Set<string>>(new Set());
-  const [resolved, setResolved] = useState<Map<string, string>>(new Map());
+  const [restaurantId, setRestaurantId] = useState<string | null>(null);
+  const [dbIncidents, setDbIncidents] = useState<IncidentRow[]>([]);
+  const [pendingIds, setPendingIds] = useState<Set<string>>(new Set());
   const [filter, setFilter] = useState<"today" | "hour" | "table" | "order">("today");
   const [filterValue, setFilterValue] = useState<string>("");
   const lastAiRef = useRef<number>(0);
