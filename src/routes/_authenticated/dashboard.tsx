@@ -285,6 +285,70 @@ function Dashboard() {
           <Kpi icon={<Sparkles className="h-4 w-4" />} label="Avg prep" value={`${avgPrep(items)} min`} />
         </div>
 
+        {/* Reservations analytics + audit log */}
+        <div className="mt-8 grid gap-6 lg:grid-cols-3">
+          <Card className="border-white/10 bg-card/70 p-6 backdrop-blur lg:col-span-2">
+            <div className="mb-5 flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-semibold">Reservations · today</h2>
+                <p className="text-xs text-muted-foreground">Occupancy, wait times, no-shows — updated live.</p>
+              </div>
+              <Button asChild variant="outline" size="sm">
+                <Link to="/host"><CalendarClock className="mr-1.5 h-4 w-4" /> Manage</Link>
+              </Button>
+            </div>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              <MiniStat label="Upcoming" value={String(resStats.upcoming)} tone="primary" />
+              <MiniStat label="Seated today" value={String(resStats.seatedToday)} tone="primary" />
+              <MiniStat label="Occupancy" value={`${resStats.occupancyPct}%`} tone="accent" />
+              <MiniStat label="Avg wait to seat" value={`${resStats.avgWaitMin}m`} tone="accent" />
+              <MiniStat label="No-shows" value={String(resStats.noShows)} tone={resStats.noShows > 0 ? "warn" : "muted"} />
+              <MiniStat label="Cancelled" value={String(resStats.cancelled)} tone="muted" />
+            </div>
+            <div className="mt-4">
+              <div className="mb-1 flex justify-between text-[11px] text-muted-foreground">
+                <span>Live occupancy</span>
+                <span>{resStats.occupancyPct}% of seats filled</span>
+              </div>
+              <div className="h-2 overflow-hidden rounded-full bg-white/5">
+                <div
+                  className="h-full rounded-full bg-primary transition-all"
+                  style={{ width: `${resStats.occupancyPct}%` }}
+                />
+              </div>
+            </div>
+          </Card>
+
+          <Card className="border-white/10 bg-card/70 p-6 backdrop-blur">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Event log</h2>
+              <Badge variant="outline" className="text-[10px]">Audit</Badge>
+            </div>
+            {resEvents.length === 0 ? (
+              <p className="py-8 text-center text-xs text-muted-foreground">
+                No reservation activity yet.
+              </p>
+            ) : (
+              <ul className="max-h-80 space-y-2 overflow-y-auto pr-1">
+                {resEvents.map((ev) => (
+                  <li key={ev.id} className="rounded-lg border border-white/5 bg-white/[0.02] p-2 text-xs">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-medium capitalize">{eventLabel(ev)}</span>
+                      <span className="text-[10px] text-muted-foreground">
+                        {new Date(ev.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                      </span>
+                    </div>
+                    <div className="mt-0.5 text-[11px] text-muted-foreground">
+                      {eventDetail(ev)}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
+        </div>
+
+
         <div className="mt-8 grid gap-6 lg:grid-cols-3">
           {/* Menu */}
           <Card className="border-white/10 bg-card/70 p-6 backdrop-blur lg:col-span-2">
