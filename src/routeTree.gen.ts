@@ -20,6 +20,7 @@ import { Route as AuthenticatedKdsRouteImport } from './routes/_authenticated/kd
 import { Route as AuthenticatedIntelRouteImport } from './routes/_authenticated/intel'
 import { Route as AuthenticatedHostRouteImport } from './routes/_authenticated/host'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedAutopilotRouteImport } from './routes/_authenticated/autopilot'
 import { Route as TTokenOrderOrderIdRouteImport } from './routes/t/$token.order.$orderId'
 
 const AuthRoute = AuthRouteImport.update({
@@ -76,6 +77,11 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAutopilotRoute = AuthenticatedAutopilotRouteImport.update({
+  id: '/autopilot',
+  path: '/autopilot',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const TTokenOrderOrderIdRoute = TTokenOrderOrderIdRouteImport.update({
   id: '/order/$orderId',
   path: '/order/$orderId',
@@ -85,6 +91,7 @@ const TTokenOrderOrderIdRoute = TTokenOrderOrderIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/autopilot': typeof AuthenticatedAutopilotRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/host': typeof AuthenticatedHostRoute
   '/intel': typeof AuthenticatedIntelRoute
@@ -98,6 +105,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/autopilot': typeof AuthenticatedAutopilotRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/host': typeof AuthenticatedHostRoute
   '/intel': typeof AuthenticatedIntelRoute
@@ -113,6 +121,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/_authenticated/autopilot': typeof AuthenticatedAutopilotRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/host': typeof AuthenticatedHostRoute
   '/_authenticated/intel': typeof AuthenticatedIntelRoute
@@ -128,6 +137,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/autopilot'
     | '/dashboard'
     | '/host'
     | '/intel'
@@ -141,6 +151,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/autopilot'
     | '/dashboard'
     | '/host'
     | '/intel'
@@ -155,6 +166,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/_authenticated/autopilot'
     | '/_authenticated/dashboard'
     | '/_authenticated/host'
     | '/_authenticated/intel'
@@ -252,6 +264,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/autopilot': {
+      id: '/_authenticated/autopilot'
+      path: '/autopilot'
+      fullPath: '/autopilot'
+      preLoaderRoute: typeof AuthenticatedAutopilotRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/t/$token/order/$orderId': {
       id: '/t/$token/order/$orderId'
       path: '/order/$orderId'
@@ -263,6 +282,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAutopilotRoute: typeof AuthenticatedAutopilotRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedHostRoute: typeof AuthenticatedHostRoute
   AuthenticatedIntelRoute: typeof AuthenticatedIntelRoute
@@ -273,6 +293,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAutopilotRoute: AuthenticatedAutopilotRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedHostRoute: AuthenticatedHostRoute,
   AuthenticatedIntelRoute: AuthenticatedIntelRoute,
