@@ -43,6 +43,17 @@ Fixed all 9 flagged findings:
 - AI shift brief on `/ops`: one click generates a markdown handoff (Numbers / Wins / Watch-outs) from the last 12h of orders.
 - "Close · paid" action on the dashboard for ready/served tickets — moves the order to `closed` and frees the ticket from the live queue.
 
+### Day 5 — Intelligence Center (`/intel`)
+Mission-control surface that analyzes the live floor instead of just displaying it.
+- **Restaurant Health Score** (0–100) computed from kitchen backlog, waitlist, occupancy, menu availability, avg prep, and revenue trend — with band, trend arrow, confidence %, and per-signal reasons.
+- **AI Ops Feed + Incident Center + Smart Recommendations** via new `generateIntelInsights` server fn (Gemini 2.5 Flash, JSON mode) fed a real snapshot of the restaurant; incidents can be dismissed / resolved locally, auto-refreshes on floor changes (60s throttle).
+- **Predictive analytics**: next-hour revenue, expected kitchen load, expected queue, likely busy window, inventory risk — all derived from 24h history + current trend, with a confidence score.
+- **Restaurant Replay** timeline: orders placed / advanced / closed, table status changes, waitlist joins & seatings, menu 86 events — filterable by Today / Last hour / Specific table / Specific order.
+- **Recharts visualizations**: 12h revenue area, orders/hour bars, kitchen-load line, top sellers bar, live table-occupancy heatmap (colored by idle minutes).
+- Skeleton loading, empty states, throttled AI, realtime subscriptions on `orders`, `order_items`, `dining_tables`, `menu_items`, `waitlist`.
+- Dashboard header links to `/intel`.
+
+
 ### Day 4 — Host queue (waitlist)
 - New `waitlist` table (party size, phone, quoted wait, status, seated table) with staff-only RLS + realtime.
 - `/host` surface for the door: add walk-ins, notify guests, and one-tap seat them at any open table (auto-flips the table to `seated`).
