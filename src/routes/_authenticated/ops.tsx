@@ -199,6 +199,23 @@ function OpsPage() {
               })}
             </div>
           </Card>
+
+          <Card className="border-white/10 bg-card/70 p-6 backdrop-blur">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Shift brief</h2>
+                <p className="mt-1 text-xs text-muted-foreground">AI-written handoff for the next manager.</p>
+              </div>
+              <Button size="sm" variant="outline" onClick={() => void generateBrief()} disabled={shiftLoading}>
+                <FileText className="mr-1.5 h-3.5 w-3.5" /> {shiftLoading ? "Writing…" : shift ? "Regenerate" : "Generate"}
+              </Button>
+            </div>
+            {shift && (
+              <div className="mt-4 whitespace-pre-wrap rounded-lg border border-white/10 bg-background/40 p-4 text-sm leading-relaxed">
+                {shift}
+              </div>
+            )}
+          </Card>
         </section>
 
         {/* Chat */}
