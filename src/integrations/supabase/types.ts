@@ -359,6 +359,42 @@ export type Database = {
         }
         Relationships: []
       }
+      reservation_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          details: Json | null
+          event_type: string
+          from_status: string | null
+          id: string
+          reservation_id: string
+          restaurant_id: string
+          to_status: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          details?: Json | null
+          event_type: string
+          from_status?: string | null
+          id?: string
+          reservation_id: string
+          restaurant_id: string
+          to_status?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          details?: Json | null
+          event_type?: string
+          from_status?: string | null
+          id?: string
+          reservation_id?: string
+          restaurant_id?: string
+          to_status?: string | null
+        }
+        Relationships: []
+      }
       reservations: {
         Row: {
           created_at: string
@@ -520,6 +556,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_reservation_capacity: {
+        Args: {
+          p_party_size: number
+          p_requested_at: string
+          p_restaurant_id: string
+        }
+        Returns: Json
+      }
       get_guest_feedback: {
         Args: { p_access_token: string; p_order_id: string }
         Returns: {
