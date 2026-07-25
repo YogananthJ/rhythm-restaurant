@@ -103,6 +103,12 @@ The mission-control brain that continuously watches the floor and proposes moves
 - **Capacity check**: new `check_reservation_capacity` RPC (SECURITY DEFINER, callable by anon) evaluates seats booked in a ±90m window vs total seats. Public `/book` calls it before insert and blocks over-booking with an inline message.
 - **Analytics**: `/dashboard` gains a "Reservations · today" panel — upcoming, seated today, live occupancy %, avg wait-to-seat (computed from event log), no-shows, cancelled — plus a live "Event log" audit feed of the latest 15 reservation actions.
 
+### Day 11 — Sales Reports & downloads
+- New `/reports` page: 18 months of revenue history, grouped **weekly / monthly / yearly** on the fly (client-side toggle).
+- Sales-trend area chart, stacked top-8 **product-wise** chart per grouping, and a **season-wise** best-seller panel (Winter/Spring/Summer/Fall) with revenue per season.
+- Three one-click CSV downloads: **Monthly report** (per-day breakdown for the current month), **Seasonal products** (top 5 items per season with units + revenue), and **Full sales export** (every order with items, guest, table, total).
+- Dashboard header now has a "Reports" link.
+
 ## Surfaces
 | Route | For | What it does |
 |---|---|---|
@@ -112,12 +118,14 @@ The mission-control brain that continuously watches the floor and proposes moves
 | `/autopilot` | Manager | AI operating system: action cards, risk radar, digital twin, emergency mode, judge mode |
 | `/dashboard` | Manager | Live floor, menu 86, table status, orders |
 | `/ops` | Manager | AI copilot + 24h analytics + shift brief |
+| `/reports` | Manager | Weekly/monthly/yearly + seasonal sales analytics, CSV downloads |
 | `/host` | Host | Walk-in queue + reservations, notify + seat guests |
 | `/intel` | Manager | Health, AI feed, incidents, replay, predictions, charts, guest sentiment |
 | `/menu` | Manager | Full menu + category CRUD, realtime |
 | `/kds` | Kitchen | Ticket board, advance order stages |
 | `/tables` | Manager | Printable QR codes for every table |
 | `/t/:token` | Guest | Live menu, cart, place order |
+
 | `/t/:token/order/:orderId` | Guest | Live order status tracker + post-meal feedback |
 
 
