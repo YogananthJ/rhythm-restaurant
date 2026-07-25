@@ -52,6 +52,51 @@ export type Database = {
           },
         ]
       }
+      guest_feedback: {
+        Row: {
+          comment: string | null
+          created_at: string
+          id: string
+          order_id: string
+          rating: number
+          restaurant_id: string
+          sentiment: string | null
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          order_id: string
+          rating: number
+          restaurant_id: string
+          sentiment?: string | null
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          order_id?: string
+          rating?: number
+          restaurant_id?: string
+          sentiment?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guest_feedback_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "guest_feedback_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       incidents: {
         Row: {
           action: string
@@ -415,6 +460,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_guest_feedback: {
+        Args: { p_access_token: string; p_order_id: string }
+        Returns: {
+          comment: string
+          created_at: string
+          rating: number
+        }[]
+      }
       get_guest_order: {
         Args: { p_access_token: string; p_order_id: string }
         Returns: Json
@@ -425,6 +478,15 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      submit_guest_feedback: {
+        Args: {
+          p_access_token: string
+          p_comment: string
+          p_order_id: string
+          p_rating: number
+        }
+        Returns: string
       }
     }
     Enums: {
