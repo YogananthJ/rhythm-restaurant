@@ -77,6 +77,26 @@ type TimelineEvent = {
   orderId?: string | null;
 };
 
+type IncidentRow = {
+  id: string;
+  restaurant_id: string;
+  fingerprint: string;
+  title: string;
+  priority: "low" | "medium" | "high";
+  root_cause: string;
+  business_impact: string;
+  action: string;
+  status: "open" | "dismissed" | "resolved";
+  resolved_at: string | null;
+  resolved_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+function fingerprintIncident(title: string) {
+  return title.toLowerCase().trim().replace(/\s+/g, " ").slice(0, 180);
+}
+
 const ACTIVE_STATUSES = new Set(["placed", "preparing", "ready"]);
 
 export const Route = createFileRoute("/_authenticated/intel")({
@@ -101,8 +121,9 @@ function IntelPage() {
   const [ai, setAi] = useState<{ feed: IntelInsight[]; incidents: IntelIncident[]; recommendations: IntelRecommendation[] } | null>(null);
   const [aiBusy, setAiBusy] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
-  const [dismissed, setDismissed] = useState<Set<string>>(new Set());
-  const [resolved, setResolved] = useState<Map<string, string>>(new Map());
+  const [restaurantId, setRestaurantId] = useState<string | null>(null);
+  const [dbIncidents, setDbIncidents] = useState<IncidentRow[]>([]);
+  const [pendingIds, setPendingIds] = useState<Set<string>>(new Set());
   const [filter, setFilter] = useState<"today" | "hour" | "table" | "order">("today");
   const [filterValue, setFilterValue] = useState<string>("");
   const lastAiRef = useRef<number>(0);
@@ -139,6 +160,103 @@ function IntelPage() {
       void supabase.removeChannel(ch);
     };
   }, [loadAll]);
+
+  // ---------- Incidents: persisted + realtime ----------
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data: rest } = await supabase.from("restaurants").select("id").limit(1).maybeSingle();
+      if (cancelled || !rest?.id) return;
+      setRestaurantId(rest.id);
+      const { data } = await supabase
+        .from("incidents")
+        .select("*")
+        .eq("restaurant_id", rest.id)
+        .order("created_at", { ascending: false })
+        .limit(200);
+      if (!cancelled && data) setDbIncidents(data as IncidentRow[]);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!restaurantId) return;
+    const ch = supabase
+      .channel(`intel-incidents-${restaurantId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "incidents", filter: `restaurant_id=eq.${restaurantId}` },
+        (payload) => {
+          setDbIncidents((prev) => {
+            if (payload.eventType === "DELETE") {
+              const oldId = (payload.old as { id?: string })?.id;
+              return oldId ? prev.filter((r) => r.id !== oldId) : prev;
+            }
+            const row = payload.new as IncidentRow;
+            const rest = prev.filter((r) => r.id !== row.id);
+            return [row, ...rest];
+          });
+        },
+      )
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(ch);
+    };
+  }, [restaurantId]);
+
+  // Upsert new AI-detected incidents (preserve existing status via ignoreDuplicates)
+  useEffect(() => {
+    if (!restaurantId || !ai?.incidents?.length) return;
+    const existing = new Set(dbIncidents.map((r) => r.fingerprint));
+    const fresh = ai.incidents
+      .map((i) => ({
+        restaurant_id: restaurantId,
+        fingerprint: fingerprintIncident(i.title),
+        title: i.title,
+        priority: i.priority,
+        root_cause: i.root_cause ?? "",
+        business_impact: i.business_impact ?? "",
+        action: i.action ?? "",
+      }))
+      .filter((r) => r.fingerprint && !existing.has(r.fingerprint));
+    if (!fresh.length) return;
+    void supabase.from("incidents").upsert(fresh, { onConflict: "restaurant_id,fingerprint", ignoreDuplicates: true });
+  }, [ai, restaurantId, dbIncidents]);
+
+  const updateIncidentStatus = useCallback(
+    async (row: IncidentRow, status: "dismissed" | "resolved") => {
+      setPendingIds((s) => new Set(s).add(row.id));
+      const patch: Partial<IncidentRow> = {
+        status,
+        resolved_at: status === "resolved" ? new Date().toISOString() : null,
+      };
+      // Optimistic
+      setDbIncidents((prev) => prev.map((r) => (r.id === row.id ? { ...r, ...patch } as IncidentRow : r)));
+      const { error } = await supabase.from("incidents").update(patch).eq("id", row.id);
+      setPendingIds((s) => {
+        const next = new Set(s);
+        next.delete(row.id);
+        return next;
+      });
+      if (error) {
+        toast.error(`Could not ${status === "resolved" ? "resolve" : "dismiss"} incident`);
+        // Reload to revert
+        const { data } = await supabase
+          .from("incidents")
+          .select("*")
+          .eq("restaurant_id", row.restaurant_id)
+          .order("created_at", { ascending: false })
+          .limit(200);
+        if (data) setDbIncidents(data as IncidentRow[]);
+      } else {
+        toast.success(status === "resolved" ? "Incident resolved" : "Incident dismissed");
+      }
+    },
+    [],
+  );
+
 
   // ---------- Derived live metrics ----------
   const metrics = useMemo(() => computeMetrics(orders, items, tables, menu, waitlist), [orders, items, tables, menu, waitlist]);
@@ -187,7 +305,11 @@ function IntelPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [snapshotKey, loading]);
 
-  const activeIncidents = (ai?.incidents ?? []).filter((i) => !dismissed.has(i.id) && !resolved.has(i.id));
+  const openIncidents = useMemo(() => dbIncidents.filter((r) => r.status === "open"), [dbIncidents]);
+  const resolvedToday = useMemo(() => {
+    const cutoff = Date.now() - 24 * 3600 * 1000;
+    return dbIncidents.filter((r) => r.status === "resolved" && r.resolved_at && new Date(r.resolved_at).getTime() >= cutoff);
+  }, [dbIncidents]);
 
   if (loading) return <IntelSkeleton />;
 
@@ -309,44 +431,58 @@ function IntelPage() {
           </Card>
 
           <Card className="border-white/10 bg-card/70 p-6 backdrop-blur">
-            <SectionHeader icon={<AlertTriangle className="h-4 w-4" />} title="Incident center" hint={`${activeIncidents.length} open`} />
+            <SectionHeader
+              icon={<AlertTriangle className="h-4 w-4" />}
+              title="Incident center"
+              hint={`${openIncidents.length} open · ${resolvedToday.length} resolved 24h`}
+            />
             <div className="space-y-3 max-h-[420px] overflow-y-auto pr-1">
-              {activeIncidents.map((i) => (
-                <div key={i.id} className="rounded-xl border border-white/10 bg-white/[0.02] p-3">
-                  <div className="flex items-center gap-2">
-                    <Badge className={`text-[10px] uppercase ${priorityTone(i.priority)}`}>{i.priority}</Badge>
-                    <div className="text-sm font-semibold">{i.title}</div>
+              {openIncidents.map((i) => {
+                const pending = pendingIds.has(i.id);
+                return (
+                  <div key={i.id} className="rounded-xl border border-white/10 bg-white/[0.02] p-3">
+                    <div className="flex items-center gap-2">
+                      <Badge className={`text-[10px] uppercase ${priorityTone(i.priority)}`}>{i.priority}</Badge>
+                      <div className="text-sm font-semibold">{i.title}</div>
+                    </div>
+                    <div className="mt-2 grid gap-1 text-xs">
+                      {i.root_cause && <div><span className="text-muted-foreground">Root cause · </span>{i.root_cause}</div>}
+                      {i.business_impact && <div><span className="text-muted-foreground">Impact · </span>{i.business_impact}</div>}
+                      {i.action && <div className="rounded-md bg-primary/5 px-2 py-1.5 text-primary">→ {i.action}</div>}
+                    </div>
+                    <div className="mt-3 flex items-center justify-between gap-2">
+                      <div className="text-[10px] text-muted-foreground">
+                        Detected {new Date(i.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                      </div>
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="ghost" disabled={pending} onClick={() => void updateIncidentStatus(i, "dismissed")}>
+                          Dismiss
+                        </Button>
+                        <Button size="sm" variant="outline" disabled={pending} onClick={() => void updateIncidentStatus(i, "resolved")}>
+                          Resolve
+                        </Button>
+                      </div>
+                    </div>
                   </div>
-                  <div className="mt-2 grid gap-1 text-xs">
-                    <div><span className="text-muted-foreground">Root cause · </span>{i.root_cause}</div>
-                    <div><span className="text-muted-foreground">Impact · </span>{i.business_impact}</div>
-                    <div className="rounded-md bg-primary/5 px-2 py-1.5 text-primary">→ {i.action}</div>
-                  </div>
-                  <div className="mt-3 flex justify-end gap-2">
-                    <Button size="sm" variant="ghost" onClick={() => setDismissed((s) => new Set(s).add(i.id))}>
-                      Dismiss
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        setResolved((m) => new Map(m).set(i.id, new Date().toISOString()));
-                        toast.success("Marked resolved");
-                      }}
-                    >
-                      Resolve
-                    </Button>
-                  </div>
-                </div>
-              ))}
-              {activeIncidents.length === 0 && <EmptyLine>No incidents detected. Ops running clean.</EmptyLine>}
-              {resolved.size > 0 && (
-                <div className="pt-3 border-t border-white/5 text-[11px] text-muted-foreground">
-                  Resolved this session: {resolved.size}
+                );
+              })}
+              {openIncidents.length === 0 && <EmptyLine>No incidents detected. Ops running clean.</EmptyLine>}
+              {resolvedToday.length > 0 && (
+                <div className="pt-3 border-t border-white/5 space-y-1.5">
+                  <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Resolved · last 24h</div>
+                  {resolvedToday.slice(0, 5).map((r) => (
+                    <div key={r.id} className="flex items-center justify-between text-[11px] text-muted-foreground">
+                      <span className="truncate pr-2">{r.title}</span>
+                      <span className="shrink-0">
+                        {r.resolved_at ? new Date(r.resolved_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : ""}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
           </Card>
+
 
           <Card className="border-white/10 bg-card/70 p-6 backdrop-blur">
             <SectionHeader icon={<Zap className="h-4 w-4" />} title="Smart recommendations" hint={`${ai?.recommendations.length ?? 0} moves`} />

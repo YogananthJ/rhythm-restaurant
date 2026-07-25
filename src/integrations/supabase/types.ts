@@ -52,6 +52,62 @@ export type Database = {
           },
         ]
       }
+      incidents: {
+        Row: {
+          action: string
+          business_impact: string
+          created_at: string
+          fingerprint: string
+          id: string
+          priority: string
+          resolved_at: string | null
+          resolved_by: string | null
+          restaurant_id: string
+          root_cause: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          action?: string
+          business_impact?: string
+          created_at?: string
+          fingerprint: string
+          id?: string
+          priority: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          restaurant_id: string
+          root_cause?: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          action?: string
+          business_impact?: string
+          created_at?: string
+          fingerprint?: string
+          id?: string
+          priority?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          restaurant_id?: string
+          root_cause?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "incidents_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       menu_categories: {
         Row: {
           id: string
