@@ -133,7 +133,7 @@ function GuestMenu() {
         guest_name: guestName.trim() || "Guest",
         total_cents: cartTotal,
       })
-      .select("id")
+      .select("id, access_token")
       .single();
     if (error || !order) {
       toast.error("Couldn't place order — try again");
@@ -159,7 +159,11 @@ function GuestMenu() {
     setShowCart(false);
     setSubmitting(false);
     toast.success("Order sent to the kitchen!");
-    navigate({ to: "/t/$token/order/$orderId", params: { token, orderId: order.id } });
+    navigate({
+      to: "/t/$token/order/$orderId",
+      params: { token, orderId: order.id },
+      search: { k: order.access_token as string },
+    });
   }
 
   if (loading) {

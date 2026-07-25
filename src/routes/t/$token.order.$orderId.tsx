@@ -1,9 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ChefHat, CheckCircle2, Clock, Flame, Utensils } from "lucide-react";
+import { z } from "zod";
 
 type Order = {
   id: string;
@@ -20,9 +21,13 @@ type OrderItem = {
   unit_price_cents: number;
   status: string;
   notes: string | null;
+  created_at?: string;
 };
 
+const searchSchema = z.object({ k: z.string().min(8).max(128) });
+
 export const Route = createFileRoute("/t/$token/order/$orderId")({
+  validateSearch: (s) => searchSchema.parse(s),
   head: () => ({
     meta: [
       { title: "Your order — Occupancy" },
@@ -36,28 +41,59 @@ const STAGES = ["placed", "preparing", "ready", "served"] as const;
 
 function OrderStatus() {
   const { orderId } = Route.useParams();
+  const { k: accessToken } = Route.useSearch();
   const [order, setOrder] = useState<Order | null>(null);
   const [items, setItems] = useState<OrderItem[]>([]);
+  const [notFound, setNotFound] = useState(false);
+
+  const load = useCallback(async () => {
+    const { data, error } = await supabase.rpc("get_guest_order", {
+      p_order_id: orderId,
+      p_access_token: accessToken,
+    });
+    if (error || !data) {
+      setNotFound(true);
+      return;
+    }
+    const payload = data as { order: Order; items: OrderItem[] };
+    setOrder(payload.order);
+    setItems(payload.items ?? []);
+  }, [orderId, accessToken]);
 
   useEffect(() => {
     void load();
+    // Realtime channel scoped to this order (SELECT is now staff-only, but the
+    // realtime layer still lets us listen for the change events and re-fetch
+    // through the token-scoped RPC).
     const ch = supabase
       .channel(`order-${orderId}`)
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "orders", filter: `id=eq.${orderId}` }, load)
-      .on("postgres_changes", { event: "*", schema: "public", table: "order_items", filter: `order_id=eq.${orderId}` }, load)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "orders", filter: `id=eq.${orderId}` },
+        () => void load(),
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "order_items", filter: `order_id=eq.${orderId}` },
+        () => void load(),
+      )
       .subscribe();
     return () => {
       void supabase.removeChannel(ch);
     };
-  }, [orderId]);
+  }, [orderId, load]);
 
-  async function load() {
-    const [{ data: o }, { data: its }] = await Promise.all([
-      supabase.from("orders").select("*").eq("id", orderId).maybeSingle(),
-      supabase.from("order_items").select("*").eq("order_id", orderId).order("created_at"),
-    ]);
-    if (o) setOrder(o as Order);
-    if (its) setItems(its as OrderItem[]);
+  if (notFound) {
+    return (
+      <div className="grid min-h-screen place-items-center bg-background px-6 text-center">
+        <div>
+          <h1 className="text-2xl font-semibold">Order not found</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            This link is invalid or has expired. Ask your server for help.
+          </p>
+        </div>
+      </div>
+    );
   }
 
   const stageIdx = order ? Math.max(0, STAGES.indexOf(order.status as (typeof STAGES)[number])) : 0;
@@ -111,7 +147,7 @@ function OrderStatus() {
                     <span className="text-muted-foreground">{it.quantity}×</span> {it.name_snapshot}
                   </div>
                   {it.notes && (
-                    <div className="mt-0.5 text-xs text-muted-foreground italic">"{it.notes}"</div>
+                    <div className="mt-0.5 text-xs italic text-muted-foreground">"{it.notes}"</div>
                   )}
                 </div>
                 <div className="flex items-center gap-3">
