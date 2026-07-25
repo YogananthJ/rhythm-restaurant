@@ -482,3 +482,101 @@ function Stat({ icon, label, value }: { icon: React.ReactNode; label: string; va
     </Card>
   );
 }
+
+function CheckInPanel({
+  reservations,
+  tables,
+  onCheckIn,
+}: {
+  reservations: Reservation[];
+  tables: DiningTable[];
+  onCheckIn: (r: Reservation) => void;
+}) {
+  const now = Date.now();
+  const arrivals = reservations
+    .filter((r) => {
+      const diff = (new Date(r.requested_at).getTime() - now) / 60000;
+      return diff >= -30 && diff <= 60 && (r.status === "pending" || r.status === "confirmed");
+    })
+    .sort((a, b) => new Date(a.requested_at).getTime() - new Date(b.requested_at).getTime());
+
+  const openTables = tables.filter((t) => t.status === "available").length;
+
+  return (
+    <Card className="mt-8 border-white/10 bg-card/70 p-6 backdrop-blur">
+      <div className="mb-4 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <DoorOpen className="h-4 w-4 text-primary" />
+          <h2 className="text-lg font-semibold">Guest check-in</h2>
+          <Badge variant="outline" className="text-[10px] uppercase">
+            {arrivals.length} arriving
+          </Badge>
+        </div>
+        <span className="text-xs text-muted-foreground">
+          {openTables} table{openTables === 1 ? "" : "s"} ready · auto-seats best fit
+        </span>
+      </div>
+
+      {arrivals.length === 0 ? (
+        <div className="rounded-lg border border-dashed border-white/10 py-8 text-center text-sm text-muted-foreground">
+          No arrivals in the next hour. Reservations appear here 30m before their time.
+        </div>
+      ) : (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {arrivals.map((r) => {
+            const when = new Date(r.requested_at);
+            const mins = Math.round((when.getTime() - now) / 60000);
+            const overdue = mins < -5;
+            const soon = mins <= 10 && mins >= -5;
+            const label =
+              mins < 0 ? `${-mins}m late` : mins === 0 ? "now" : `in ${mins}m`;
+            const preferred = r.table_id ? tables.find((t) => t.id === r.table_id) : null;
+            return (
+              <div
+                key={r.id}
+                className={`rounded-xl border p-4 transition-all ${
+                  overdue
+                    ? "border-destructive/40 bg-destructive/10"
+                    : soon
+                      ? "border-primary/40 bg-primary/10"
+                      : "border-white/10 bg-white/[0.02]"
+                }`}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="truncate font-semibold">{r.guest_name}</div>
+                    <div className="mt-0.5 text-xs text-muted-foreground">
+                      Party of {r.party_size} · {label}
+                    </div>
+                  </div>
+                  <Badge
+                    className={`text-[10px] uppercase ${
+                      overdue
+                        ? "border-destructive/30 bg-destructive/15 text-destructive"
+                        : "border-primary/30 bg-primary/15 text-primary"
+                    }`}
+                  >
+                    {when.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
+                  </Badge>
+                </div>
+                {preferred && (
+                  <div className="mt-2 text-[11px] text-muted-foreground">
+                    Preferred: <span className="text-foreground">{preferred.label}</span>
+                    {preferred.status !== "available" && " · busy"}
+                  </div>
+                )}
+                <Button
+                  size="sm"
+                  className="mt-3 w-full"
+                  onClick={() => onCheckIn(r)}
+                >
+                  <LogIn className="mr-1.5 h-3.5 w-3.5" /> Mark arrived & seat
+                </Button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </Card>
+  );
+}
