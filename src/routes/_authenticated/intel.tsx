@@ -68,6 +68,7 @@ type OrderItem = {
 type DiningTable = { id: string; label: string; seats: number; status: string; updated_at: string };
 type MenuItem = { id: string; name: string; is_available: boolean; prep_minutes: number; price_cents: number; updated_at: string };
 type WaitEntry = { id: string; guest_name: string; party_size: number; status: string; quoted_minutes: number; created_at: string; updated_at: string; seated_table_id: string | null };
+type Feedback = { id: string; order_id: string; rating: number; comment: string | null; sentiment: string | null; created_at: string };
 
 type TimelineEvent = {
   ts: string;
