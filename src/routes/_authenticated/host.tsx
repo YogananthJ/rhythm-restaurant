@@ -115,6 +115,37 @@ function HostPage() {
     toast.success(`Seated ${r.guest_name}`);
   }
 
+  function pickBestTable(partySize: number, preferredId: string | null): DiningTable | null {
+    if (preferredId) {
+      const preferred = tables.find((t) => t.id === preferredId);
+      if (preferred && preferred.status === "available" && preferred.seats >= partySize) return preferred;
+    }
+    const fits = tables
+      .filter((t) => t.status === "available" && t.seats >= partySize)
+      .sort((a, b) => a.seats - b.seats);
+    return fits[0] ?? null;
+  }
+
+  async function checkInReservation(r: Reservation) {
+    const table = pickBestTable(r.party_size, r.table_id);
+    if (!table) {
+      const { error } = await supabase
+        .from("reservations")
+        .update({ status: "confirmed" })
+        .eq("id", r.id);
+      if (error) return toast.error(error.message);
+      toast(`${r.guest_name} checked in — no table open yet, holding at door`);
+      return;
+    }
+    const { error } = await supabase
+      .from("reservations")
+      .update({ status: "seated", table_id: table.id })
+      .eq("id", r.id);
+    if (error) return toast.error(error.message);
+    await supabase.from("dining_tables").update({ status: "seated" }).eq("id", table.id);
+    toast.success(`${r.guest_name} checked in · seated at ${table.label}`);
+  }
+
   async function addEntry(e: React.FormEvent) {
     e.preventDefault();
     if (!restaurantId) return;
