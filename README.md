@@ -60,6 +60,13 @@ Mission-control surface that analyzes the live floor instead of just displaying 
 - Live KPIs (waiting, notified, avg wait) and party-size aware table suggestions.
 - Dashboard header links to `/host`.
 
+### Day 6 — Menu Manager (`/menu`)
+- Full CRUD for menu items: create, edit, delete, 86-toggle — all live.
+- Category management: add/delete categories with per-category counts and filter chips.
+- Search across name + description, live category filter, empty/skeleton states.
+- Writes flow through the same realtime channel, so `/dashboard`, `/t/:token`, `/kds`, and `/intel` reflect changes instantly.
+- Dashboard header now links to `/menu`.
+
 ## Surfaces
 | Route | For | What it does |
 |---|---|---|
@@ -69,11 +76,12 @@ Mission-control surface that analyzes the live floor instead of just displaying 
 | `/ops` | Manager | AI copilot + 24h analytics + shift brief |
 | `/host` | Host | Walk-in queue, notify + seat guests |
 | `/intel` | Manager | Health score, AI feed, incidents, replay, predictions, charts |
-
+| `/menu` | Manager | Full menu + category CRUD, realtime |
 | `/kds` | Kitchen | Ticket board, advance order stages |
 | `/tables` | Manager | Printable QR codes for every table |
 | `/t/:token` | Guest | Live menu, cart, place order |
 | `/t/:token/order/:orderId` | Guest | Live order status tracker |
+
 
 
 ## Stack
