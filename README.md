@@ -85,15 +85,22 @@ The mission-control brain that continuously watches the floor and proposes moves
 - Autopilot sweeps every 45s automatically; "Run now" for on-demand.
 - Dashboard header links to `/autopilot`.
 
+### Day 9 — Reservations
+- New `reservations` table (guest name, phone, email, party size, requested time, status, notes, optional table) — anon can insert (with strict validation), staff-only read/update/delete, realtime enabled.
+- Public booking page (`/book`) — no login required; datetime picker, party size, phone, email, special requests; instant confirmation screen with a reference code.
+- Host stand (`/host`) now shows a Reservations panel: pending vs confirmed, time-to-arrival, one-tap Confirm / Cancel, and one-tap Seat that flips a live table to `seated` — all realtime across every open host tab.
+- Landing header has a "Reserve" link straight into `/book`.
+
 ## Surfaces
 | Route | For | What it does |
 |---|---|---|
 | `/` | Everyone | Landing + product story |
 | `/auth` | Staff | Sign up / sign in |
+| `/book` | Guest | Public reservation form, no login |
 | `/autopilot` | Manager | AI operating system: action cards, risk radar, digital twin, emergency mode, judge mode |
 | `/dashboard` | Manager | Live floor, menu 86, table status, orders |
 | `/ops` | Manager | AI copilot + 24h analytics + shift brief |
-| `/host` | Host | Walk-in queue, notify + seat guests |
+| `/host` | Host | Walk-in queue + reservations, notify + seat guests |
 | `/intel` | Manager | Health, AI feed, incidents, replay, predictions, charts, guest sentiment |
 | `/menu` | Manager | Full menu + category CRUD, realtime |
 | `/kds` | Kitchen | Ticket board, advance order stages |
