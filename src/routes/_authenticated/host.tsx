@@ -426,6 +426,9 @@ function HostPage() {
                         {r.notes && <div className="mt-1 text-xs italic text-muted-foreground">"{r.notes}"</div>}
                       </div>
                       <div className="flex items-center gap-2">
+                        <Button size="sm" onClick={() => checkInReservation(r)}>
+                          <LogIn className="mr-1.5 h-3.5 w-3.5" /> Check in
+                        </Button>
                         {r.status === "pending" && (
                           <Button size="sm" variant="outline" onClick={() => updateReservation(r.id, { status: "confirmed" }, `Confirmed ${r.guest_name}`)}>
                             <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" /> Confirm
