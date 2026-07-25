@@ -160,6 +160,7 @@ function IntelPage() {
       .on("postgres_changes", { event: "*", schema: "public", table: "dining_tables" }, loadAll)
       .on("postgres_changes", { event: "*", schema: "public", table: "menu_items" }, loadAll)
       .on("postgres_changes", { event: "*", schema: "public", table: "waitlist" }, loadAll)
+      .on("postgres_changes", { event: "*", schema: "public", table: "guest_feedback" }, loadAll)
       .subscribe();
     return () => {
       void supabase.removeChannel(ch);
