@@ -49,6 +49,25 @@ type Order = {
   table_id: string | null;
 };
 
+type ResStats = {
+  upcoming: number;
+  seatedToday: number;
+  noShows: number;
+  cancelled: number;
+  avgWaitMin: number;
+  occupancyPct: number;
+};
+
+type ResEvent = {
+  id: string;
+  reservation_id: string;
+  event_type: string;
+  from_status: string | null;
+  to_status: string | null;
+  details: Record<string, unknown> | null;
+  created_at: string;
+};
+
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
     meta: [
