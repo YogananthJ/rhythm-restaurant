@@ -215,6 +215,73 @@ function Dashboard() {
     if (data) setResEvents(data as ResEvent[]);
   }
 
+  async function loadKitchenStats() {
+    const since = new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString();
+    const { data } = await supabase
+      .from("orders")
+      .select("id, status, guest_name, created_at, updated_at")
+      .gte("created_at", since)
+      .order("created_at", { ascending: false });
+    const rows = (data ?? []) as Array<{ id: string; status: string; guest_name: string | null; created_at: string; updated_at: string }>;
+    const now = Date.now();
+    const OVERDUE_MIN = 20;
+
+    const completedStatuses = new Set(["ready", "served", "paid", "closed"]);
+    const inFlightStatuses = new Set(["open", "placed", "preparing"]);
+
+    const readyDurations: number[] = [];
+    let completed12h = 0;
+    const throughputMap = new Map<string, number>();
+    // Seed last 12 hours buckets
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(now - i * 3600 * 1000);
+      d.setMinutes(0, 0, 0);
+      throughputMap.set(d.toISOString(), 0);
+    }
+    for (const r of rows) {
+      if (completedStatuses.has(r.status)) {
+        const dur = (new Date(r.updated_at).getTime() - new Date(r.created_at).getTime()) / 60000;
+        if (dur >= 0 && dur < 240) readyDurations.push(dur);
+        completed12h++;
+        const b = new Date(r.updated_at);
+        b.setMinutes(0, 0, 0);
+        const key = b.toISOString();
+        if (throughputMap.has(key)) throughputMap.set(key, (throughputMap.get(key) ?? 0) + 1);
+      }
+    }
+    const avgReadyMin = readyDurations.length
+      ? Math.round(readyDurations.reduce((a, b) => a + b, 0) / readyDurations.length)
+      : 0;
+    const sorted = [...readyDurations].sort((a, b) => a - b);
+    const medianReadyMin = sorted.length ? Math.round(sorted[Math.floor(sorted.length / 2)]) : 0;
+
+    const inFlight = rows.filter((r) => inFlightStatuses.has(r.status));
+    const overdueList = inFlight
+      .map((r) => ({
+        id: r.id,
+        guest: r.guest_name ?? "Guest",
+        minutes: Math.round((now - new Date(r.created_at).getTime()) / 60000),
+        status: r.status,
+      }))
+      .filter((r) => r.minutes >= OVERDUE_MIN)
+      .sort((a, b) => b.minutes - a.minutes);
+
+    const throughput = Array.from(throughputMap.entries()).map(([iso, count]) => ({
+      hour: new Date(iso).toLocaleTimeString([], { hour: "numeric" }),
+      count,
+    }));
+
+    setKitchen({
+      avgReadyMin,
+      medianReadyMin,
+      overdue: overdueList.length,
+      completed12h,
+      inFlight: inFlight.length,
+      throughput,
+      slowest: overdueList.slice(0, 5),
+    });
+  }
+
   async function toggleAvailability(item: MenuItem) {
     const next = !item.is_available;
     setItems((prev) => prev.map((i) => (i.id === item.id ? { ...i, is_available: next } : i)));
