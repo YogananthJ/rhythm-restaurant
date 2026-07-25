@@ -118,7 +118,7 @@ function KDS() {
 
       <header className="sticky top-0 z-20 border-b border-white/10 bg-background/70 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <Link to="/_authenticated/dashboard" className="flex items-center gap-2">
+          <Link to="/dashboard" className="flex items-center gap-2">
             <div className="grid h-8 w-8 place-items-center rounded-lg bg-primary/15 text-primary">
               <ChefHat className="h-4 w-4" />
             </div>
