@@ -39,6 +39,10 @@ Fixed all 9 flagged findings:
 - Print stylesheet — hit "Print all" to get a table tent sheet.
 - One-click copy link + open-in-new-tab for staff testing.
 
+### Day 3.75 — Shift handoff + payment close
+- AI shift brief on `/ops`: one click generates a markdown handoff (Numbers / Wins / Watch-outs) from the last 12h of orders.
+- "Close · paid" action on the dashboard for ready/served tickets — moves the order to `closed` and frees the ticket from the live queue.
+
 ## Surfaces
 | Route | For | What it does |
 |---|---|---|
