@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import {
   Activity,
+  CalendarClock,
   ChefHat,
   CircleDot,
   Clock,
