@@ -188,6 +188,7 @@ export type Database = {
       }
       orders: {
         Row: {
+          access_token: string
           created_at: string
           guest_name: string | null
           id: string
@@ -198,6 +199,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          access_token?: string
           created_at?: string
           guest_name?: string | null
           id?: string
@@ -208,6 +210,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          access_token?: string
           created_at?: string
           guest_name?: string | null
           id?: string
@@ -299,6 +302,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_guest_order: {
+        Args: { p_access_token: string; p_order_id: string }
+        Returns: Json
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
