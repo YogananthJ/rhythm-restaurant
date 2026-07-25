@@ -90,6 +90,7 @@ The mission-control brain that continuously watches the floor and proposes moves
 |---|---|---|
 | `/` | Everyone | Landing + product story |
 | `/auth` | Staff | Sign up / sign in |
+| `/autopilot` | Manager | AI operating system: action cards, risk radar, digital twin, emergency mode, judge mode |
 | `/dashboard` | Manager | Live floor, menu 86, table status, orders |
 | `/ops` | Manager | AI copilot + 24h analytics + shift brief |
 | `/host` | Host | Walk-in queue, notify + seat guests |
