@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { ChefHat, Users, Clock, BellRing, Trash2, ArrowLeft, UserPlus } from "lucide-react";
+import { ChefHat, Users, Clock, BellRing, Trash2, ArrowLeft, UserPlus, CalendarClock, CheckCircle2, XCircle } from "lucide-react";
 
 type WaitEntry = {
   id: string;
