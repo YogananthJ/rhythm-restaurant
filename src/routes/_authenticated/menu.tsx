@@ -121,7 +121,7 @@ function MenuManager() {
     else toast.success(`Deleted ${it.name}`);
   };
 
-  const saveItem = async (draft: Partial<Item> & { name: string; price_cents: number; prep_minutes: number }) => {
+  const saveItem = async (draft: Partial<Item> & { name: string; price_cents: number; prep_minutes: number }): Promise<void> => {
     if (!restaurantId) return;
     if (editing) {
       const { error } = await supabase
