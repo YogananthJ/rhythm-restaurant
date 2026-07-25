@@ -22,6 +22,19 @@ type WaitEntry = {
 
 type DiningTable = { id: string; label: string; seats: number; status: string };
 
+type Reservation = {
+  id: string;
+  guest_name: string;
+  phone: string | null;
+  email: string | null;
+  party_size: number;
+  requested_at: string;
+  status: string;
+  notes: string | null;
+  table_id: string | null;
+  created_at: string;
+};
+
 export const Route = createFileRoute("/_authenticated/host")({
   head: () => ({
     meta: [
