@@ -152,6 +152,9 @@ function Dashboard() {
             </Badge>
             <span className="hidden text-xs text-muted-foreground sm:inline">{email}</span>
             <Button asChild variant="outline" size="sm">
+              <Link to="/ops"><Sparkles className="mr-1.5 h-4 w-4" /> Copilot</Link>
+            </Button>
+            <Button asChild variant="outline" size="sm">
               <Link to="/kds"><ChefHat className="mr-1.5 h-4 w-4" /> KDS</Link>
             </Button>
             <Button variant="ghost" size="sm" onClick={signOut}>
