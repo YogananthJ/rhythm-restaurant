@@ -119,6 +119,7 @@ function IntelPage() {
   const [tables, setTables] = useState<DiningTable[]>([]);
   const [menu, setMenu] = useState<MenuItem[]>([]);
   const [waitlist, setWaitlist] = useState<WaitEntry[]>([]);
+  const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
   const [loading, setLoading] = useState(true);
   const [ai, setAi] = useState<{ feed: IntelInsight[]; incidents: IntelIncident[]; recommendations: IntelRecommendation[] } | null>(null);
   const [aiBusy, setAiBusy] = useState(false);
