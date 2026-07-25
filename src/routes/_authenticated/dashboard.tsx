@@ -13,6 +13,7 @@ import {
   Clock,
   LogOut,
   Sparkles,
+  QrCode,
   Utensils,
 } from "lucide-react";
 
