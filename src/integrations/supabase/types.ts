@@ -359,6 +359,66 @@ export type Database = {
         }
         Relationships: []
       }
+      reservations: {
+        Row: {
+          created_at: string
+          email: string | null
+          guest_name: string
+          id: string
+          notes: string | null
+          party_size: number
+          phone: string | null
+          requested_at: string
+          restaurant_id: string
+          status: string
+          table_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          guest_name: string
+          id?: string
+          notes?: string | null
+          party_size?: number
+          phone?: string | null
+          requested_at: string
+          restaurant_id: string
+          status?: string
+          table_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          guest_name?: string
+          id?: string
+          notes?: string | null
+          party_size?: number
+          phone?: string | null
+          requested_at?: string
+          restaurant_id?: string
+          status?: string
+          table_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reservations_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reservations_table_id_fkey"
+            columns: ["table_id"]
+            isOneToOne: false
+            referencedRelation: "dining_tables"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       restaurants: {
         Row: {
           created_at: string

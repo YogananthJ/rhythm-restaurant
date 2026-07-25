@@ -76,6 +76,12 @@ function Nav() {
         </nav>
         <div className="flex items-center gap-2">
           <Link
+            to="/book"
+            className="hidden rounded-lg px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground sm:inline-flex"
+          >
+            Reserve
+          </Link>
+          <Link
             to="/auth"
             className="hidden rounded-lg px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground sm:inline-flex"
           >

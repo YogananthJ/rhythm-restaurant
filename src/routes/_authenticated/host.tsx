@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { ChefHat, Users, Clock, BellRing, Trash2, ArrowLeft, UserPlus } from "lucide-react";
+import { ChefHat, Users, Clock, BellRing, Trash2, ArrowLeft, UserPlus, CalendarClock, CheckCircle2, XCircle } from "lucide-react";
 
 type WaitEntry = {
   id: string;
@@ -21,6 +21,19 @@ type WaitEntry = {
 };
 
 type DiningTable = { id: string; label: string; seats: number; status: string };
+
+type Reservation = {
+  id: string;
+  guest_name: string;
+  phone: string | null;
+  email: string | null;
+  party_size: number;
+  requested_at: string;
+  status: string;
+  notes: string | null;
+  table_id: string | null;
+  created_at: string;
+};
 
 export const Route = createFileRoute("/_authenticated/host")({
   head: () => ({
@@ -37,6 +50,7 @@ export const Route = createFileRoute("/_authenticated/host")({
 function HostPage() {
   const [entries, setEntries] = useState<WaitEntry[]>([]);
   const [tables, setTables] = useState<DiningTable[]>([]);
+  const [reservations, setReservations] = useState<Reservation[]>([]);
   const [restaurantId, setRestaurantId] = useState<string | null>(null);
   const [form, setForm] = useState({ guest_name: "", party_size: 2, phone: "", quoted_minutes: 15, notes: "" });
   const [busy, setBusy] = useState(false);
@@ -47,6 +61,7 @@ function HostPage() {
       .channel("host-waitlist")
       .on("postgres_changes", { event: "*", schema: "public", table: "waitlist" }, load)
       .on("postgres_changes", { event: "*", schema: "public", table: "dining_tables" }, loadTables)
+      .on("postgres_changes", { event: "*", schema: "public", table: "reservations" }, loadReservations)
       .subscribe();
     return () => {
       void supabase.removeChannel(ch);
@@ -56,7 +71,7 @@ function HostPage() {
   async function bootstrap() {
     const { data: rest } = await supabase.from("restaurants").select("id").limit(1).maybeSingle();
     if (rest?.id) setRestaurantId(rest.id);
-    await Promise.all([load(), loadTables()]);
+    await Promise.all([load(), loadTables(), loadReservations()]);
   }
 
   async function load() {
@@ -71,6 +86,33 @@ function HostPage() {
   async function loadTables() {
     const { data } = await supabase.from("dining_tables").select("*").order("label");
     if (data) setTables(data as DiningTable[]);
+  }
+
+  async function loadReservations() {
+    const { data } = await supabase
+      .from("reservations")
+      .select("*")
+      .in("status", ["pending", "confirmed"])
+      .gte("requested_at", new Date(Date.now() - 2 * 3600 * 1000).toISOString())
+      .order("requested_at", { ascending: true })
+      .limit(50);
+    if (data) setReservations(data as Reservation[]);
+  }
+
+  async function updateReservation(id: string, patch: Partial<Reservation>, msg: string) {
+    const { error } = await supabase.from("reservations").update(patch).eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success(msg);
+  }
+
+  async function seatReservation(r: Reservation, tableId: string) {
+    const { error } = await supabase
+      .from("reservations")
+      .update({ status: "seated", table_id: tableId })
+      .eq("id", r.id);
+    if (error) return toast.error(error.message);
+    await supabase.from("dining_tables").update({ status: "seated" }).eq("id", tableId);
+    toast.success(`Seated ${r.guest_name}`);
   }
 
   async function addEntry(e: React.FormEvent) {
@@ -289,6 +331,98 @@ function HostPage() {
             )}
           </Card>
         </div>
+
+        <Card className="mt-8 border-white/10 bg-card/70 p-6 backdrop-blur">
+          <div className="mb-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <CalendarClock className="h-4 w-4 text-accent" />
+              <h2 className="text-lg font-semibold">Reservations</h2>
+              <Badge variant="outline" className="text-[10px] uppercase">
+                {reservations.filter((r) => r.status === "pending").length} pending
+              </Badge>
+            </div>
+            <a
+              href="/book"
+              target="_blank"
+              rel="noreferrer"
+              className="text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+            >
+              Public booking page ↗
+            </a>
+          </div>
+
+          {reservations.length === 0 ? (
+            <div className="rounded-lg border border-dashed border-white/10 py-10 text-center text-sm text-muted-foreground">
+              No upcoming reservations. Share <span className="font-mono text-foreground">/book</span> to take one.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {reservations.map((r) => {
+                const when = new Date(r.requested_at);
+                const mins = Math.round((when.getTime() - Date.now()) / 60000);
+                const timeLabel =
+                  mins < 0 ? `${-mins}m ago` : mins < 60 ? `in ${mins}m` : when.toLocaleString();
+                return (
+                  <div key={r.id} className="rounded-xl border border-white/10 bg-white/[0.02] p-4">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="font-semibold">{r.guest_name}</span>
+                          <Badge variant="outline" className="text-[10px] uppercase">party of {r.party_size}</Badge>
+                          {r.status === "pending" ? (
+                            <Badge className="border-yellow-400/30 bg-yellow-400/15 text-yellow-300 text-[10px] uppercase">
+                              Pending
+                            </Badge>
+                          ) : (
+                            <Badge className="border-primary/30 bg-primary/15 text-primary text-[10px] uppercase">
+                              Confirmed
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                          <span>{timeLabel}</span>
+                          <span className="text-muted-foreground/60">·</span>
+                          <span>{when.toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" })}</span>
+                          {r.phone && <span>· {r.phone}</span>}
+                          {r.email && <span>· {r.email}</span>}
+                        </div>
+                        {r.notes && <div className="mt-1 text-xs italic text-muted-foreground">"{r.notes}"</div>}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {r.status === "pending" && (
+                          <Button size="sm" variant="outline" onClick={() => updateReservation(r.id, { status: "confirmed" }, `Confirmed ${r.guest_name}`)}>
+                            <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" /> Confirm
+                          </Button>
+                        )}
+                        <Button size="sm" variant="ghost" onClick={() => updateReservation(r.id, { status: "cancelled" }, `Cancelled ${r.guest_name}`)}>
+                          <XCircle className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {availableTables.length === 0 ? (
+                        <span className="text-xs text-muted-foreground">No open tables — cycle one on the floor.</span>
+                      ) : (
+                        availableTables
+                          .filter((t) => t.seats >= r.party_size - 1)
+                          .map((t) => (
+                            <button
+                              key={t.id}
+                              onClick={() => seatReservation(r, t.id)}
+                              className="rounded-lg border border-accent/30 bg-accent/10 px-3 py-1.5 text-xs font-medium text-accent transition-all hover:bg-accent/20"
+                            >
+                              Seat at {t.label} · {t.seats}
+                            </button>
+                          ))
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </Card>
       </main>
     </div>
   );
