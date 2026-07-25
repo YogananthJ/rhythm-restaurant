@@ -431,44 +431,58 @@ function IntelPage() {
           </Card>
 
           <Card className="border-white/10 bg-card/70 p-6 backdrop-blur">
-            <SectionHeader icon={<AlertTriangle className="h-4 w-4" />} title="Incident center" hint={`${activeIncidents.length} open`} />
+            <SectionHeader
+              icon={<AlertTriangle className="h-4 w-4" />}
+              title="Incident center"
+              hint={`${openIncidents.length} open · ${resolvedToday.length} resolved 24h`}
+            />
             <div className="space-y-3 max-h-[420px] overflow-y-auto pr-1">
-              {activeIncidents.map((i) => (
-                <div key={i.id} className="rounded-xl border border-white/10 bg-white/[0.02] p-3">
-                  <div className="flex items-center gap-2">
-                    <Badge className={`text-[10px] uppercase ${priorityTone(i.priority)}`}>{i.priority}</Badge>
-                    <div className="text-sm font-semibold">{i.title}</div>
+              {openIncidents.map((i) => {
+                const pending = pendingIds.has(i.id);
+                return (
+                  <div key={i.id} className="rounded-xl border border-white/10 bg-white/[0.02] p-3">
+                    <div className="flex items-center gap-2">
+                      <Badge className={`text-[10px] uppercase ${priorityTone(i.priority)}`}>{i.priority}</Badge>
+                      <div className="text-sm font-semibold">{i.title}</div>
+                    </div>
+                    <div className="mt-2 grid gap-1 text-xs">
+                      {i.root_cause && <div><span className="text-muted-foreground">Root cause · </span>{i.root_cause}</div>}
+                      {i.business_impact && <div><span className="text-muted-foreground">Impact · </span>{i.business_impact}</div>}
+                      {i.action && <div className="rounded-md bg-primary/5 px-2 py-1.5 text-primary">→ {i.action}</div>}
+                    </div>
+                    <div className="mt-3 flex items-center justify-between gap-2">
+                      <div className="text-[10px] text-muted-foreground">
+                        Detected {new Date(i.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                      </div>
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="ghost" disabled={pending} onClick={() => void updateIncidentStatus(i, "dismissed")}>
+                          Dismiss
+                        </Button>
+                        <Button size="sm" variant="outline" disabled={pending} onClick={() => void updateIncidentStatus(i, "resolved")}>
+                          Resolve
+                        </Button>
+                      </div>
+                    </div>
                   </div>
-                  <div className="mt-2 grid gap-1 text-xs">
-                    <div><span className="text-muted-foreground">Root cause · </span>{i.root_cause}</div>
-                    <div><span className="text-muted-foreground">Impact · </span>{i.business_impact}</div>
-                    <div className="rounded-md bg-primary/5 px-2 py-1.5 text-primary">→ {i.action}</div>
-                  </div>
-                  <div className="mt-3 flex justify-end gap-2">
-                    <Button size="sm" variant="ghost" onClick={() => setDismissed((s) => new Set(s).add(i.id))}>
-                      Dismiss
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        setResolved((m) => new Map(m).set(i.id, new Date().toISOString()));
-                        toast.success("Marked resolved");
-                      }}
-                    >
-                      Resolve
-                    </Button>
-                  </div>
-                </div>
-              ))}
-              {activeIncidents.length === 0 && <EmptyLine>No incidents detected. Ops running clean.</EmptyLine>}
-              {resolved.size > 0 && (
-                <div className="pt-3 border-t border-white/5 text-[11px] text-muted-foreground">
-                  Resolved this session: {resolved.size}
+                );
+              })}
+              {openIncidents.length === 0 && <EmptyLine>No incidents detected. Ops running clean.</EmptyLine>}
+              {resolvedToday.length > 0 && (
+                <div className="pt-3 border-t border-white/5 space-y-1.5">
+                  <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Resolved · last 24h</div>
+                  {resolvedToday.slice(0, 5).map((r) => (
+                    <div key={r.id} className="flex items-center justify-between text-[11px] text-muted-foreground">
+                      <span className="truncate pr-2">{r.title}</span>
+                      <span className="shrink-0">
+                        {r.resolved_at ? new Date(r.resolved_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : ""}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
           </Card>
+
 
           <Card className="border-white/10 bg-card/70 p-6 backdrop-blur">
             <SectionHeader icon={<Zap className="h-4 w-4" />} title="Smart recommendations" hint={`${ai?.recommendations.length ?? 0} moves`} />
