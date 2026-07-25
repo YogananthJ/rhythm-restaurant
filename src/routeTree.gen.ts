@@ -13,6 +13,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TTokenRouteImport } from './routes/t/$token'
+import { Route as AuthenticatedTablesRouteImport } from './routes/_authenticated/tables'
 import { Route as AuthenticatedOpsRouteImport } from './routes/_authenticated/ops'
 import { Route as AuthenticatedKdsRouteImport } from './routes/_authenticated/kds'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -36,6 +37,11 @@ const TTokenRoute = TTokenRouteImport.update({
   id: '/t/$token',
   path: '/t/$token',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedTablesRoute = AuthenticatedTablesRouteImport.update({
+  id: '/tables',
+  path: '/tables',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedOpsRoute = AuthenticatedOpsRouteImport.update({
   id: '/ops',
@@ -64,6 +70,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/kds': typeof AuthenticatedKdsRoute
   '/ops': typeof AuthenticatedOpsRoute
+  '/tables': typeof AuthenticatedTablesRoute
   '/t/$token': typeof TTokenRouteWithChildren
   '/t/$token/order/$orderId': typeof TTokenOrderOrderIdRoute
 }
@@ -73,6 +80,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/kds': typeof AuthenticatedKdsRoute
   '/ops': typeof AuthenticatedOpsRoute
+  '/tables': typeof AuthenticatedTablesRoute
   '/t/$token': typeof TTokenRouteWithChildren
   '/t/$token/order/$orderId': typeof TTokenOrderOrderIdRoute
 }
@@ -84,6 +92,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/kds': typeof AuthenticatedKdsRoute
   '/_authenticated/ops': typeof AuthenticatedOpsRoute
+  '/_authenticated/tables': typeof AuthenticatedTablesRoute
   '/t/$token': typeof TTokenRouteWithChildren
   '/t/$token/order/$orderId': typeof TTokenOrderOrderIdRoute
 }
@@ -95,6 +104,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/kds'
     | '/ops'
+    | '/tables'
     | '/t/$token'
     | '/t/$token/order/$orderId'
   fileRoutesByTo: FileRoutesByTo
@@ -104,6 +114,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/kds'
     | '/ops'
+    | '/tables'
     | '/t/$token'
     | '/t/$token/order/$orderId'
   id:
@@ -114,6 +125,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/kds'
     | '/_authenticated/ops'
+    | '/_authenticated/tables'
     | '/t/$token'
     | '/t/$token/order/$orderId'
   fileRoutesById: FileRoutesById
@@ -155,6 +167,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/tables': {
+      id: '/_authenticated/tables'
+      path: '/tables'
+      fullPath: '/tables'
+      preLoaderRoute: typeof AuthenticatedTablesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ops': {
       id: '/_authenticated/ops'
       path: '/ops'
@@ -190,12 +209,14 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedKdsRoute: typeof AuthenticatedKdsRoute
   AuthenticatedOpsRoute: typeof AuthenticatedOpsRoute
+  AuthenticatedTablesRoute: typeof AuthenticatedTablesRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedKdsRoute: AuthenticatedKdsRoute,
   AuthenticatedOpsRoute: AuthenticatedOpsRoute,
+  AuthenticatedTablesRoute: AuthenticatedTablesRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
