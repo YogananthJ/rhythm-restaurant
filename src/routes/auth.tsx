@@ -1,12 +1,12 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { ChefHat, Loader2 } from "lucide-react";
+import { ChefHat, Loader2, Sparkles, MailCheck } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -20,6 +20,8 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
 
+const RESEND_COOLDOWN_SECONDS = 60;
+
 function AuthPage() {
   const navigate = useNavigate();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
@@ -27,6 +29,11 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [demoLoading, setDemoLoading] = useState(false);
+  const [lastSignupEmail, setLastSignupEmail] = useState<string | null>(null);
+  const [cooldown, setCooldown] = useState(0);
+  const [resending, setResending] = useState(false);
+  const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -34,12 +41,31 @@ function AuthPage() {
     });
   }, [navigate]);
 
+  useEffect(() => {
+    if (cooldown <= 0) {
+      if (cooldownRef.current) clearInterval(cooldownRef.current);
+      cooldownRef.current = null;
+      return;
+    }
+    if (!cooldownRef.current) {
+      cooldownRef.current = setInterval(() => {
+        setCooldown((c) => (c <= 1 ? 0 : c - 1));
+      }, 1000);
+    }
+    return () => {
+      if (cooldownRef.current && cooldown <= 1) {
+        clearInterval(cooldownRef.current);
+        cooldownRef.current = null;
+      }
+    };
+  }, [cooldown]);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -48,16 +74,77 @@ function AuthPage() {
           },
         });
         if (error) throw error;
-        toast.success("Account created. Signing you in…");
+        // With auto-confirm on, session exists immediately → straight to dashboard.
+        if (data.session) {
+          toast.success("Account created. Redirecting…");
+          navigate({ to: "/dashboard" });
+          return;
+        }
+        // Fallback: confirmation required — show resend UI.
+        setLastSignupEmail(email);
+        setCooldown(RESEND_COOLDOWN_SECONDS);
+        toast.success("Check your inbox to confirm your email.");
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        navigate({ to: "/dashboard" });
       }
-      navigate({ to: "/dashboard" });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Something went wrong");
+      const msg = err instanceof Error ? err.message : "Something went wrong";
+      toast.error(msg);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleResend() {
+    if (!lastSignupEmail || cooldown > 0) return;
+    setResending(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email: lastSignupEmail,
+        options: { emailRedirectTo: `${window.location.origin}/dashboard` },
+      });
+      if (error) throw error;
+      toast.success(`New code sent to ${lastSignupEmail}`);
+      setCooldown(RESEND_COOLDOWN_SECONDS);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not resend");
+    } finally {
+      setResending(false);
+    }
+  }
+
+  async function handleDemoLogin() {
+    setDemoLoading(true);
+    try {
+      const rand = Math.random().toString(36).slice(2, 10);
+      const demoEmail = `guest_${rand}@occupancy.demo`;
+      const demoPassword = `Demo!${rand}${Math.random().toString(36).slice(2, 8)}`;
+      const { data, error } = await supabase.auth.signUp({
+        email: demoEmail,
+        password: demoPassword,
+        options: {
+          emailRedirectTo: `${window.location.origin}/dashboard`,
+          data: { full_name: "Demo Guest" },
+        },
+      });
+      if (error) throw error;
+      if (!data.session) {
+        // Auto-confirm not on — try password sign-in anyway (in case it's confirmed elsewhere).
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email: demoEmail,
+          password: demoPassword,
+        });
+        if (signInError) throw signInError;
+      }
+      toast.success("Signed in as demo guest");
+      navigate({ to: "/dashboard" });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Demo login failed");
+    } finally {
+      setDemoLoading(false);
     }
   }
 
@@ -78,7 +165,22 @@ function AuthPage() {
               ? "Sign in to your live restaurant dashboard."
               : "New accounts are provisioned as manager by default."}
           </p>
-          <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+
+          <Button
+            type="button"
+            variant="secondary"
+            className="mt-5 w-full"
+            onClick={handleDemoLogin}
+            disabled={demoLoading || loading}
+          >
+            {demoLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+            One-tap demo login
+          </Button>
+          <div className="my-4 flex items-center gap-3 text-[11px] uppercase tracking-wider text-muted-foreground">
+            <div className="h-px flex-1 bg-white/10" /> or <div className="h-px flex-1 bg-white/10" />
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
             {mode === "signup" && (
               <div className="space-y-1.5">
                 <Label htmlFor="name">Full name</Label>
@@ -93,11 +195,36 @@ function AuthPage() {
               <Label htmlFor="password">Password</Label>
               <Input id="password" type="password" value={password} minLength={6} onChange={(e) => setPassword(e.target.value)} required />
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full" disabled={loading || demoLoading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {mode === "signin" ? "Sign in" : "Create account"}
             </Button>
           </form>
+
+          {lastSignupEmail && (
+            <div className="mt-5 rounded-lg border border-white/10 bg-background/50 p-3 text-sm">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <MailCheck className="h-4 w-4 text-primary" />
+                Confirmation sent to <span className="text-foreground">{lastSignupEmail}</span>
+              </div>
+              <div className="mt-2 flex items-center justify-between gap-2">
+                <span className="text-xs text-muted-foreground">
+                  {cooldown > 0 ? `You can request a new code in ${cooldown}s` : "Didn't get it?"}
+                </span>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={handleResend}
+                  disabled={cooldown > 0 || resending}
+                >
+                  {resending && <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />}
+                  {cooldown > 0 ? `Resend (${cooldown}s)` : "Resend code"}
+                </Button>
+              </div>
+            </div>
+          )}
+
           <button
             type="button"
             onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
@@ -105,6 +232,12 @@ function AuthPage() {
           >
             {mode === "signin" ? "Need an account? Sign up" : "Already have an account? Sign in"}
           </button>
+
+          <div className="mt-4 text-center">
+            <Link to="/health" className="text-xs text-muted-foreground hover:text-foreground">
+              Backend status →
+            </Link>
+          </div>
         </Card>
       </div>
     </div>
