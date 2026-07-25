@@ -70,6 +70,16 @@ type ResEvent = {
   created_at: string;
 };
 
+type KitchenStats = {
+  avgReadyMin: number;
+  medianReadyMin: number;
+  overdue: number;
+  completed12h: number;
+  inFlight: number;
+  throughput: { hour: string; count: number }[];
+  slowest: { id: string; guest: string; minutes: number; status: string }[];
+};
+
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
     meta: [
