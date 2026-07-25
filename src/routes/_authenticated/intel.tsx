@@ -161,6 +161,103 @@ function IntelPage() {
     };
   }, [loadAll]);
 
+  // ---------- Incidents: persisted + realtime ----------
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data: rest } = await supabase.from("restaurants").select("id").limit(1).maybeSingle();
+      if (cancelled || !rest?.id) return;
+      setRestaurantId(rest.id);
+      const { data } = await supabase
+        .from("incidents")
+        .select("*")
+        .eq("restaurant_id", rest.id)
+        .order("created_at", { ascending: false })
+        .limit(200);
+      if (!cancelled && data) setDbIncidents(data as IncidentRow[]);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!restaurantId) return;
+    const ch = supabase
+      .channel(`intel-incidents-${restaurantId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "incidents", filter: `restaurant_id=eq.${restaurantId}` },
+        (payload) => {
+          setDbIncidents((prev) => {
+            if (payload.eventType === "DELETE") {
+              const oldId = (payload.old as { id?: string })?.id;
+              return oldId ? prev.filter((r) => r.id !== oldId) : prev;
+            }
+            const row = payload.new as IncidentRow;
+            const rest = prev.filter((r) => r.id !== row.id);
+            return [row, ...rest];
+          });
+        },
+      )
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(ch);
+    };
+  }, [restaurantId]);
+
+  // Upsert new AI-detected incidents (preserve existing status via ignoreDuplicates)
+  useEffect(() => {
+    if (!restaurantId || !ai?.incidents?.length) return;
+    const existing = new Set(dbIncidents.map((r) => r.fingerprint));
+    const fresh = ai.incidents
+      .map((i) => ({
+        restaurant_id: restaurantId,
+        fingerprint: fingerprintIncident(i.title),
+        title: i.title,
+        priority: i.priority,
+        root_cause: i.root_cause ?? "",
+        business_impact: i.business_impact ?? "",
+        action: i.action ?? "",
+      }))
+      .filter((r) => r.fingerprint && !existing.has(r.fingerprint));
+    if (!fresh.length) return;
+    void supabase.from("incidents").upsert(fresh, { onConflict: "restaurant_id,fingerprint", ignoreDuplicates: true });
+  }, [ai, restaurantId, dbIncidents]);
+
+  const updateIncidentStatus = useCallback(
+    async (row: IncidentRow, status: "dismissed" | "resolved") => {
+      setPendingIds((s) => new Set(s).add(row.id));
+      const patch: Partial<IncidentRow> = {
+        status,
+        resolved_at: status === "resolved" ? new Date().toISOString() : null,
+      };
+      // Optimistic
+      setDbIncidents((prev) => prev.map((r) => (r.id === row.id ? { ...r, ...patch } as IncidentRow : r)));
+      const { error } = await supabase.from("incidents").update(patch).eq("id", row.id);
+      setPendingIds((s) => {
+        const next = new Set(s);
+        next.delete(row.id);
+        return next;
+      });
+      if (error) {
+        toast.error(`Could not ${status === "resolved" ? "resolve" : "dismiss"} incident`);
+        // Reload to revert
+        const { data } = await supabase
+          .from("incidents")
+          .select("*")
+          .eq("restaurant_id", row.restaurant_id)
+          .order("created_at", { ascending: false })
+          .limit(200);
+        if (data) setDbIncidents(data as IncidentRow[]);
+      } else {
+        toast.success(status === "resolved" ? "Incident resolved" : "Incident dismissed");
+      }
+    },
+    [],
+  );
+
+
   // ---------- Derived live metrics ----------
   const metrics = useMemo(() => computeMetrics(orders, items, tables, menu, waitlist), [orders, items, tables, menu, waitlist]);
   const health = useMemo(() => computeHealth(metrics), [metrics]);
