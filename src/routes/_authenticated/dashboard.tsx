@@ -16,6 +16,9 @@ import {
   QrCode,
   Utensils,
   Users,
+} from "lucide-react";
+
+
 
 
 type MenuItem = {
