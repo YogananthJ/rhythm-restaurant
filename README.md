@@ -91,6 +91,12 @@ The mission-control brain that continuously watches the floor and proposes moves
 - Host stand (`/host`) now shows a Reservations panel: pending vs confirmed, time-to-arrival, one-tap Confirm / Cancel, and one-tap Seat that flips a live table to `seated` — all realtime across every open host tab.
 - Landing header has a "Reserve" link straight into `/book`.
 
+### Day 9.5 — Guest check-in panel
+- Host stand gets an "Arrivals" panel showing reservations in the ±30/60m window, color-coded (green = arriving soon, red = late).
+- One-tap **Mark arrived & seat** auto-picks the best-fit open table (preferred table first, then smallest table that fits the party), flips the reservation to `seated`, and updates the dining table to `seated` — all realtime.
+- If no table is open the guest is marked `confirmed` and held at the door with a toast.
+- Same **Check in** action added inline to every reservation card in the list.
+
 ## Surfaces
 | Route | For | What it does |
 |---|---|---|

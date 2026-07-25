@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { ChefHat, Users, Clock, BellRing, Trash2, ArrowLeft, UserPlus, CalendarClock, CheckCircle2, XCircle } from "lucide-react";
+import { ChefHat, Users, Clock, BellRing, Trash2, ArrowLeft, UserPlus, CalendarClock, CheckCircle2, XCircle, DoorOpen, LogIn } from "lucide-react";
 
 type WaitEntry = {
   id: string;
@@ -115,6 +115,37 @@ function HostPage() {
     toast.success(`Seated ${r.guest_name}`);
   }
 
+  function pickBestTable(partySize: number, preferredId: string | null): DiningTable | null {
+    if (preferredId) {
+      const preferred = tables.find((t) => t.id === preferredId);
+      if (preferred && preferred.status === "available" && preferred.seats >= partySize) return preferred;
+    }
+    const fits = tables
+      .filter((t) => t.status === "available" && t.seats >= partySize)
+      .sort((a, b) => a.seats - b.seats);
+    return fits[0] ?? null;
+  }
+
+  async function checkInReservation(r: Reservation) {
+    const table = pickBestTable(r.party_size, r.table_id);
+    if (!table) {
+      const { error } = await supabase
+        .from("reservations")
+        .update({ status: "confirmed" })
+        .eq("id", r.id);
+      if (error) return toast.error(error.message);
+      toast(`${r.guest_name} checked in — no table open yet, holding at door`);
+      return;
+    }
+    const { error } = await supabase
+      .from("reservations")
+      .update({ status: "seated", table_id: table.id })
+      .eq("id", r.id);
+    if (error) return toast.error(error.message);
+    await supabase.from("dining_tables").update({ status: "seated" }).eq("id", table.id);
+    toast.success(`${r.guest_name} checked in · seated at ${table.label}`);
+  }
+
   async function addEntry(e: React.FormEvent) {
     e.preventDefault();
     if (!restaurantId) return;
@@ -203,8 +234,14 @@ function HostPage() {
         <div className="grid gap-4 sm:grid-cols-3">
           <Stat icon={<Users className="h-4 w-4" />} label="Waiting" value={String(waiting)} />
           <Stat icon={<BellRing className="h-4 w-4" />} label="Notified" value={String(notified)} />
-          <Stat icon={<Clock className="h-4 w-4" />} label="Avg wait" value={`${avgWait}m`} />
+        <Stat icon={<Clock className="h-4 w-4" />} label="Avg wait" value={`${avgWait}m`} />
         </div>
+
+        <CheckInPanel
+          reservations={reservations}
+          tables={tables}
+          onCheckIn={checkInReservation}
+        />
 
         <div className="mt-8 grid gap-6 lg:grid-cols-3">
           <Card className="border-white/10 bg-card/70 p-6 backdrop-blur">
@@ -389,6 +426,9 @@ function HostPage() {
                         {r.notes && <div className="mt-1 text-xs italic text-muted-foreground">"{r.notes}"</div>}
                       </div>
                       <div className="flex items-center gap-2">
+                        <Button size="sm" onClick={() => checkInReservation(r)}>
+                          <LogIn className="mr-1.5 h-3.5 w-3.5" /> Check in
+                        </Button>
                         {r.status === "pending" && (
                           <Button size="sm" variant="outline" onClick={() => updateReservation(r.id, { status: "confirmed" }, `Confirmed ${r.guest_name}`)}>
                             <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" /> Confirm
@@ -439,6 +479,104 @@ function Stat({ icon, label, value }: { icon: React.ReactNode; label: string; va
         {icon} {label}
       </div>
       <div className="mt-2 text-2xl font-semibold">{value}</div>
+    </Card>
+  );
+}
+
+function CheckInPanel({
+  reservations,
+  tables,
+  onCheckIn,
+}: {
+  reservations: Reservation[];
+  tables: DiningTable[];
+  onCheckIn: (r: Reservation) => void;
+}) {
+  const now = Date.now();
+  const arrivals = reservations
+    .filter((r) => {
+      const diff = (new Date(r.requested_at).getTime() - now) / 60000;
+      return diff >= -30 && diff <= 60 && (r.status === "pending" || r.status === "confirmed");
+    })
+    .sort((a, b) => new Date(a.requested_at).getTime() - new Date(b.requested_at).getTime());
+
+  const openTables = tables.filter((t) => t.status === "available").length;
+
+  return (
+    <Card className="mt-8 border-white/10 bg-card/70 p-6 backdrop-blur">
+      <div className="mb-4 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <DoorOpen className="h-4 w-4 text-primary" />
+          <h2 className="text-lg font-semibold">Guest check-in</h2>
+          <Badge variant="outline" className="text-[10px] uppercase">
+            {arrivals.length} arriving
+          </Badge>
+        </div>
+        <span className="text-xs text-muted-foreground">
+          {openTables} table{openTables === 1 ? "" : "s"} ready · auto-seats best fit
+        </span>
+      </div>
+
+      {arrivals.length === 0 ? (
+        <div className="rounded-lg border border-dashed border-white/10 py-8 text-center text-sm text-muted-foreground">
+          No arrivals in the next hour. Reservations appear here 30m before their time.
+        </div>
+      ) : (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {arrivals.map((r) => {
+            const when = new Date(r.requested_at);
+            const mins = Math.round((when.getTime() - now) / 60000);
+            const overdue = mins < -5;
+            const soon = mins <= 10 && mins >= -5;
+            const label =
+              mins < 0 ? `${-mins}m late` : mins === 0 ? "now" : `in ${mins}m`;
+            const preferred = r.table_id ? tables.find((t) => t.id === r.table_id) : null;
+            return (
+              <div
+                key={r.id}
+                className={`rounded-xl border p-4 transition-all ${
+                  overdue
+                    ? "border-destructive/40 bg-destructive/10"
+                    : soon
+                      ? "border-primary/40 bg-primary/10"
+                      : "border-white/10 bg-white/[0.02]"
+                }`}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="truncate font-semibold">{r.guest_name}</div>
+                    <div className="mt-0.5 text-xs text-muted-foreground">
+                      Party of {r.party_size} · {label}
+                    </div>
+                  </div>
+                  <Badge
+                    className={`text-[10px] uppercase ${
+                      overdue
+                        ? "border-destructive/30 bg-destructive/15 text-destructive"
+                        : "border-primary/30 bg-primary/15 text-primary"
+                    }`}
+                  >
+                    {when.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
+                  </Badge>
+                </div>
+                {preferred && (
+                  <div className="mt-2 text-[11px] text-muted-foreground">
+                    Preferred: <span className="text-foreground">{preferred.label}</span>
+                    {preferred.status !== "available" && " · busy"}
+                  </div>
+                )}
+                <Button
+                  size="sm"
+                  className="mt-3 w-full"
+                  onClick={() => onCheckIn(r)}
+                >
+                  <LogIn className="mr-1.5 h-3.5 w-3.5" /> Mark arrived & seat
+                </Button>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </Card>
   );
 }
