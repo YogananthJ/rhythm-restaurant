@@ -305,7 +305,11 @@ function IntelPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [snapshotKey, loading]);
 
-  const activeIncidents = (ai?.incidents ?? []).filter((i) => !dismissed.has(i.id) && !resolved.has(i.id));
+  const openIncidents = useMemo(() => dbIncidents.filter((r) => r.status === "open"), [dbIncidents]);
+  const resolvedToday = useMemo(() => {
+    const cutoff = Date.now() - 24 * 3600 * 1000;
+    return dbIncidents.filter((r) => r.status === "resolved" && r.resolved_at && new Date(r.resolved_at).getTime() >= cutoff);
+  }, [dbIncidents]);
 
   if (loading) return <IntelSkeleton />;
 
