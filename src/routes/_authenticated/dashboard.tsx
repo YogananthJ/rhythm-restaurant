@@ -105,6 +105,8 @@ function Dashboard() {
       .on("postgres_changes", { event: "*", schema: "public", table: "menu_items" }, loadItems)
       .on("postgres_changes", { event: "*", schema: "public", table: "dining_tables" }, loadTables)
       .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, loadOrders)
+      .on("postgres_changes", { event: "*", schema: "public", table: "reservations" }, loadReservationStats)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "reservation_events" }, loadReservationEvents)
       .subscribe();
 
     return () => {
@@ -113,7 +115,7 @@ function Dashboard() {
   }, []);
 
   async function loadAll() {
-    await Promise.all([loadItems(), loadTables(), loadOrders()]);
+    await Promise.all([loadItems(), loadTables(), loadOrders(), loadReservationStats(), loadReservationEvents()]);
   }
 
   async function loadItems() {
@@ -131,6 +133,63 @@ function Dashboard() {
       .in("status", ["open", "placed", "preparing", "ready"])
       .order("created_at", { ascending: false });
     if (data) setOrders(data as Order[]);
+  }
+
+  async function loadReservationStats() {
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+    const { data: allToday } = await supabase
+      .from("reservations")
+      .select("id, status, party_size, requested_at, created_at, table_id")
+      .gte("requested_at", startOfDay.toISOString());
+    const rows = (allToday ?? []) as Array<{
+      id: string; status: string; party_size: number; requested_at: string; created_at: string; table_id: string | null;
+    }>;
+    const now = Date.now();
+    const upcoming = rows.filter((r) => (r.status === "pending" || r.status === "confirmed") && new Date(r.requested_at).getTime() > now).length;
+    const seatedToday = rows.filter((r) => r.status === "seated").length;
+    const noShows = rows.filter((r) => r.status === "no_show").length;
+    const cancelled = rows.filter((r) => r.status === "cancelled").length;
+
+    // Avg wait: for seated today, time from requested_at to when the "seated" event was logged
+    const seatedIds = rows.filter((r) => r.status === "seated").map((r) => r.id);
+    let avgWaitMin = 0;
+    if (seatedIds.length) {
+      const { data: evs } = await supabase
+        .from("reservation_events")
+        .select("reservation_id, created_at, to_status")
+        .in("reservation_id", seatedIds)
+        .eq("to_status", "seated");
+      const byRes = new Map<string, string>((evs ?? []).map((e: { reservation_id: string; created_at: string }) => [e.reservation_id, e.created_at]));
+      const waits: number[] = [];
+      for (const r of rows) {
+        if (r.status !== "seated") continue;
+        const seatedAt = byRes.get(r.id);
+        if (!seatedAt) continue;
+        const diff = (new Date(seatedAt).getTime() - new Date(r.requested_at).getTime()) / 60000;
+        if (!Number.isNaN(diff)) waits.push(diff);
+      }
+      if (waits.length) avgWaitMin = Math.round(waits.reduce((a, b) => a + b, 0) / waits.length);
+    }
+
+    // Occupancy: seats currently occupied by seated reservations vs total table seats
+    const { data: tbls } = await supabase.from("dining_tables").select("seats");
+    const totalSeats = (tbls ?? []).reduce((s, t: { seats: number }) => s + t.seats, 0);
+    const seatedNow = rows
+      .filter((r) => r.status === "seated")
+      .reduce((s, r) => s + r.party_size, 0);
+    const occupancyPct = totalSeats ? Math.min(100, Math.round((seatedNow / totalSeats) * 100)) : 0;
+
+    setResStats({ upcoming, seatedToday, noShows, cancelled, avgWaitMin, occupancyPct });
+  }
+
+  async function loadReservationEvents() {
+    const { data } = await supabase
+      .from("reservation_events")
+      .select("id, reservation_id, event_type, from_status, to_status, details, created_at")
+      .order("created_at", { ascending: false })
+      .limit(15);
+    if (data) setResEvents(data as ResEvent[]);
   }
 
   async function toggleAvailability(item: MenuItem) {
