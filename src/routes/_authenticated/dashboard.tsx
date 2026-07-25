@@ -70,6 +70,16 @@ type ResEvent = {
   created_at: string;
 };
 
+type KitchenStats = {
+  avgReadyMin: number;
+  medianReadyMin: number;
+  overdue: number;
+  completed12h: number;
+  inFlight: number;
+  throughput: { hour: string; count: number }[];
+  slowest: { id: string; guest: string; minutes: number; status: string }[];
+};
+
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
     meta: [
@@ -97,6 +107,15 @@ function Dashboard() {
     occupancyPct: 0,
   });
   const [resEvents, setResEvents] = useState<ResEvent[]>([]);
+  const [kitchen, setKitchen] = useState<KitchenStats>({
+    avgReadyMin: 0,
+    medianReadyMin: 0,
+    overdue: 0,
+    completed12h: 0,
+    inFlight: 0,
+    throughput: [],
+    slowest: [],
+  });
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? ""));
@@ -106,18 +125,20 @@ function Dashboard() {
       .channel("occupancy-live")
       .on("postgres_changes", { event: "*", schema: "public", table: "menu_items" }, loadItems)
       .on("postgres_changes", { event: "*", schema: "public", table: "dining_tables" }, loadTables)
-      .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, loadOrders)
+      .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => { void loadOrders(); void loadKitchenStats(); })
       .on("postgres_changes", { event: "*", schema: "public", table: "reservations" }, loadReservationStats)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "reservation_events" }, loadReservationEvents)
       .subscribe();
 
+    const tick = setInterval(() => void loadKitchenStats(), 30000);
     return () => {
       void supabase.removeChannel(ch);
+      clearInterval(tick);
     };
   }, []);
 
   async function loadAll() {
-    await Promise.all([loadItems(), loadTables(), loadOrders(), loadReservationStats(), loadReservationEvents()]);
+    await Promise.all([loadItems(), loadTables(), loadOrders(), loadReservationStats(), loadReservationEvents(), loadKitchenStats()]);
   }
 
   async function loadItems() {
@@ -192,6 +213,73 @@ function Dashboard() {
       .order("created_at", { ascending: false })
       .limit(15);
     if (data) setResEvents(data as ResEvent[]);
+  }
+
+  async function loadKitchenStats() {
+    const since = new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString();
+    const { data } = await supabase
+      .from("orders")
+      .select("id, status, guest_name, created_at, updated_at")
+      .gte("created_at", since)
+      .order("created_at", { ascending: false });
+    const rows = (data ?? []) as Array<{ id: string; status: string; guest_name: string | null; created_at: string; updated_at: string }>;
+    const now = Date.now();
+    const OVERDUE_MIN = 20;
+
+    const completedStatuses = new Set(["ready", "served", "paid", "closed"]);
+    const inFlightStatuses = new Set(["open", "placed", "preparing"]);
+
+    const readyDurations: number[] = [];
+    let completed12h = 0;
+    const throughputMap = new Map<string, number>();
+    // Seed last 12 hours buckets
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(now - i * 3600 * 1000);
+      d.setMinutes(0, 0, 0);
+      throughputMap.set(d.toISOString(), 0);
+    }
+    for (const r of rows) {
+      if (completedStatuses.has(r.status)) {
+        const dur = (new Date(r.updated_at).getTime() - new Date(r.created_at).getTime()) / 60000;
+        if (dur >= 0 && dur < 240) readyDurations.push(dur);
+        completed12h++;
+        const b = new Date(r.updated_at);
+        b.setMinutes(0, 0, 0);
+        const key = b.toISOString();
+        if (throughputMap.has(key)) throughputMap.set(key, (throughputMap.get(key) ?? 0) + 1);
+      }
+    }
+    const avgReadyMin = readyDurations.length
+      ? Math.round(readyDurations.reduce((a, b) => a + b, 0) / readyDurations.length)
+      : 0;
+    const sorted = [...readyDurations].sort((a, b) => a - b);
+    const medianReadyMin = sorted.length ? Math.round(sorted[Math.floor(sorted.length / 2)]) : 0;
+
+    const inFlight = rows.filter((r) => inFlightStatuses.has(r.status));
+    const overdueList = inFlight
+      .map((r) => ({
+        id: r.id,
+        guest: r.guest_name ?? "Guest",
+        minutes: Math.round((now - new Date(r.created_at).getTime()) / 60000),
+        status: r.status,
+      }))
+      .filter((r) => r.minutes >= OVERDUE_MIN)
+      .sort((a, b) => b.minutes - a.minutes);
+
+    const throughput = Array.from(throughputMap.entries()).map(([iso, count]) => ({
+      hour: new Date(iso).toLocaleTimeString([], { hour: "numeric" }),
+      count,
+    }));
+
+    setKitchen({
+      avgReadyMin,
+      medianReadyMin,
+      overdue: overdueList.length,
+      completed12h,
+      inFlight: inFlight.length,
+      throughput,
+      slowest: overdueList.slice(0, 5),
+    });
   }
 
   async function toggleAvailability(item: MenuItem) {
@@ -290,6 +378,74 @@ function Dashboard() {
           <Kpi icon={<Activity className="h-4 w-4" />} label="Active orders" value={String(orders.length)} />
           <Kpi icon={<Sparkles className="h-4 w-4" />} label="Avg prep" value={`${avgPrep(items)} min`} />
         </div>
+
+        {/* Kitchen KPIs */}
+        <Card className="mt-6 border-white/10 bg-card/70 p-6 backdrop-blur">
+          <div className="mb-5 flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-semibold">Kitchen KPIs · last 12h</h2>
+              <p className="text-xs text-muted-foreground">Time-to-ready, overdue tickets, and throughput by hour — spot bottlenecks fast.</p>
+            </div>
+            <Badge variant="outline" className="border-primary/30 text-primary">Live</Badge>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+            <MiniStat label="Avg time-to-ready" value={`${kitchen.avgReadyMin}m`} tone="primary" />
+            <MiniStat label="Median" value={`${kitchen.medianReadyMin}m`} tone="accent" />
+            <MiniStat label="Overdue (>20m)" value={String(kitchen.overdue)} tone={kitchen.overdue > 0 ? "warn" : "muted"} />
+            <MiniStat label="In flight" value={String(kitchen.inFlight)} tone="muted" />
+            <MiniStat label="Completed 12h" value={String(kitchen.completed12h)} tone="primary" />
+          </div>
+
+          <div className="mt-6 grid gap-6 lg:grid-cols-3">
+            <div className="lg:col-span-2">
+              <div className="mb-2 flex justify-between text-[11px] text-muted-foreground">
+                <span>Throughput by hour</span>
+                <span>tickets completed</span>
+              </div>
+              <div className="flex h-32 items-end gap-1.5">
+                {kitchen.throughput.map((b, i) => {
+                  const max = Math.max(1, ...kitchen.throughput.map((x) => x.count));
+                  const pct = (b.count / max) * 100;
+                  return (
+                    <div key={i} className="flex flex-1 flex-col items-center gap-1">
+                      <div className="relative flex w-full flex-1 items-end">
+                        <div
+                          className="w-full rounded-t bg-primary/70 transition-all hover:bg-primary"
+                          style={{ height: `${Math.max(pct, b.count > 0 ? 6 : 2)}%` }}
+                          title={`${b.hour}: ${b.count}`}
+                        />
+                      </div>
+                      <span className="text-[9px] text-muted-foreground">{b.hour}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div>
+              <div className="mb-2 text-[11px] uppercase tracking-wider text-muted-foreground">Slowest open tickets</div>
+              {kitchen.slowest.length === 0 ? (
+                <div className="rounded-lg border border-dashed border-white/10 py-6 text-center text-xs text-muted-foreground">
+                  Nothing overdue. Kitchen's cruising.
+                </div>
+              ) : (
+                <ul className="space-y-1.5">
+                  {kitchen.slowest.map((s) => (
+                    <li key={s.id} className="flex items-center justify-between rounded-lg border border-amber-400/20 bg-amber-500/5 px-3 py-2 text-xs">
+                      <div>
+                        <div className="font-medium">{s.guest}</div>
+                        <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{s.status}</div>
+                      </div>
+                      <span className="font-semibold text-amber-300">{s.minutes}m</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        </Card>
+
 
         {/* Reservations analytics + audit log */}
         <div className="mt-8 grid gap-6 lg:grid-cols-3">
