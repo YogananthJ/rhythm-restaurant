@@ -68,6 +68,8 @@ Mission-control surface that analyzes the live floor instead of just displaying 
 | `/dashboard` | Manager | Live floor, menu 86, table status, orders |
 | `/ops` | Manager | AI copilot + 24h analytics + shift brief |
 | `/host` | Host | Walk-in queue, notify + seat guests |
+| `/intel` | Manager | Health score, AI feed, incidents, replay, predictions, charts |
+
 | `/kds` | Kitchen | Ticket board, advance order stages |
 | `/tables` | Manager | Printable QR codes for every table |
 | `/t/:token` | Guest | Live menu, cart, place order |
