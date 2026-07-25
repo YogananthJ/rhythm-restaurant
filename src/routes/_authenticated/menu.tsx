@@ -135,7 +135,7 @@ function MenuManager() {
           is_available: draft.is_available ?? true,
         })
         .eq("id", editing.id);
-      if (error) return toast.error(error.message);
+      if (error) { toast.error(error.message); return; }
       toast.success("Item updated");
       setEditing(null);
     } else {
@@ -148,7 +148,7 @@ function MenuManager() {
         category_id: draft.category_id ?? null,
         is_available: draft.is_available ?? true,
       });
-      if (error) return toast.error(error.message);
+      if (error) { toast.error(error.message); return; }
       toast.success("Item added");
       setCreating(false);
     }
@@ -161,7 +161,7 @@ function MenuManager() {
       name: newCatName.trim(),
       sort_order: cats.length,
     });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success("Category added");
     setNewCatName("");
     setCatDialog(false);
