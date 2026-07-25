@@ -16,6 +16,7 @@ import {
   QrCode,
   Utensils,
   Users,
+  Brain,
 } from "lucide-react";
 
 
@@ -157,8 +158,12 @@ function Dashboard() {
             </Badge>
             <span className="hidden text-xs text-muted-foreground sm:inline">{email}</span>
             <Button asChild variant="outline" size="sm">
+              <Link to="/intel"><Brain className="mr-1.5 h-4 w-4" /> Intel</Link>
+            </Button>
+            <Button asChild variant="outline" size="sm">
               <Link to="/ops"><Sparkles className="mr-1.5 h-4 w-4" /> Copilot</Link>
             </Button>
+
             <Button asChild variant="outline" size="sm">
               <Link to="/host"><Users className="mr-1.5 h-4 w-4" /> Host</Link>
             </Button>
