@@ -61,8 +61,24 @@ function OpsPage() {
   ]);
   const [input, setInput] = useState("");
   const [pending, setPending] = useState(false);
+  const [shift, setShift] = useState<string | null>(null);
+  const [shiftLoading, setShiftLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const ask = useServerFn(askOpsAssistant);
+  const briefFn = useServerFn(generateShiftSummary);
+
+  async function generateBrief() {
+    if (shiftLoading) return;
+    setShiftLoading(true);
+    try {
+      const res = await briefFn();
+      setShift(res.summary);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to generate brief");
+    } finally {
+      setShiftLoading(false);
+    }
+  }
 
   useEffect(() => {
     void load();
