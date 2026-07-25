@@ -156,6 +156,9 @@ function Dashboard() {
               <Link to="/ops"><Sparkles className="mr-1.5 h-4 w-4" /> Copilot</Link>
             </Button>
             <Button asChild variant="outline" size="sm">
+              <Link to="/tables"><QrCode className="mr-1.5 h-4 w-4" /> QR</Link>
+            </Button>
+            <Button asChild variant="outline" size="sm">
               <Link to="/kds"><ChefHat className="mr-1.5 h-4 w-4" /> KDS</Link>
             </Button>
             <Button variant="ghost" size="sm" onClick={signOut}>
