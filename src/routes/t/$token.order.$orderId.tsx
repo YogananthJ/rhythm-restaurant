@@ -78,9 +78,7 @@ function OrderStatus() {
 
   useEffect(() => {
     void load();
-    // Realtime channel scoped to this order (SELECT is now staff-only, but the
-    // realtime layer still lets us listen for the change events and re-fetch
-    // through the token-scoped RPC).
+    void loadFeedback();
     const ch = supabase
       .channel(`order-${orderId}`)
       .on(
@@ -97,7 +95,29 @@ function OrderStatus() {
     return () => {
       void supabase.removeChannel(ch);
     };
-  }, [orderId, load]);
+  }, [orderId, load, loadFeedback]);
+
+  async function submitFeedback() {
+    if (rating < 1) {
+      toast.error("Pick a rating first");
+      return;
+    }
+    setSubmitting(true);
+    const { error } = await supabase.rpc("submit_guest_feedback", {
+      p_order_id: orderId,
+      p_access_token: accessToken,
+      p_rating: rating,
+      p_comment: comment,
+    });
+    setSubmitting(false);
+    if (error) {
+      toast.error("Could not submit feedback");
+      return;
+    }
+    setFeedback({ rating, comment: comment || null });
+    toast.success("Thanks for the feedback!");
+  }
+
 
   if (notFound) {
     return (
