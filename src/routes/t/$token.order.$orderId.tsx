@@ -202,6 +202,58 @@ function OrderStatus() {
             <span className="text-lg font-semibold">${((order?.total_cents ?? 0) / 100).toFixed(2)}</span>
           </div>
         </Card>
+
+        {(order?.status === "served" || order?.status === "ready" || order?.status === "closed") && (
+          <Card className="mt-6 border-white/10 bg-card/70 p-6 backdrop-blur">
+            {feedback ? (
+              <div>
+                <div className="text-sm font-semibold">Your feedback</div>
+                <div className="mt-2 flex items-center gap-1">
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <Star
+                      key={n}
+                      className={`h-5 w-5 ${n <= feedback.rating ? "fill-primary text-primary" : "text-muted-foreground/40"}`}
+                    />
+                  ))}
+                </div>
+                {feedback.comment && (
+                  <p className="mt-3 text-sm italic text-muted-foreground">"{feedback.comment}"</p>
+                )}
+                <p className="mt-3 text-xs text-muted-foreground">Thanks — shared with the team.</p>
+              </div>
+            ) : (
+              <div>
+                <div className="text-sm font-semibold">How was your meal?</div>
+                <p className="mt-1 text-xs text-muted-foreground">Your feedback goes straight to the manager.</p>
+                <div className="mt-3 flex items-center gap-1">
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <button
+                      key={n}
+                      type="button"
+                      onClick={() => setRating(n)}
+                      className="p-1 transition-transform hover:scale-110"
+                      aria-label={`${n} star`}
+                    >
+                      <Star
+                        className={`h-7 w-7 ${n <= rating ? "fill-primary text-primary" : "text-muted-foreground/40"}`}
+                      />
+                    </button>
+                  ))}
+                </div>
+                <Textarea
+                  className="mt-3"
+                  placeholder="What stood out? (optional)"
+                  value={comment}
+                  maxLength={500}
+                  onChange={(e) => setComment(e.target.value)}
+                />
+                <Button className="mt-3 w-full" onClick={submitFeedback} disabled={submitting || rating < 1}>
+                  {submitting ? "Sending…" : "Send feedback"}
+                </Button>
+              </div>
+            )}
+          </Card>
+        )}
       </main>
     </div>
   );
