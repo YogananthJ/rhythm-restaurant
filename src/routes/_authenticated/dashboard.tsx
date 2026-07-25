@@ -263,6 +263,19 @@ function Dashboard() {
                   <div className="flex items-center gap-3">
                     <Badge>{o.status}</Badge>
                     <span className="text-muted-foreground">${(o.total_cents / 100).toFixed(2)}</span>
+                    {(o.status === "ready" || o.status === "served") && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={async () => {
+                          const { error } = await supabase.from("orders").update({ status: "closed" }).eq("id", o.id);
+                          if (error) toast.error("Could not close");
+                          else toast.success("Ticket closed & paid");
+                        }}
+                      >
+                        Close · paid
+                      </Button>
+                    )}
                   </div>
                 </div>
               ))}
