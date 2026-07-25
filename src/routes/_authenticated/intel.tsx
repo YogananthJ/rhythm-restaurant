@@ -18,6 +18,7 @@ import {
   History,
   LineChart as LineChartIcon,
   Sparkles,
+  Star,
   TrendingDown,
   TrendingUp,
   Users,
@@ -67,6 +68,7 @@ type OrderItem = {
 type DiningTable = { id: string; label: string; seats: number; status: string; updated_at: string };
 type MenuItem = { id: string; name: string; is_available: boolean; prep_minutes: number; price_cents: number; updated_at: string };
 type WaitEntry = { id: string; guest_name: string; party_size: number; status: string; quoted_minutes: number; created_at: string; updated_at: string; seated_table_id: string | null };
+type Feedback = { id: string; order_id: string; rating: number; comment: string | null; sentiment: string | null; created_at: string };
 
 type TimelineEvent = {
   ts: string;
@@ -117,6 +119,7 @@ function IntelPage() {
   const [tables, setTables] = useState<DiningTable[]>([]);
   const [menu, setMenu] = useState<MenuItem[]>([]);
   const [waitlist, setWaitlist] = useState<WaitEntry[]>([]);
+  const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
   const [loading, setLoading] = useState(true);
   const [ai, setAi] = useState<{ feed: IntelInsight[]; incidents: IntelIncident[]; recommendations: IntelRecommendation[] } | null>(null);
   const [aiBusy, setAiBusy] = useState(false);
@@ -131,18 +134,20 @@ function IntelPage() {
 
   const loadAll = useCallback(async () => {
     const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
-    const [ordersRes, itemsRes, tablesRes, menuRes, waitRes] = await Promise.all([
+    const [ordersRes, itemsRes, tablesRes, menuRes, waitRes, fbRes] = await Promise.all([
       supabase.from("orders").select("*").gte("created_at", since).order("created_at", { ascending: false }),
       supabase.from("order_items").select("*").gte("created_at", since).order("created_at", { ascending: false }),
       supabase.from("dining_tables").select("*").order("label"),
       supabase.from("menu_items").select("*").order("name"),
       supabase.from("waitlist").select("*").gte("created_at", since).order("created_at", { ascending: false }),
+      supabase.from("guest_feedback").select("*").gte("created_at", since).order("created_at", { ascending: false }),
     ]);
     if (ordersRes.data) setOrders(ordersRes.data as Order[]);
     if (itemsRes.data) setItems(itemsRes.data as OrderItem[]);
     if (tablesRes.data) setTables(tablesRes.data as DiningTable[]);
     if (menuRes.data) setMenu(menuRes.data as MenuItem[]);
     if (waitRes.data) setWaitlist(waitRes.data as WaitEntry[]);
+    if (fbRes.data) setFeedbacks(fbRes.data as Feedback[]);
     setLoading(false);
   }, []);
 
@@ -155,6 +160,7 @@ function IntelPage() {
       .on("postgres_changes", { event: "*", schema: "public", table: "dining_tables" }, loadAll)
       .on("postgres_changes", { event: "*", schema: "public", table: "menu_items" }, loadAll)
       .on("postgres_changes", { event: "*", schema: "public", table: "waitlist" }, loadAll)
+      .on("postgres_changes", { event: "*", schema: "public", table: "guest_feedback" }, loadAll)
       .subscribe();
     return () => {
       void supabase.removeChannel(ch);
@@ -554,6 +560,69 @@ function IntelPage() {
               <MiniStat label="Avg prep" value={metrics.avgPrepMinutes !== null ? `${metrics.avgPrepMinutes}m` : "—"} />
               <MiniStat label="Reservations 24h" value={String(waitlist.length)} />
             </div>
+          </Card>
+        </section>
+
+        {/* Row 4.5: Guest Sentiment */}
+        <section>
+          <Card className="border-white/10 bg-card/70 p-6 backdrop-blur">
+            <SectionHeader
+              icon={<Star className="h-4 w-4" />}
+              title="Guest sentiment · 24h"
+              hint={feedbacks.length === 0 ? "No reviews yet" : `${feedbacks.length} reviews · avg ${(feedbacks.reduce((s, f) => s + f.rating, 0) / feedbacks.length).toFixed(1)}★`}
+            />
+            {feedbacks.length === 0 ? (
+              <EmptyLine>Guests haven't left feedback yet. It appears here the moment they submit from the order tracker.</EmptyLine>
+            ) : (
+              <div className="grid gap-6 lg:grid-cols-3">
+                <div>
+                  <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Rating breakdown</div>
+                  <div className="space-y-1.5">
+                    {[5, 4, 3, 2, 1].map((n) => {
+                      const count = feedbacks.filter((f) => f.rating === n).length;
+                      const pct = feedbacks.length ? Math.round((count / feedbacks.length) * 100) : 0;
+                      return (
+                        <div key={n} className="flex items-center gap-2 text-xs">
+                          <span className="w-8 text-muted-foreground">{n}★</span>
+                          <div className="h-2 flex-1 overflow-hidden rounded-full bg-white/5">
+                            <div className="h-full bg-primary/70" style={{ width: `${pct}%` }} />
+                          </div>
+                          <span className="w-8 text-right text-muted-foreground">{count}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="mt-4 grid grid-cols-3 gap-2 text-xs">
+                    <MiniStat label="Positive" value={String(feedbacks.filter((f) => f.sentiment === "positive").length)} />
+                    <MiniStat label="Neutral" value={String(feedbacks.filter((f) => f.sentiment === "neutral").length)} />
+                    <MiniStat label="Negative" value={String(feedbacks.filter((f) => f.sentiment === "negative").length)} />
+                  </div>
+                </div>
+                <div className="lg:col-span-2">
+                  <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Latest comments</div>
+                  <div className="space-y-2 max-h-[260px] overflow-y-auto pr-1">
+                    {feedbacks.filter((f) => f.comment).slice(0, 8).map((f) => (
+                      <div key={f.id} className={`rounded-lg border p-3 ${f.rating >= 4 ? "border-primary/25 bg-primary/5" : f.rating === 3 ? "border-white/10 bg-white/[0.02]" : "border-destructive/30 bg-destructive/5"}`}>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-0.5">
+                            {[1, 2, 3, 4, 5].map((n) => (
+                              <Star key={n} className={`h-3.5 w-3.5 ${n <= f.rating ? "fill-primary text-primary" : "text-muted-foreground/30"}`} />
+                            ))}
+                          </div>
+                          <span className="text-[10px] text-muted-foreground">
+                            {new Date(f.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                          </span>
+                        </div>
+                        <p className="mt-1.5 text-sm italic text-foreground/90">"{f.comment}"</p>
+                      </div>
+                    ))}
+                    {feedbacks.filter((f) => f.comment).length === 0 && (
+                      <EmptyLine>Ratings received, but no written comments yet.</EmptyLine>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
           </Card>
         </section>
 

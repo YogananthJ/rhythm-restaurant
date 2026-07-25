@@ -67,6 +67,11 @@ Mission-control surface that analyzes the live floor instead of just displaying 
 - Writes flow through the same realtime channel, so `/dashboard`, `/t/:token`, `/kds`, and `/intel` reflect changes instantly.
 - Dashboard header now links to `/menu`.
 
+### Day 7 — Guest feedback loop
+- New `guest_feedback` table (rating 1–5, comment, auto-derived sentiment) with staff-only reads and a token-scoped `submit_guest_feedback` RPC — same secure guest pattern as `get_guest_order`.
+- Guest order tracker (`/t/:token/order/:orderId`) grows a star-rating + comment form the moment the order is `ready`/`served`/`closed`; already-submitted reviews render read-only.
+- New "Guest sentiment · 24h" panel on `/intel` — average score, rating breakdown bars, positive/neutral/negative counts, and a live scroll of the latest written comments (color-coded by rating), all wired to realtime.
+
 ## Surfaces
 | Route | For | What it does |
 |---|---|---|
@@ -75,12 +80,12 @@ Mission-control surface that analyzes the live floor instead of just displaying 
 | `/dashboard` | Manager | Live floor, menu 86, table status, orders |
 | `/ops` | Manager | AI copilot + 24h analytics + shift brief |
 | `/host` | Host | Walk-in queue, notify + seat guests |
-| `/intel` | Manager | Health score, AI feed, incidents, replay, predictions, charts |
+| `/intel` | Manager | Health, AI feed, incidents, replay, predictions, charts, guest sentiment |
 | `/menu` | Manager | Full menu + category CRUD, realtime |
 | `/kds` | Kitchen | Ticket board, advance order stages |
 | `/tables` | Manager | Printable QR codes for every table |
 | `/t/:token` | Guest | Live menu, cart, place order |
-| `/t/:token/order/:orderId` | Guest | Live order status tracker |
+| `/t/:token/order/:orderId` | Guest | Live order status tracker + post-meal feedback |
 
 
 

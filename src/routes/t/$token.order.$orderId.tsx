@@ -3,7 +3,10 @@ import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ChefHat, CheckCircle2, Clock, Flame, Utensils } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
+import { ChefHat, CheckCircle2, Clock, Flame, Star, Utensils } from "lucide-react";
 import { z } from "zod";
 
 type Order = {
@@ -45,6 +48,19 @@ function OrderStatus() {
   const [order, setOrder] = useState<Order | null>(null);
   const [items, setItems] = useState<OrderItem[]>([]);
   const [notFound, setNotFound] = useState(false);
+  const [feedback, setFeedback] = useState<{ rating: number; comment: string | null } | null>(null);
+  const [rating, setRating] = useState(0);
+  const [comment, setComment] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const loadFeedback = useCallback(async () => {
+    const { data } = await supabase.rpc("get_guest_feedback", {
+      p_order_id: orderId,
+      p_access_token: accessToken,
+    });
+    const row = Array.isArray(data) ? data[0] : null;
+    if (row) setFeedback({ rating: row.rating, comment: row.comment });
+  }, [orderId, accessToken]);
 
   const load = useCallback(async () => {
     const { data, error } = await supabase.rpc("get_guest_order", {
@@ -62,9 +78,7 @@ function OrderStatus() {
 
   useEffect(() => {
     void load();
-    // Realtime channel scoped to this order (SELECT is now staff-only, but the
-    // realtime layer still lets us listen for the change events and re-fetch
-    // through the token-scoped RPC).
+    void loadFeedback();
     const ch = supabase
       .channel(`order-${orderId}`)
       .on(
@@ -81,7 +95,29 @@ function OrderStatus() {
     return () => {
       void supabase.removeChannel(ch);
     };
-  }, [orderId, load]);
+  }, [orderId, load, loadFeedback]);
+
+  async function submitFeedback() {
+    if (rating < 1) {
+      toast.error("Pick a rating first");
+      return;
+    }
+    setSubmitting(true);
+    const { error } = await supabase.rpc("submit_guest_feedback", {
+      p_order_id: orderId,
+      p_access_token: accessToken,
+      p_rating: rating,
+      p_comment: comment,
+    });
+    setSubmitting(false);
+    if (error) {
+      toast.error("Could not submit feedback");
+      return;
+    }
+    setFeedback({ rating, comment: comment || null });
+    toast.success("Thanks for the feedback!");
+  }
+
 
   if (notFound) {
     return (
@@ -166,6 +202,58 @@ function OrderStatus() {
             <span className="text-lg font-semibold">${((order?.total_cents ?? 0) / 100).toFixed(2)}</span>
           </div>
         </Card>
+
+        {(order?.status === "served" || order?.status === "ready" || order?.status === "closed") && (
+          <Card className="mt-6 border-white/10 bg-card/70 p-6 backdrop-blur">
+            {feedback ? (
+              <div>
+                <div className="text-sm font-semibold">Your feedback</div>
+                <div className="mt-2 flex items-center gap-1">
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <Star
+                      key={n}
+                      className={`h-5 w-5 ${n <= feedback.rating ? "fill-primary text-primary" : "text-muted-foreground/40"}`}
+                    />
+                  ))}
+                </div>
+                {feedback.comment && (
+                  <p className="mt-3 text-sm italic text-muted-foreground">"{feedback.comment}"</p>
+                )}
+                <p className="mt-3 text-xs text-muted-foreground">Thanks — shared with the team.</p>
+              </div>
+            ) : (
+              <div>
+                <div className="text-sm font-semibold">How was your meal?</div>
+                <p className="mt-1 text-xs text-muted-foreground">Your feedback goes straight to the manager.</p>
+                <div className="mt-3 flex items-center gap-1">
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <button
+                      key={n}
+                      type="button"
+                      onClick={() => setRating(n)}
+                      className="p-1 transition-transform hover:scale-110"
+                      aria-label={`${n} star`}
+                    >
+                      <Star
+                        className={`h-7 w-7 ${n <= rating ? "fill-primary text-primary" : "text-muted-foreground/40"}`}
+                      />
+                    </button>
+                  ))}
+                </div>
+                <Textarea
+                  className="mt-3"
+                  placeholder="What stood out? (optional)"
+                  value={comment}
+                  maxLength={500}
+                  onChange={(e) => setComment(e.target.value)}
+                />
+                <Button className="mt-3 w-full" onClick={submitFeedback} disabled={submitting || rating < 1}>
+                  {submitting ? "Sending…" : "Send feedback"}
+                </Button>
+              </div>
+            )}
+          </Card>
+        )}
       </main>
     </div>
   );
