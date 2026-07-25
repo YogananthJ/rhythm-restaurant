@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
-import { askOpsAssistant } from "@/lib/ai-ops.functions";
+import { askOpsAssistant, generateShiftSummary } from "@/lib/ai-ops.functions";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ import {
   ArrowLeft,
   Bot,
   DollarSign,
+  FileText,
   Send,
   Sparkles,
   Timer,
