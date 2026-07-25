@@ -103,6 +103,15 @@ function KDS() {
         .update({ status: next === "preparing" ? "cooking" : "ready" })
         .eq("order_id", order.id);
     }
+    // auto-update the dining table status to mirror kitchen progress
+    if (order.table_id) {
+      const tableStatus =
+        next === "preparing" ? "occupied" : next === "ready" ? "needs_service" : "occupied";
+      await supabase
+        .from("dining_tables")
+        .update({ status: tableStatus })
+        .eq("id", order.table_id);
+    }
     toast.success(`Ticket → ${next}`);
   }
 
