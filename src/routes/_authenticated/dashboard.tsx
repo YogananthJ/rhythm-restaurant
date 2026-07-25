@@ -379,6 +379,74 @@ function Dashboard() {
           <Kpi icon={<Sparkles className="h-4 w-4" />} label="Avg prep" value={`${avgPrep(items)} min`} />
         </div>
 
+        {/* Kitchen KPIs */}
+        <Card className="mt-6 border-white/10 bg-card/70 p-6 backdrop-blur">
+          <div className="mb-5 flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-semibold">Kitchen KPIs · last 12h</h2>
+              <p className="text-xs text-muted-foreground">Time-to-ready, overdue tickets, and throughput by hour — spot bottlenecks fast.</p>
+            </div>
+            <Badge variant="outline" className="border-primary/30 text-primary">Live</Badge>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+            <MiniStat label="Avg time-to-ready" value={`${kitchen.avgReadyMin}m`} tone="primary" />
+            <MiniStat label="Median" value={`${kitchen.medianReadyMin}m`} tone="accent" />
+            <MiniStat label="Overdue (>20m)" value={String(kitchen.overdue)} tone={kitchen.overdue > 0 ? "warn" : "muted"} />
+            <MiniStat label="In flight" value={String(kitchen.inFlight)} tone="muted" />
+            <MiniStat label="Completed 12h" value={String(kitchen.completed12h)} tone="primary" />
+          </div>
+
+          <div className="mt-6 grid gap-6 lg:grid-cols-3">
+            <div className="lg:col-span-2">
+              <div className="mb-2 flex justify-between text-[11px] text-muted-foreground">
+                <span>Throughput by hour</span>
+                <span>tickets completed</span>
+              </div>
+              <div className="flex h-32 items-end gap-1.5">
+                {kitchen.throughput.map((b, i) => {
+                  const max = Math.max(1, ...kitchen.throughput.map((x) => x.count));
+                  const pct = (b.count / max) * 100;
+                  return (
+                    <div key={i} className="flex flex-1 flex-col items-center gap-1">
+                      <div className="relative flex w-full flex-1 items-end">
+                        <div
+                          className="w-full rounded-t bg-primary/70 transition-all hover:bg-primary"
+                          style={{ height: `${Math.max(pct, b.count > 0 ? 6 : 2)}%` }}
+                          title={`${b.hour}: ${b.count}`}
+                        />
+                      </div>
+                      <span className="text-[9px] text-muted-foreground">{b.hour}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div>
+              <div className="mb-2 text-[11px] uppercase tracking-wider text-muted-foreground">Slowest open tickets</div>
+              {kitchen.slowest.length === 0 ? (
+                <div className="rounded-lg border border-dashed border-white/10 py-6 text-center text-xs text-muted-foreground">
+                  Nothing overdue. Kitchen's cruising.
+                </div>
+              ) : (
+                <ul className="space-y-1.5">
+                  {kitchen.slowest.map((s) => (
+                    <li key={s.id} className="flex items-center justify-between rounded-lg border border-amber-400/20 bg-amber-500/5 px-3 py-2 text-xs">
+                      <div>
+                        <div className="font-medium">{s.guest}</div>
+                        <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{s.status}</div>
+                      </div>
+                      <span className="font-semibold text-amber-300">{s.minutes}m</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        </Card>
+
+
         {/* Reservations analytics + audit log */}
         <div className="mt-8 grid gap-6 lg:grid-cols-3">
           <Card className="border-white/10 bg-card/70 p-6 backdrop-blur lg:col-span-2">
