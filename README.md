@@ -97,6 +97,12 @@ The mission-control brain that continuously watches the floor and proposes moves
 - If no table is open the guest is marked `confirmed` and held at the door with a toast.
 - Same **Check in** action added inline to every reservation card in the list.
 
+### Day 10 — Reservation RBAC, audit log & analytics
+- **RBAC**: reservations remain staff-only (admin/manager/host/waiter) for read/update, admin/manager for delete; public inserts kept behind strict `WITH CHECK` validation.
+- **Audit log**: new `reservation_events` table + `AFTER INSERT/UPDATE/DELETE` trigger records `created`, `status_change` (with from/to), `table_assigned`, and `deleted` events with actor + details JSON. Staff-only read, realtime enabled.
+- **Capacity check**: new `check_reservation_capacity` RPC (SECURITY DEFINER, callable by anon) evaluates seats booked in a ±90m window vs total seats. Public `/book` calls it before insert and blocks over-booking with an inline message.
+- **Analytics**: `/dashboard` gains a "Reservations · today" panel — upcoming, seated today, live occupancy %, avg wait-to-seat (computed from event log), no-shows, cancelled — plus a live "Event log" audit feed of the latest 15 reservation actions.
+
 ## Surfaces
 | Route | For | What it does |
 |---|---|---|

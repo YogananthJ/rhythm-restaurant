@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import {
   Activity,
+  CalendarClock,
   ChefHat,
   CircleDot,
   Clock,
@@ -49,6 +50,25 @@ type Order = {
   table_id: string | null;
 };
 
+type ResStats = {
+  upcoming: number;
+  seatedToday: number;
+  noShows: number;
+  cancelled: number;
+  avgWaitMin: number;
+  occupancyPct: number;
+};
+
+type ResEvent = {
+  id: string;
+  reservation_id: string;
+  event_type: string;
+  from_status: string | null;
+  to_status: string | null;
+  details: Record<string, unknown> | null;
+  created_at: string;
+};
+
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
     meta: [
@@ -67,6 +87,15 @@ function Dashboard() {
   const [tables, setTables] = useState<DiningTable[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [email, setEmail] = useState<string>("");
+  const [resStats, setResStats] = useState<ResStats>({
+    upcoming: 0,
+    seatedToday: 0,
+    noShows: 0,
+    cancelled: 0,
+    avgWaitMin: 0,
+    occupancyPct: 0,
+  });
+  const [resEvents, setResEvents] = useState<ResEvent[]>([]);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? ""));
@@ -77,6 +106,8 @@ function Dashboard() {
       .on("postgres_changes", { event: "*", schema: "public", table: "menu_items" }, loadItems)
       .on("postgres_changes", { event: "*", schema: "public", table: "dining_tables" }, loadTables)
       .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, loadOrders)
+      .on("postgres_changes", { event: "*", schema: "public", table: "reservations" }, loadReservationStats)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "reservation_events" }, loadReservationEvents)
       .subscribe();
 
     return () => {
@@ -85,7 +116,7 @@ function Dashboard() {
   }, []);
 
   async function loadAll() {
-    await Promise.all([loadItems(), loadTables(), loadOrders()]);
+    await Promise.all([loadItems(), loadTables(), loadOrders(), loadReservationStats(), loadReservationEvents()]);
   }
 
   async function loadItems() {
@@ -103,6 +134,63 @@ function Dashboard() {
       .in("status", ["open", "placed", "preparing", "ready"])
       .order("created_at", { ascending: false });
     if (data) setOrders(data as Order[]);
+  }
+
+  async function loadReservationStats() {
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+    const { data: allToday } = await supabase
+      .from("reservations")
+      .select("id, status, party_size, requested_at, created_at, table_id")
+      .gte("requested_at", startOfDay.toISOString());
+    const rows = (allToday ?? []) as Array<{
+      id: string; status: string; party_size: number; requested_at: string; created_at: string; table_id: string | null;
+    }>;
+    const now = Date.now();
+    const upcoming = rows.filter((r) => (r.status === "pending" || r.status === "confirmed") && new Date(r.requested_at).getTime() > now).length;
+    const seatedToday = rows.filter((r) => r.status === "seated").length;
+    const noShows = rows.filter((r) => r.status === "no_show").length;
+    const cancelled = rows.filter((r) => r.status === "cancelled").length;
+
+    // Avg wait: for seated today, time from requested_at to when the "seated" event was logged
+    const seatedIds = rows.filter((r) => r.status === "seated").map((r) => r.id);
+    let avgWaitMin = 0;
+    if (seatedIds.length) {
+      const { data: evs } = await supabase
+        .from("reservation_events")
+        .select("reservation_id, created_at, to_status")
+        .in("reservation_id", seatedIds)
+        .eq("to_status", "seated");
+      const byRes = new Map<string, string>((evs ?? []).map((e: { reservation_id: string; created_at: string }) => [e.reservation_id, e.created_at]));
+      const waits: number[] = [];
+      for (const r of rows) {
+        if (r.status !== "seated") continue;
+        const seatedAt = byRes.get(r.id);
+        if (!seatedAt) continue;
+        const diff = (new Date(seatedAt).getTime() - new Date(r.requested_at).getTime()) / 60000;
+        if (!Number.isNaN(diff)) waits.push(diff);
+      }
+      if (waits.length) avgWaitMin = Math.round(waits.reduce((a, b) => a + b, 0) / waits.length);
+    }
+
+    // Occupancy: seats currently occupied by seated reservations vs total table seats
+    const { data: tbls } = await supabase.from("dining_tables").select("seats");
+    const totalSeats = (tbls ?? []).reduce((s, t: { seats: number }) => s + t.seats, 0);
+    const seatedNow = rows
+      .filter((r) => r.status === "seated")
+      .reduce((s, r) => s + r.party_size, 0);
+    const occupancyPct = totalSeats ? Math.min(100, Math.round((seatedNow / totalSeats) * 100)) : 0;
+
+    setResStats({ upcoming, seatedToday, noShows, cancelled, avgWaitMin, occupancyPct });
+  }
+
+  async function loadReservationEvents() {
+    const { data } = await supabase
+      .from("reservation_events")
+      .select("id, reservation_id, event_type, from_status, to_status, details, created_at")
+      .order("created_at", { ascending: false })
+      .limit(15);
+    if (data) setResEvents(data as ResEvent[]);
   }
 
   async function toggleAvailability(item: MenuItem) {
@@ -197,6 +285,70 @@ function Dashboard() {
           <Kpi icon={<Activity className="h-4 w-4" />} label="Active orders" value={String(orders.length)} />
           <Kpi icon={<Sparkles className="h-4 w-4" />} label="Avg prep" value={`${avgPrep(items)} min`} />
         </div>
+
+        {/* Reservations analytics + audit log */}
+        <div className="mt-8 grid gap-6 lg:grid-cols-3">
+          <Card className="border-white/10 bg-card/70 p-6 backdrop-blur lg:col-span-2">
+            <div className="mb-5 flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-semibold">Reservations · today</h2>
+                <p className="text-xs text-muted-foreground">Occupancy, wait times, no-shows — updated live.</p>
+              </div>
+              <Button asChild variant="outline" size="sm">
+                <Link to="/host"><CalendarClock className="mr-1.5 h-4 w-4" /> Manage</Link>
+              </Button>
+            </div>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              <MiniStat label="Upcoming" value={String(resStats.upcoming)} tone="primary" />
+              <MiniStat label="Seated today" value={String(resStats.seatedToday)} tone="primary" />
+              <MiniStat label="Occupancy" value={`${resStats.occupancyPct}%`} tone="accent" />
+              <MiniStat label="Avg wait to seat" value={`${resStats.avgWaitMin}m`} tone="accent" />
+              <MiniStat label="No-shows" value={String(resStats.noShows)} tone={resStats.noShows > 0 ? "warn" : "muted"} />
+              <MiniStat label="Cancelled" value={String(resStats.cancelled)} tone="muted" />
+            </div>
+            <div className="mt-4">
+              <div className="mb-1 flex justify-between text-[11px] text-muted-foreground">
+                <span>Live occupancy</span>
+                <span>{resStats.occupancyPct}% of seats filled</span>
+              </div>
+              <div className="h-2 overflow-hidden rounded-full bg-white/5">
+                <div
+                  className="h-full rounded-full bg-primary transition-all"
+                  style={{ width: `${resStats.occupancyPct}%` }}
+                />
+              </div>
+            </div>
+          </Card>
+
+          <Card className="border-white/10 bg-card/70 p-6 backdrop-blur">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Event log</h2>
+              <Badge variant="outline" className="text-[10px]">Audit</Badge>
+            </div>
+            {resEvents.length === 0 ? (
+              <p className="py-8 text-center text-xs text-muted-foreground">
+                No reservation activity yet.
+              </p>
+            ) : (
+              <ul className="max-h-80 space-y-2 overflow-y-auto pr-1">
+                {resEvents.map((ev) => (
+                  <li key={ev.id} className="rounded-lg border border-white/5 bg-white/[0.02] p-2 text-xs">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-medium capitalize">{eventLabel(ev)}</span>
+                      <span className="text-[10px] text-muted-foreground">
+                        {new Date(ev.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                      </span>
+                    </div>
+                    <div className="mt-0.5 text-[11px] text-muted-foreground">
+                      {eventDetail(ev)}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
+        </div>
+
 
         <div className="mt-8 grid gap-6 lg:grid-cols-3">
           {/* Menu */}
@@ -318,6 +470,52 @@ function Kpi({ icon, label, value }: { icon: React.ReactNode; label: string; val
     </Card>
   );
 }
+
+function MiniStat({
+  label,
+  value,
+  tone = "muted",
+}: {
+  label: string;
+  value: string;
+  tone?: "primary" | "accent" | "warn" | "muted";
+}) {
+  const toneClass =
+    tone === "primary"
+      ? "border-primary/25 bg-primary/5 text-primary"
+      : tone === "accent"
+        ? "border-accent/25 bg-accent/5 text-accent"
+        : tone === "warn"
+          ? "border-amber-400/30 bg-amber-500/10 text-amber-300"
+          : "border-white/10 bg-white/[0.02] text-foreground";
+  return (
+    <div className={`rounded-xl border p-3 ${toneClass}`}>
+      <div className="text-[10px] uppercase tracking-wider opacity-80">{label}</div>
+      <div className="mt-1 text-xl font-semibold tracking-tight text-foreground">{value}</div>
+    </div>
+  );
+}
+
+function eventLabel(ev: ResEvent) {
+  if (ev.event_type === "created") return "New reservation";
+  if (ev.event_type === "deleted") return "Reservation deleted";
+  if (ev.event_type === "table_assigned") return "Table assigned";
+  if (ev.event_type === "status_change") return `${ev.from_status ?? "?"} → ${ev.to_status ?? "?"}`;
+  return ev.event_type;
+}
+
+function eventDetail(ev: ResEvent) {
+  const d = ev.details ?? {};
+  const guest = (d as { guest_name?: string }).guest_name;
+  const party = (d as { party_size?: number }).party_size;
+  const at = (d as { requested_at?: string }).requested_at;
+  if (guest) {
+    const time = at ? new Date(at).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "";
+    return `${guest}${party ? ` · party of ${party}` : ""}${time ? ` · ${time}` : ""}`;
+  }
+  return `Reservation ${ev.reservation_id.slice(0, 8).toUpperCase()}`;
+}
+
 
 function tableTone(status: string) {
   switch (status) {

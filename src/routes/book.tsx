@@ -63,6 +63,25 @@ function BookPage() {
     if (when.getTime() < Date.now() - 30 * 60 * 1000) return toast.error("Pick a future time");
 
     setBusy(true);
+
+    // Capacity check before inserting
+    const { data: cap, error: capErr } = await supabase.rpc("check_reservation_capacity", {
+      p_restaurant_id: restaurant.id,
+      p_requested_at: when.toISOString(),
+      p_party_size: form.party_size,
+    });
+    if (capErr) {
+      setBusy(false);
+      return toast.error(capErr.message);
+    }
+    const capacity = cap as { seats_available: number; can_book: boolean; total_seats: number } | null;
+    if (capacity && !capacity.can_book) {
+      setBusy(false);
+      return toast.error(
+        `Sorry — only ${capacity.seats_available} seats free within 90 min of that time. Try a different slot.`,
+      );
+    }
+
     const { data, error } = await supabase
       .from("reservations")
       .insert({
@@ -83,7 +102,7 @@ function BookPage() {
       return;
     }
     setConfirmed({ id: data!.id, when: when.toLocaleString(), party: form.party_size });
-    toast.success("Reservation request sent");
+    toast.success("Reservation confirmed instantly");
   }
 
   return (
