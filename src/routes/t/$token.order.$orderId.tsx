@@ -3,7 +3,10 @@ import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ChefHat, CheckCircle2, Clock, Flame, Utensils } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
+import { ChefHat, CheckCircle2, Clock, Flame, Star, Utensils } from "lucide-react";
 import { z } from "zod";
 
 type Order = {
