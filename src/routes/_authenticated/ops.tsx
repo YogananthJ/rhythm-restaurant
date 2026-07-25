@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
-import { askOpsAssistant } from "@/lib/ai-ops.functions";
+import { askOpsAssistant, generateShiftSummary } from "@/lib/ai-ops.functions";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ import {
   ArrowLeft,
   Bot,
   DollarSign,
+  FileText,
   Send,
   Sparkles,
   Timer,
@@ -60,8 +61,24 @@ function OpsPage() {
   ]);
   const [input, setInput] = useState("");
   const [pending, setPending] = useState(false);
+  const [shift, setShift] = useState<string | null>(null);
+  const [shiftLoading, setShiftLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const ask = useServerFn(askOpsAssistant);
+  const briefFn = useServerFn(generateShiftSummary);
+
+  async function generateBrief() {
+    if (shiftLoading) return;
+    setShiftLoading(true);
+    try {
+      const res = await briefFn();
+      setShift(res.summary);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to generate brief");
+    } finally {
+      setShiftLoading(false);
+    }
+  }
 
   useEffect(() => {
     void load();
@@ -181,6 +198,23 @@ function OpsPage() {
                 );
               })}
             </div>
+          </Card>
+
+          <Card className="border-white/10 bg-card/70 p-6 backdrop-blur">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Shift brief</h2>
+                <p className="mt-1 text-xs text-muted-foreground">AI-written handoff for the next manager.</p>
+              </div>
+              <Button size="sm" variant="outline" onClick={() => void generateBrief()} disabled={shiftLoading}>
+                <FileText className="mr-1.5 h-3.5 w-3.5" /> {shiftLoading ? "Writing…" : shift ? "Regenerate" : "Generate"}
+              </Button>
+            </div>
+            {shift && (
+              <div className="mt-4 whitespace-pre-wrap rounded-lg border border-white/10 bg-background/40 p-4 text-sm leading-relaxed">
+                {shift}
+              </div>
+            )}
           </Card>
         </section>
 
