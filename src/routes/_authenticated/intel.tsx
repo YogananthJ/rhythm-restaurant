@@ -18,6 +18,7 @@ import {
   History,
   LineChart as LineChartIcon,
   Sparkles,
+  Star,
   TrendingDown,
   TrendingUp,
   Users,
