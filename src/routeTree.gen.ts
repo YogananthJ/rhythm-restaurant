@@ -15,6 +15,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TTokenRouteImport } from './routes/t/$token'
 import { Route as AuthenticatedTablesRouteImport } from './routes/_authenticated/tables'
+import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
 import { Route as AuthenticatedOpsRouteImport } from './routes/_authenticated/ops'
 import { Route as AuthenticatedMenuRouteImport } from './routes/_authenticated/menu'
 import { Route as AuthenticatedKdsRouteImport } from './routes/_authenticated/kds'
@@ -51,6 +52,11 @@ const TTokenRoute = TTokenRouteImport.update({
 const AuthenticatedTablesRoute = AuthenticatedTablesRouteImport.update({
   id: '/tables',
   path: '/tables',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedOpsRoute = AuthenticatedOpsRouteImport.update({
@@ -105,6 +111,7 @@ export interface FileRoutesByFullPath {
   '/kds': typeof AuthenticatedKdsRoute
   '/menu': typeof AuthenticatedMenuRoute
   '/ops': typeof AuthenticatedOpsRoute
+  '/reports': typeof AuthenticatedReportsRoute
   '/tables': typeof AuthenticatedTablesRoute
   '/t/$token': typeof TTokenRouteWithChildren
   '/t/$token/order/$orderId': typeof TTokenOrderOrderIdRoute
@@ -120,6 +127,7 @@ export interface FileRoutesByTo {
   '/kds': typeof AuthenticatedKdsRoute
   '/menu': typeof AuthenticatedMenuRoute
   '/ops': typeof AuthenticatedOpsRoute
+  '/reports': typeof AuthenticatedReportsRoute
   '/tables': typeof AuthenticatedTablesRoute
   '/t/$token': typeof TTokenRouteWithChildren
   '/t/$token/order/$orderId': typeof TTokenOrderOrderIdRoute
@@ -137,6 +145,7 @@ export interface FileRoutesById {
   '/_authenticated/kds': typeof AuthenticatedKdsRoute
   '/_authenticated/menu': typeof AuthenticatedMenuRoute
   '/_authenticated/ops': typeof AuthenticatedOpsRoute
+  '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/tables': typeof AuthenticatedTablesRoute
   '/t/$token': typeof TTokenRouteWithChildren
   '/t/$token/order/$orderId': typeof TTokenOrderOrderIdRoute
@@ -154,6 +163,7 @@ export interface FileRouteTypes {
     | '/kds'
     | '/menu'
     | '/ops'
+    | '/reports'
     | '/tables'
     | '/t/$token'
     | '/t/$token/order/$orderId'
@@ -169,6 +179,7 @@ export interface FileRouteTypes {
     | '/kds'
     | '/menu'
     | '/ops'
+    | '/reports'
     | '/tables'
     | '/t/$token'
     | '/t/$token/order/$orderId'
@@ -185,6 +196,7 @@ export interface FileRouteTypes {
     | '/_authenticated/kds'
     | '/_authenticated/menu'
     | '/_authenticated/ops'
+    | '/_authenticated/reports'
     | '/_authenticated/tables'
     | '/t/$token'
     | '/t/$token/order/$orderId'
@@ -240,6 +252,13 @@ declare module '@tanstack/react-router' {
       path: '/tables'
       fullPath: '/tables'
       preLoaderRoute: typeof AuthenticatedTablesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/reports': {
+      id: '/_authenticated/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof AuthenticatedReportsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/ops': {
@@ -309,6 +328,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedKdsRoute: typeof AuthenticatedKdsRoute
   AuthenticatedMenuRoute: typeof AuthenticatedMenuRoute
   AuthenticatedOpsRoute: typeof AuthenticatedOpsRoute
+  AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedTablesRoute: typeof AuthenticatedTablesRoute
 }
 
@@ -320,6 +340,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedKdsRoute: AuthenticatedKdsRoute,
   AuthenticatedMenuRoute: AuthenticatedMenuRoute,
   AuthenticatedOpsRoute: AuthenticatedOpsRoute,
+  AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedTablesRoute: AuthenticatedTablesRoute,
 }
 
