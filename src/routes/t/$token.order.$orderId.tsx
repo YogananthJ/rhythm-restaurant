@@ -48,8 +48,19 @@ function OrderStatus() {
   const [order, setOrder] = useState<Order | null>(null);
   const [items, setItems] = useState<OrderItem[]>([]);
   const [notFound, setNotFound] = useState(false);
+  const [feedback, setFeedback] = useState<{ rating: number; comment: string | null } | null>(null);
+  const [rating, setRating] = useState(0);
+  const [comment, setComment] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  const load = useCallback(async () => {
+  const loadFeedback = useCallback(async () => {
+    const { data } = await supabase.rpc("get_guest_feedback", {
+      p_order_id: orderId,
+      p_access_token: accessToken,
+    });
+    const row = Array.isArray(data) ? data[0] : null;
+    if (row) setFeedback({ rating: row.rating, comment: row.comment });
+  }, [orderId, accessToken]);
     const { data, error } = await supabase.rpc("get_guest_order", {
       p_order_id: orderId,
       p_access_token: accessToken,
