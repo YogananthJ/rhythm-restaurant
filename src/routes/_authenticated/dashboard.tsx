@@ -15,7 +15,8 @@ import {
   Sparkles,
   QrCode,
   Utensils,
-} from "lucide-react";
+  Users,
+
 
 type MenuItem = {
   id: string;
