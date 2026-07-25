@@ -297,6 +297,63 @@ export type Database = {
         }
         Relationships: []
       }
+      waitlist: {
+        Row: {
+          created_at: string
+          guest_name: string
+          id: string
+          notes: string | null
+          party_size: number
+          phone: string | null
+          quoted_minutes: number
+          restaurant_id: string
+          seated_table_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          guest_name: string
+          id?: string
+          notes?: string | null
+          party_size?: number
+          phone?: string | null
+          quoted_minutes?: number
+          restaurant_id: string
+          seated_table_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          guest_name?: string
+          id?: string
+          notes?: string | null
+          party_size?: number
+          phone?: string | null
+          quoted_minutes?: number
+          restaurant_id?: string
+          seated_table_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "waitlist_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "waitlist_seated_table_id_fkey"
+            columns: ["seated_table_id"]
+            isOneToOne: false
+            referencedRelation: "dining_tables"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
