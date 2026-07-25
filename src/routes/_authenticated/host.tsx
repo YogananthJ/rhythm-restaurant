@@ -50,6 +50,7 @@ export const Route = createFileRoute("/_authenticated/host")({
 function HostPage() {
   const [entries, setEntries] = useState<WaitEntry[]>([]);
   const [tables, setTables] = useState<DiningTable[]>([]);
+  const [reservations, setReservations] = useState<Reservation[]>([]);
   const [restaurantId, setRestaurantId] = useState<string | null>(null);
   const [form, setForm] = useState({ guest_name: "", party_size: 2, phone: "", quoted_minutes: 15, notes: "" });
   const [busy, setBusy] = useState(false);
@@ -60,6 +61,7 @@ function HostPage() {
       .channel("host-waitlist")
       .on("postgres_changes", { event: "*", schema: "public", table: "waitlist" }, load)
       .on("postgres_changes", { event: "*", schema: "public", table: "dining_tables" }, loadTables)
+      .on("postgres_changes", { event: "*", schema: "public", table: "reservations" }, loadReservations)
       .subscribe();
     return () => {
       void supabase.removeChannel(ch);
@@ -69,7 +71,7 @@ function HostPage() {
   async function bootstrap() {
     const { data: rest } = await supabase.from("restaurants").select("id").limit(1).maybeSingle();
     if (rest?.id) setRestaurantId(rest.id);
-    await Promise.all([load(), loadTables()]);
+    await Promise.all([load(), loadTables(), loadReservations()]);
   }
 
   async function load() {
@@ -84,6 +86,33 @@ function HostPage() {
   async function loadTables() {
     const { data } = await supabase.from("dining_tables").select("*").order("label");
     if (data) setTables(data as DiningTable[]);
+  }
+
+  async function loadReservations() {
+    const { data } = await supabase
+      .from("reservations")
+      .select("*")
+      .in("status", ["pending", "confirmed"])
+      .gte("requested_at", new Date(Date.now() - 2 * 3600 * 1000).toISOString())
+      .order("requested_at", { ascending: true })
+      .limit(50);
+    if (data) setReservations(data as Reservation[]);
+  }
+
+  async function updateReservation(id: string, patch: Partial<Reservation>, msg: string) {
+    const { error } = await supabase.from("reservations").update(patch).eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success(msg);
+  }
+
+  async function seatReservation(r: Reservation, tableId: string) {
+    const { error } = await supabase
+      .from("reservations")
+      .update({ status: "seated", table_id: tableId })
+      .eq("id", r.id);
+    if (error) return toast.error(error.message);
+    await supabase.from("dining_tables").update({ status: "seated" }).eq("id", tableId);
+    toast.success(`Seated ${r.guest_name}`);
   }
 
   async function addEntry(e: React.FormEvent) {
