@@ -43,17 +43,25 @@ Fixed all 9 flagged findings:
 - AI shift brief on `/ops`: one click generates a markdown handoff (Numbers / Wins / Watch-outs) from the last 12h of orders.
 - "Close · paid" action on the dashboard for ready/served tickets — moves the order to `closed` and frees the ticket from the live queue.
 
+### Day 4 — Host queue (waitlist)
+- New `waitlist` table (party size, phone, quoted wait, status, seated table) with staff-only RLS + realtime.
+- `/host` surface for the door: add walk-ins, notify guests, and one-tap seat them at any open table (auto-flips the table to `seated`).
+- Live KPIs (waiting, notified, avg wait) and party-size aware table suggestions.
+- Dashboard header links to `/host`.
+
 ## Surfaces
 | Route | For | What it does |
 |---|---|---|
 | `/` | Everyone | Landing + product story |
 | `/auth` | Staff | Sign up / sign in |
 | `/dashboard` | Manager | Live floor, menu 86, table status, orders |
-| `/ops` | Manager | AI copilot + 24h analytics |
+| `/ops` | Manager | AI copilot + 24h analytics + shift brief |
+| `/host` | Host | Walk-in queue, notify + seat guests |
 | `/kds` | Kitchen | Ticket board, advance order stages |
 | `/tables` | Manager | Printable QR codes for every table |
 | `/t/:token` | Guest | Live menu, cart, place order |
 | `/t/:token/order/:orderId` | Guest | Live order status tracker |
+
 
 ## Stack
 TanStack Start · React 19 · TypeScript · Tailwind v4 · Lovable Cloud (Supabase: Auth + Postgres + Realtime + RLS) · Lovable AI Gateway (Gemini 2.5 Flash) · qrcode.react.
