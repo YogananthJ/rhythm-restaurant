@@ -67,6 +67,15 @@ function Dashboard() {
   const [tables, setTables] = useState<DiningTable[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [email, setEmail] = useState<string>("");
+  const [resStats, setResStats] = useState<ResStats>({
+    upcoming: 0,
+    seatedToday: 0,
+    noShows: 0,
+    cancelled: 0,
+    avgWaitMin: 0,
+    occupancyPct: 0,
+  });
+  const [resEvents, setResEvents] = useState<ResEvent[]>([]);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? ""));
