@@ -125,18 +125,20 @@ function Dashboard() {
       .channel("occupancy-live")
       .on("postgres_changes", { event: "*", schema: "public", table: "menu_items" }, loadItems)
       .on("postgres_changes", { event: "*", schema: "public", table: "dining_tables" }, loadTables)
-      .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, loadOrders)
+      .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => { void loadOrders(); void loadKitchenStats(); })
       .on("postgres_changes", { event: "*", schema: "public", table: "reservations" }, loadReservationStats)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "reservation_events" }, loadReservationEvents)
       .subscribe();
 
+    const tick = setInterval(() => void loadKitchenStats(), 30000);
     return () => {
       void supabase.removeChannel(ch);
+      clearInterval(tick);
     };
   }, []);
 
   async function loadAll() {
-    await Promise.all([loadItems(), loadTables(), loadOrders(), loadReservationStats(), loadReservationEvents()]);
+    await Promise.all([loadItems(), loadTables(), loadOrders(), loadReservationStats(), loadReservationEvents(), loadKitchenStats()]);
   }
 
   async function loadItems() {
