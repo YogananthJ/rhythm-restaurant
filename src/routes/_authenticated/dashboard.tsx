@@ -159,6 +159,9 @@ function Dashboard() {
             </Badge>
             <span className="hidden text-xs text-muted-foreground sm:inline">{email}</span>
             <Button asChild variant="outline" size="sm">
+              <Link to="/autopilot"><Cpu className="mr-1.5 h-4 w-4" /> Autopilot</Link>
+            </Button>
+            <Button asChild variant="outline" size="sm">
               <Link to="/intel"><Brain className="mr-1.5 h-4 w-4" /> Intel</Link>
             </Button>
             <Button asChild variant="outline" size="sm">
