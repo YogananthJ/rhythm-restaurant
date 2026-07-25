@@ -134,18 +134,20 @@ function IntelPage() {
 
   const loadAll = useCallback(async () => {
     const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
-    const [ordersRes, itemsRes, tablesRes, menuRes, waitRes] = await Promise.all([
+    const [ordersRes, itemsRes, tablesRes, menuRes, waitRes, fbRes] = await Promise.all([
       supabase.from("orders").select("*").gte("created_at", since).order("created_at", { ascending: false }),
       supabase.from("order_items").select("*").gte("created_at", since).order("created_at", { ascending: false }),
       supabase.from("dining_tables").select("*").order("label"),
       supabase.from("menu_items").select("*").order("name"),
       supabase.from("waitlist").select("*").gte("created_at", since).order("created_at", { ascending: false }),
+      supabase.from("guest_feedback").select("*").gte("created_at", since).order("created_at", { ascending: false }),
     ]);
     if (ordersRes.data) setOrders(ordersRes.data as Order[]);
     if (itemsRes.data) setItems(itemsRes.data as OrderItem[]);
     if (tablesRes.data) setTables(tablesRes.data as DiningTable[]);
     if (menuRes.data) setMenu(menuRes.data as MenuItem[]);
     if (waitRes.data) setWaitlist(waitRes.data as WaitEntry[]);
+    if (fbRes.data) setFeedbacks(fbRes.data as Feedback[]);
     setLoading(false);
   }, []);
 
