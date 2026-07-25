@@ -17,6 +17,7 @@ import {
   Utensils,
   Users,
   Brain,
+  Cpu,
 } from "lucide-react";
 
 
