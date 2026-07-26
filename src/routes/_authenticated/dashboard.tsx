@@ -620,7 +620,7 @@ function Dashboard() {
           )}
         </Card>
       </main>
-      <BillingDialog orderId={billOrderId} open={!!billOrderId} onOpenChange={(o) => !o && setBillOrderId(null)} onClosed={() => { setBillOrderId(null); loadOrders(); }} />
+      <BillingDialog orderId={billOrderId} open={!!billOrderId} onOpenChange={(open: boolean) => !open && setBillOrderId(null)} onClosed={() => { setBillOrderId(null); loadOrders(); }} />
 
     </div>
   );
