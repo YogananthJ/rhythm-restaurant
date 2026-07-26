@@ -59,19 +59,23 @@ function HealthPage() {
     const rtStart = performance.now();
     const rtResult: Check = await new Promise((resolve) => {
       const channel = supabase.channel(`health-${Math.random().toString(36).slice(2)}`);
+      let done = false;
+      const finish = (result: Check) => {
+        if (done) return;
+        done = true;
+        clearTimeout(timer);
+        // Defer removal so we don't recurse into the subscribe callback via onClose.
+        setTimeout(() => { try { supabase.removeChannel(channel); } catch { /* noop */ } }, 0);
+        resolve(result);
+      };
       const timer = setTimeout(() => {
-        supabase.removeChannel(channel);
-        resolve({ name: "Realtime", status: "fail", detail: "Timed out after 5s" });
+        finish({ name: "Realtime", status: "fail", detail: "Timed out after 5s" });
       }, 5000);
       channel.subscribe((status) => {
         if (status === "SUBSCRIBED") {
-          clearTimeout(timer);
-          supabase.removeChannel(channel);
-          resolve({ name: "Realtime", status: "ok", ms: Math.round(performance.now() - rtStart), detail: "Websocket connected" });
-        } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
-          clearTimeout(timer);
-          supabase.removeChannel(channel);
-          resolve({ name: "Realtime", status: "fail", detail: `Channel status: ${status}` });
+          finish({ name: "Realtime", status: "ok", ms: Math.round(performance.now() - rtStart), detail: "Websocket connected" });
+        } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+          finish({ name: "Realtime", status: "fail", detail: `Channel status: ${status}` });
         }
       });
     });
