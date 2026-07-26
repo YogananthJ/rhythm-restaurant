@@ -24,6 +24,20 @@ export const Route = createFileRoute("/auth")({
 
 const RESEND_COOLDOWN_SECONDS = 60;
 
+function friendlyOAuthError(code: string, description?: string | null): string {
+  const c = code.toLowerCase();
+  const d = (description ?? "").toLowerCase();
+  if (c === "access_denied" || d.includes("cancel")) return "Google sign-in was cancelled.";
+  if (c === "server_error" || d.includes("provider is not enabled"))
+    return "Google sign-in isn't fully configured yet. Try again in a moment or use email.";
+  if (c === "unauthorized_client" || d.includes("redirect")) return "This site isn't authorized for Google sign-in yet. Contact the admin.";
+  if (c === "invalid_request") return "Malformed Google sign-in request. Please retry.";
+  if (c === "temporarily_unavailable") return "Google sign-in is temporarily unavailable. Try again shortly.";
+  if (d.includes("email")) return "Google returned an issue with the account email.";
+  return `Google sign-in failed (${code}).`;
+}
+
+
 function AuthPage() {
   const navigate = useNavigate();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
@@ -43,7 +57,25 @@ function AuthPage() {
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) navigate({ to: "/dashboard" });
     });
+
+    // Surface OAuth errors that come back in the URL (query or hash fragment).
+    // Google/Supabase append ?error=... or #error=... on failure.
+    const url = new URL(window.location.href);
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    const err = url.searchParams.get("error") ?? hashParams.get("error");
+    const errDesc =
+      url.searchParams.get("error_description") ?? hashParams.get("error_description");
+    if (err) {
+      const pretty = friendlyOAuthError(err, errDesc);
+      // Log the raw provider response for debugging.
+      // eslint-disable-next-line no-console
+      console.error("[oauth] provider returned error", { error: err, description: errDesc });
+      toast.error(pretty, { description: errDesc ?? undefined, duration: 8000 });
+      // Clean the URL so a refresh doesn't re-toast.
+      window.history.replaceState({}, "", window.location.pathname);
+    }
   }, [navigate]);
+
 
   useEffect(() => {
     if (cooldown <= 0) {
@@ -154,20 +186,34 @@ function AuthPage() {
   async function handleGoogle() {
     setGoogleLoading(true);
     try {
+      // eslint-disable-next-line no-console
+      console.info("[oauth] starting Google sign-in", { redirect_uri: window.location.origin });
       const result = await lovable.auth.signInWithOAuth("google", {
         redirect_uri: window.location.origin,
       });
       if (result.error) throw result.error;
-      if (result.redirected) return; // browser navigating to Google
-      // Popup flow: session set — go to dashboard.
+      if (result.redirected) {
+        // eslint-disable-next-line no-console
+        console.info("[oauth] redirecting to Google…");
+        return;
+      }
+      // eslint-disable-next-line no-console
+      console.info("[oauth] popup flow completed — session set");
       toast.success("Signed in with Google");
       navigate({ to: "/dashboard" });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Google sign-in failed");
+      const raw = err instanceof Error ? err.message : String(err);
+      // eslint-disable-next-line no-console
+      console.error("[oauth] Google sign-in failed", err);
+      toast.error(friendlyOAuthError("server_error", raw), {
+        description: raw,
+        duration: 8000,
+      });
     } finally {
       setGoogleLoading(false);
     }
   }
+
 
 
   return (
