@@ -129,6 +129,11 @@ The mission-control brain that continuously watches the floor and proposes moves
 | `/t/:token/order/:orderId` | Guest | Live order status tracker + post-meal feedback |
 
 
+### Day 12 — Auth debug PII hardening
+- `src/lib/auth-log.ts` now masks emails before they land in the in-memory log, `sessionStorage`, `console.info [auth-log]`, or `window.__authLog` — the raw address never leaves `logAuthEvent`.
+- Emails render as `j***@e***.com`; a short FNV-1a `emailHash` (7-char base36) is stored alongside so events for the same user can still be correlated during QA without exposing PII.
+- `detail` strings are scrubbed with the same masker, so incidental email mentions (e.g. "signed in as foo@bar.com") are redacted too.
+- `AuthDebugPanel` shows the masked email plus the `#hash` tag; existing Playwright checks continue to pass against the masked shape.
 
 ## Stack
 TanStack Start · React 19 · TypeScript · Tailwind v4 · Lovable Cloud (Supabase: Auth + Postgres + Realtime + RLS) · Lovable AI Gateway (Gemini 2.5 Flash) · qrcode.react.
