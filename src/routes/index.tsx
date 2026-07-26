@@ -1,7 +1,6 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
 
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth, signOutEverywhere } from "@/hooks/use-auth";
 import {
   Activity,
   ArrowRight,
@@ -9,7 +8,9 @@ import {
   CircleDot,
   Clock,
   Github,
+  LayoutDashboard,
   LineChart,
+  LogOut,
   QrCode,
   Sparkles,
   Utensils,
@@ -38,76 +39,36 @@ export const Route = createFileRoute("/")({
 });
 
 function Landing() {
-  const navigate = useNavigate();
-  const [session, setSession] = useState<{ email: string } | null>(null);
-  const [redirectingIn, setRedirectingIn] = useState<number | null>(null);
-
-  useEffect(() => {
-    let timer: ReturnType<typeof setInterval> | null = null;
-    const startCountdown = (email: string) => {
-      setSession({ email });
-      setRedirectingIn(3);
-      timer = setInterval(() => {
-        setRedirectingIn((n) => {
-          if (n === null) return null;
-          if (n <= 1) {
-            if (timer) clearInterval(timer);
-            navigate({ to: "/dashboard", replace: true });
-            return 0;
-          }
-          return n - 1;
-        });
-      }, 1000);
-    };
-
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session?.user) startCountdown(data.session.user.email ?? "signed in");
-    });
-    const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
-      if (event === "SIGNED_IN" && s?.user) startCountdown(s.user.email ?? "signed in");
-      if (event === "SIGNED_OUT") {
-        setSession(null);
-        setRedirectingIn(null);
-        if (timer) clearInterval(timer);
-      }
-    });
-    return () => {
-      sub.subscription.unsubscribe();
-      if (timer) clearInterval(timer);
-    };
-  }, [navigate]);
+  const { status, user } = useAuth();
+  const signedIn = status === "authenticated" && !!user;
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-background text-foreground">
-      {session && (
+      {signedIn && (
         <div className="sticky top-0 z-50 border-b border-primary/30 bg-primary/10 backdrop-blur">
           <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-2.5 text-sm">
             <div className="flex items-center gap-2">
               <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-primary" />
               <span className="text-foreground">
-                Signed in as <span className="font-medium">{session.email}</span>
+                Signed in as <span className="font-medium">{user?.email ?? "your account"}</span>
               </span>
-              {redirectingIn !== null && redirectingIn > 0 && (
-                <span className="text-muted-foreground">
-                  · Redirecting to <span className="text-foreground">/dashboard</span> in {redirectingIn}s
-                </span>
-              )}
             </div>
             <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => navigate({ to: "/dashboard", replace: true })}
-                className="rounded-md bg-primary px-3 py-1 text-xs font-medium text-primary-foreground hover:opacity-90"
+              <Link
+                to="/dashboard"
+                className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1 text-xs font-medium text-primary-foreground hover:opacity-90"
               >
-                Go now →
-              </button>
+                <LayoutDashboard className="h-3.5 w-3.5" />
+                Open dashboard
+              </Link>
               <button
                 type="button"
-                onClick={async () => {
-                  await supabase.auth.signOut();
+                onClick={() => {
+                  void signOutEverywhere();
                 }}
-                className="text-xs text-muted-foreground hover:text-foreground"
+                className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
               >
+                <LogOut className="h-3 w-3" />
                 Sign out
               </button>
             </div>
@@ -121,20 +82,20 @@ function Landing() {
       />
       <div className="pointer-events-none absolute inset-0 -z-10 grid-pattern opacity-[0.15]" />
 
-      <Nav />
-      <Hero />
+      <Nav signedIn={signedIn} />
+      <Hero signedIn={signedIn} />
       <LogoStrip />
       <Features />
       <ProductPreview />
       <AISection />
-      <CTA />
+      <CTA signedIn={signedIn} />
       <Footer />
     </div>
   );
 }
 
 
-function Nav() {
+function Nav({ signedIn }: { signedIn: boolean }) {
   return (
     <header className="sticky top-0 z-40 border-b border-border/50 glass-panel">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
@@ -160,19 +121,42 @@ function Nav() {
           >
             Reserve
           </Link>
-          <Link
-            to="/auth"
-            className="hidden rounded-lg px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground sm:inline-flex"
-          >
-            Sign in
-          </Link>
-          <Link
-            to="/auth"
-            className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-1.5 text-sm font-medium text-primary-foreground shadow-glow transition-all hover:brightness-110"
-          >
-            Get started
-            <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
+          {signedIn ? (
+            <>
+              <button
+                type="button"
+                onClick={() => {
+                  void signOutEverywhere();
+                }}
+                className="hidden rounded-lg px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground sm:inline-flex"
+              >
+                Sign out
+              </button>
+              <Link
+                to="/dashboard"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-1.5 text-sm font-medium text-primary-foreground shadow-glow transition-all hover:brightness-110"
+              >
+                Open dashboard
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </>
+          ) : (
+            <>
+              <Link
+                to="/auth"
+                className="hidden rounded-lg px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground sm:inline-flex"
+              >
+                Sign in
+              </Link>
+              <Link
+                to="/auth"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-1.5 text-sm font-medium text-primary-foreground shadow-glow transition-all hover:brightness-110"
+              >
+                Get started
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </header>
