@@ -583,6 +583,19 @@ export type Database = {
         }
         Returns: boolean
       }
+      place_guest_order: {
+        Args: { p_guest_name: string; p_items: Json; p_qr_token: string }
+        Returns: Json
+      }
+      resolve_table_by_qr: {
+        Args: { p_qr_token: string }
+        Returns: {
+          id: string
+          label: string
+          restaurant_id: string
+          restaurant_name: string
+        }[]
+      }
       submit_guest_feedback: {
         Args: {
           p_access_token: string

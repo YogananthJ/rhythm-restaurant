@@ -51,23 +51,19 @@ function GuestMenu() {
 
   useEffect(() => {
     (async () => {
-      const { data: t } = await supabase
-        .from("dining_tables")
-        .select("id,label,restaurant_id")
-        .eq("qr_token", token)
-        .maybeSingle();
-      if (!t) {
+      const { data: rows, error } = await supabase.rpc("resolve_table_by_qr", { p_qr_token: token });
+      const t = Array.isArray(rows) ? rows[0] : null;
+      if (error || !t) {
         setNotFound(true);
         setLoading(false);
         return;
       }
-      setTable(t as Table);
-      const [{ data: r }, { data: cats }, { data: its }] = await Promise.all([
-        supabase.from("restaurants").select("id,name").eq("id", t.restaurant_id).maybeSingle(),
+      setTable({ id: t.id, label: t.label, restaurant_id: t.restaurant_id });
+      setRestaurant({ id: t.restaurant_id, name: t.restaurant_name });
+      const [{ data: cats }, { data: its }] = await Promise.all([
         supabase.from("menu_categories").select("*").eq("restaurant_id", t.restaurant_id).order("sort_order"),
         supabase.from("menu_items").select("*").eq("restaurant_id", t.restaurant_id).order("name"),
       ]);
-      setRestaurant(r as Restaurant);
       setCategories((cats as Category[]) ?? []);
       setItems((its as MenuItem[]) ?? []);
       setLoading(false);
@@ -84,6 +80,7 @@ function GuestMenu() {
       void supabase.removeChannel(ch);
     };
   }, [token]);
+
 
   const grouped = useMemo(() => {
     return categories.map((c) => ({
@@ -124,47 +121,32 @@ function GuestMenu() {
   async function placeOrder() {
     if (!table || cart.length === 0) return;
     setSubmitting(true);
-    const { data: order, error } = await supabase
-      .from("orders")
-      .insert({
-        restaurant_id: table.restaurant_id,
-        table_id: table.id,
-        status: "placed",
-        guest_name: guestName.trim() || "Guest",
-        total_cents: cartTotal,
-      })
-      .select("id, access_token")
-      .single();
-    if (error || !order) {
+    const { data, error } = await supabase.rpc("place_guest_order", {
+      p_qr_token: token,
+      p_guest_name: guestName.trim() || "Guest",
+      p_items: cart.map((l) => ({
+        menu_item_id: l.item.id,
+        quantity: l.qty,
+        notes: l.notes ?? null,
+      })),
+    });
+    if (error || !data) {
       toast.error("Couldn't place order — try again");
       setSubmitting(false);
       return;
     }
-    const rows = cart.map((l) => ({
-      order_id: order.id,
-      menu_item_id: l.item.id,
-      name_snapshot: l.item.name,
-      unit_price_cents: l.item.price_cents,
-      quantity: l.qty,
-      notes: l.notes ?? null,
-      status: "queued",
-    }));
-    const { error: e2 } = await supabase.from("order_items").insert(rows);
-    if (e2) {
-      toast.error("Order items failed");
-      setSubmitting(false);
-      return;
-    }
+    const result = data as { order_id: string; access_token: string };
     setCart([]);
     setShowCart(false);
     setSubmitting(false);
     toast.success("Order sent to the kitchen!");
     navigate({
       to: "/t/$token/order/$orderId",
-      params: { token, orderId: order.id },
-      search: { k: order.access_token as string },
+      params: { token, orderId: result.order_id },
+      search: { k: result.access_token },
     });
   }
+
 
   if (loading) {
     return (
