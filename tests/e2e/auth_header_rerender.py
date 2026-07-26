@@ -112,13 +112,10 @@ async def main():
 
         # ---- Phase 1: cross-tab SIGNED_OUT ----
         await sign_in_demo(page)
-        await page.goto(f"{BASE}/?debug=auth", wait_until="domcontentloaded")
         await assert_banner_visible(page)
         await page.screenshot(path=str(SHOTS / "1_signed_in.png"))
 
-        key = await get_supabase_storage_key(page)
-        assert key, "expected a supabase auth-token key in localStorage"
-        await cross_tab_signout(page, key)
+        await cross_tab_signout(page)
 
         await assert_banner_gone(page)
         await expect(page.get_by_role("link", name="Sign in")).to_be_visible()
