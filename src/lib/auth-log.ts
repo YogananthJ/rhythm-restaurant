@@ -87,12 +87,16 @@ function hydrate() {
 hydrate();
 
 export function logAuthEvent(kind: AuthLogKind, opts: { email?: string | null; detail?: string } = {}) {
+  const rawEmail = opts.email ?? null;
+  const masked = maskEmail(rawEmail);
+  const emailHash = rawEmail ? shortHash(rawEmail.trim().toLowerCase()) : undefined;
   const entry: AuthLogEntry = {
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     kind,
     at: Date.now(),
-    email: opts.email ?? null,
-    detail: opts.detail,
+    email: masked,
+    emailHash,
+    detail: scrubDetail(opts.detail),
   };
   entries = [entry, ...entries].slice(0, MAX);
   persist();
@@ -100,6 +104,7 @@ export function logAuthEvent(kind: AuthLogKind, opts: { email?: string | null; d
   console.info(`${TAG} ${kind}`, {
     at: new Date(entry.at).toISOString(),
     email: entry.email,
+    emailHash: entry.emailHash,
     detail: entry.detail,
   });
   for (const l of listeners) l(entries);
