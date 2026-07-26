@@ -186,20 +186,34 @@ function AuthPage() {
   async function handleGoogle() {
     setGoogleLoading(true);
     try {
+      // eslint-disable-next-line no-console
+      console.info("[oauth] starting Google sign-in", { redirect_uri: window.location.origin });
       const result = await lovable.auth.signInWithOAuth("google", {
         redirect_uri: window.location.origin,
       });
       if (result.error) throw result.error;
-      if (result.redirected) return; // browser navigating to Google
-      // Popup flow: session set — go to dashboard.
+      if (result.redirected) {
+        // eslint-disable-next-line no-console
+        console.info("[oauth] redirecting to Google…");
+        return;
+      }
+      // eslint-disable-next-line no-console
+      console.info("[oauth] popup flow completed — session set");
       toast.success("Signed in with Google");
       navigate({ to: "/dashboard" });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Google sign-in failed");
+      const raw = err instanceof Error ? err.message : String(err);
+      // eslint-disable-next-line no-console
+      console.error("[oauth] Google sign-in failed", err);
+      toast.error(friendlyOAuthError("server_error", raw), {
+        description: raw,
+        duration: 8000,
+      });
     } finally {
       setGoogleLoading(false);
     }
   }
+
 
 
   return (
