@@ -102,7 +102,14 @@ export function AuthDebugPanel() {
                   {e.kind}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-foreground">{e.email ?? "—"}</div>
+                  <div className="truncate text-foreground">
+                    {e.email ?? "—"}
+                    {e.emailHash && (
+                      <span className="ml-1 font-mono text-[10px] text-muted-foreground">
+                        #{e.emailHash}
+                      </span>
+                    )}
+                  </div>
                   {e.detail && (
                     <div className="truncate text-muted-foreground">{e.detail}</div>
                   )}
