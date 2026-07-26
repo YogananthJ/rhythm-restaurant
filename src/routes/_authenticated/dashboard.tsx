@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { BillingDialog } from "@/components/BillingDialog";
 import { toast } from "sonner";
 import {
   Activity,
