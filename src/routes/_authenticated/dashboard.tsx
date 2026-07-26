@@ -358,6 +358,10 @@ function Dashboard() {
             <Button asChild variant="outline" size="sm">
               <Link to="/reports"><FileText className="mr-1.5 h-4 w-4" /> Reports</Link>
             </Button>
+            <Button asChild variant="outline" size="sm">
+              <Link to="/billing"><Receipt className="mr-1.5 h-4 w-4" /> Billing</Link>
+            </Button>
+
 
 
             <Button asChild variant="outline" size="sm">
