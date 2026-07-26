@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { logAuthEvent } from "@/lib/auth-log";
 
 // Single in-module cache so every component sees the same session snapshot
 // immediately (no per-mount getSession() flicker) and updates together when
@@ -73,6 +74,7 @@ export function useAuth(): AuthSnapshot {
 
 export async function signOutEverywhere() {
   markIntentionalSignOut();
+  logAuthEvent("INTENTIONAL_SIGN_OUT", { detail: "signOutEverywhere() called" });
   await supabase.auth.signOut();
 }
 
@@ -102,6 +104,7 @@ export function isAuthExpiredError(err: unknown): boolean {
 // from any component/hook; the root listener will surface the toast + redirect.
 export async function handleExpiredSession() {
   // Do NOT mark intentional — we want the "session expired" UX to fire.
+  logAuthEvent("AUTH_EXPIRED", { detail: "handleExpiredSession() invoked" });
   try {
     await supabase.auth.signOut({ scope: "local" });
   } catch {

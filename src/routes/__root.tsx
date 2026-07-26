@@ -14,6 +14,8 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { supabase } from "@/integrations/supabase/client";
 import { consumeIntentionalSignOut } from "@/hooks/use-auth";
+import { logAuthEvent } from "@/lib/auth-log";
+import { AuthDebugPanel } from "@/components/AuthDebugPanel";
 
 function NotFoundComponent() {
   return (
