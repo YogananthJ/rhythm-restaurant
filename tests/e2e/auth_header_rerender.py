@@ -65,21 +65,18 @@ async def assert_banner_gone(page):
     await expect(page.get_by_text("Signed in as")).to_have_count(0, timeout=5_000)
 
 
-async def cross_tab_signout(page, storage_key):
-    """Simulate another tab clearing the Supabase session.
+async def cross_tab_signout(page):
+    """Simulate another tab signing out.
 
-    supabase-js subscribes to the `storage` event and emits SIGNED_OUT when its
-    storage key is cleared from another tab.
+    A signOut() call in another tab reaches this tab via supabase-js's
+    cross-tab sync as a SIGNED_OUT event without the intentional flag set
+    here — identical to what our root listener treats as expired.
     """
     await page.evaluate(
-        """(key) => {
-            const old = localStorage.getItem(key);
-            localStorage.removeItem(key);
-            window.dispatchEvent(new StorageEvent('storage', {
-                key, oldValue: old, newValue: null, storageArea: localStorage,
-            }));
-        }""",
-        storage_key,
+        """async () => {
+            const mod = await import('/src/integrations/supabase/client.ts');
+            await mod.supabase.auth.signOut();
+        }"""
     )
 
 
