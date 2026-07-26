@@ -37,8 +37,21 @@ export const Route = createFileRoute("/")({
 });
 
 function Landing() {
+  const navigate = useNavigate();
+  useEffect(() => {
+    // If the user just returned from Google/OAuth (or was already signed in),
+    // hop straight into the dashboard instead of showing marketing.
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) navigate({ to: "/dashboard", replace: true });
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN" && session) navigate({ to: "/dashboard", replace: true });
+    });
+    return () => sub.subscription.unsubscribe();
+  }, [navigate]);
   return (
     <div className="relative min-h-screen overflow-hidden bg-background text-foreground">
+
       {/* Ambient mesh */}
       <div
         className="pointer-events-none absolute inset-0 -z-10"
