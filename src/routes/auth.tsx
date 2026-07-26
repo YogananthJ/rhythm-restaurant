@@ -1,12 +1,14 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { ChefHat, Loader2, Sparkles, MailCheck } from "lucide-react";
+
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -30,10 +32,12 @@ function AuthPage() {
   const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
   const [demoLoading, setDemoLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [lastSignupEmail, setLastSignupEmail] = useState<string | null>(null);
   const [cooldown, setCooldown] = useState(0);
   const [resending, setResending] = useState(false);
   const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -147,6 +151,24 @@ function AuthPage() {
       setDemoLoading(false);
     }
   }
+  async function handleGoogle() {
+    setGoogleLoading(true);
+    try {
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin,
+      });
+      if (result.error) throw result.error;
+      if (result.redirected) return; // browser navigating to Google
+      // Popup flow: session set — go to dashboard.
+      toast.success("Signed in with Google");
+      navigate({ to: "/dashboard" });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Google sign-in failed");
+    } finally {
+      setGoogleLoading(false);
+    }
+  }
+
 
   return (
     <div className="relative min-h-screen bg-background text-foreground">
