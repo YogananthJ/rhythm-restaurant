@@ -54,7 +54,7 @@ async def sign_in_demo(page):
         }"""
     )
     assert result["ok"], f"signUp failed: {result}"
-    await wait_for_kind(page, "SIGNED_IN")
+    await expect(page.get_by_text("Signed in as")).to_be_visible(timeout=10_000)
 
 
 async def assert_banner_visible(page):
