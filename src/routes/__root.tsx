@@ -7,12 +7,13 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
-import { Toaster } from "sonner";
+import { useEffect, useRef, type ReactNode } from "react";
+import { Toaster, toast } from "sonner";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { supabase } from "@/integrations/supabase/client";
+import { consumeIntentionalSignOut } from "@/hooks/use-auth";
 
 function NotFoundComponent() {
   return (
@@ -133,12 +134,31 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
+  const hadSessionRef = useRef<boolean>(false);
+
+  // Prime "had a session" from persisted state so a page load into a stale
+  // localStorage token still triggers the expired-session UX when Supabase
+  // fails to refresh and emits SIGNED_OUT.
+  useEffect(() => {
+    let cancelled = false;
+    supabase.auth.getSession().then(({ data }) => {
+      if (!cancelled) hadSessionRef.current = !!data.session;
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Single global auth listener. Keeps router route-context and cached queries
-  // in sync with real session state so every route (headers, gates, guards)
-  // reflects the same truth without per-page subscriptions.
+  // in sync with real session state, and turns unexpected SIGNED_OUT events
+  // (refresh_token expired, revoked, tab woke past expiry) into a friendly
+  // "session expired" prompt instead of a silent state wipe.
   useEffect(() => {
-    const { data } = supabase.auth.onAuthStateChange((event) => {
+    const { data } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "TOKEN_REFRESHED") {
+        hadSessionRef.current = !!session;
+        return;
+      }
       if (
         event !== "SIGNED_IN" &&
         event !== "SIGNED_OUT" &&
@@ -146,13 +166,48 @@ function RootComponent() {
       ) {
         return;
       }
-      router.invalidate();
-      if (event !== "SIGNED_OUT") {
-        queryClient.invalidateQueries();
-      } else {
-        // Drop cached protected data so a re-login doesn't flash prior tenant.
+
+      if (event === "SIGNED_OUT") {
+        const wasSignedIn = hadSessionRef.current;
+        hadSessionRef.current = false;
+        const intentional = consumeIntentionalSignOut();
+
+        // Always drop cached protected data so a re-login can't flash the
+        // prior tenant.
+        void queryClient.cancelQueries();
         queryClient.clear();
+        router.invalidate();
+
+        if (wasSignedIn && !intentional) {
+          const here =
+            typeof window !== "undefined" ? window.location.pathname + window.location.search : "/";
+          const isPublic =
+            here === "/" ||
+            here.startsWith("/auth") ||
+            here.startsWith("/t/") ||
+            here.startsWith("/book") ||
+            here.startsWith("/health");
+
+          toast.error("Session expired", {
+            description: "Please sign in again to continue.",
+            duration: 6000,
+          });
+
+          if (!isPublic) {
+            router.navigate({
+              to: "/auth",
+              search: { redirect: here },
+              replace: true,
+            } as never);
+          }
+        }
+        return;
       }
+
+      // SIGNED_IN / USER_UPDATED
+      hadSessionRef.current = !!session;
+      router.invalidate();
+      queryClient.invalidateQueries();
     });
     return () => {
       data.subscription.unsubscribe();
