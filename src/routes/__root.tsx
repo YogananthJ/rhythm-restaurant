@@ -144,7 +144,12 @@ function RootComponent() {
   useEffect(() => {
     let cancelled = false;
     supabase.auth.getSession().then(({ data }) => {
-      if (!cancelled) hadSessionRef.current = !!data.session;
+      if (cancelled) return;
+      hadSessionRef.current = !!data.session;
+      logAuthEvent("INITIAL_SESSION", {
+        email: data.session?.user?.email,
+        detail: data.session ? "hydrated existing session" : "no session",
+      });
     });
     return () => {
       cancelled = true;
