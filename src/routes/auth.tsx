@@ -43,7 +43,25 @@ function AuthPage() {
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) navigate({ to: "/dashboard" });
     });
+
+    // Surface OAuth errors that come back in the URL (query or hash fragment).
+    // Google/Supabase append ?error=... or #error=... on failure.
+    const url = new URL(window.location.href);
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    const err = url.searchParams.get("error") ?? hashParams.get("error");
+    const errDesc =
+      url.searchParams.get("error_description") ?? hashParams.get("error_description");
+    if (err) {
+      const pretty = friendlyOAuthError(err, errDesc);
+      // Log the raw provider response for debugging.
+      // eslint-disable-next-line no-console
+      console.error("[oauth] provider returned error", { error: err, description: errDesc });
+      toast.error(pretty, { description: errDesc ?? undefined, duration: 8000 });
+      // Clean the URL so a refresh doesn't re-toast.
+      window.history.replaceState({}, "", window.location.pathname);
+    }
   }, [navigate]);
+
 
   useEffect(() => {
     if (cooldown <= 0) {
