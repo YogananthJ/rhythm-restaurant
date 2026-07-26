@@ -40,9 +40,20 @@ async def wait_for_kind(page, kind, timeout_ms=5000):
 
 
 async def sign_in_demo(page):
-    await page.goto(f"{BASE}/auth?debug=auth", wait_until="domcontentloaded")
-    await page.get_by_role("button", name="One-tap demo login").click()
-    await page.wait_for_url("**/dashboard", timeout=15_000)
+    """Bypass the auth UI: create a fresh user directly via the supabase
+    client. Auto-confirm is enabled on this project so signUp yields a session."""
+    await page.goto(f"{BASE}/?debug=auth", wait_until="domcontentloaded")
+    result = await page.evaluate(
+        """async () => {
+            const mod = await import('/src/integrations/supabase/client.ts');
+            const rand = Math.random().toString(36).slice(2, 10);
+            const email = `e2e_${rand}@occupancy.demo`;
+            const password = `E2E!${rand}${Math.random().toString(36).slice(2, 8)}`;
+            const { data, error } = await mod.supabase.auth.signUp({ email, password });
+            return { ok: !error && !!data.session, error: error?.message ?? null, email };
+        }"""
+    )
+    assert result["ok"], f"signUp failed: {result}"
     await wait_for_kind(page, "SIGNED_IN")
 
 
