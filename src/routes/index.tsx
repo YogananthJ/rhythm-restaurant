@@ -83,12 +83,12 @@ function Landing() {
       <div className="pointer-events-none absolute inset-0 -z-10 grid-pattern opacity-[0.15]" />
 
       <Nav signedIn={signedIn} />
-      <Hero signedIn={signedIn} />
+      <Hero />
       <LogoStrip />
       <Features />
       <ProductPreview />
       <AISection />
-      <CTA signedIn={signedIn} />
+      <CTA />
       <Footer />
     </div>
   );
