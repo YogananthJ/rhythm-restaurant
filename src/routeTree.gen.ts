@@ -23,6 +23,7 @@ import { Route as AuthenticatedKdsRouteImport } from './routes/_authenticated/kd
 import { Route as AuthenticatedIntelRouteImport } from './routes/_authenticated/intel'
 import { Route as AuthenticatedHostRouteImport } from './routes/_authenticated/host'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedBillingRouteImport } from './routes/_authenticated/billing'
 import { Route as AuthenticatedAutopilotRouteImport } from './routes/_authenticated/autopilot'
 import { Route as TTokenOrderOrderIdRouteImport } from './routes/t/$token.order.$orderId'
 
@@ -95,6 +96,11 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedBillingRoute = AuthenticatedBillingRouteImport.update({
+  id: '/billing',
+  path: '/billing',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAutopilotRoute = AuthenticatedAutopilotRouteImport.update({
   id: '/autopilot',
   path: '/autopilot',
@@ -112,6 +118,7 @@ export interface FileRoutesByFullPath {
   '/book': typeof BookRoute
   '/health': typeof HealthRoute
   '/autopilot': typeof AuthenticatedAutopilotRoute
+  '/billing': typeof AuthenticatedBillingRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/host': typeof AuthenticatedHostRoute
   '/intel': typeof AuthenticatedIntelRoute
@@ -129,6 +136,7 @@ export interface FileRoutesByTo {
   '/book': typeof BookRoute
   '/health': typeof HealthRoute
   '/autopilot': typeof AuthenticatedAutopilotRoute
+  '/billing': typeof AuthenticatedBillingRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/host': typeof AuthenticatedHostRoute
   '/intel': typeof AuthenticatedIntelRoute
@@ -148,6 +156,7 @@ export interface FileRoutesById {
   '/book': typeof BookRoute
   '/health': typeof HealthRoute
   '/_authenticated/autopilot': typeof AuthenticatedAutopilotRoute
+  '/_authenticated/billing': typeof AuthenticatedBillingRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/host': typeof AuthenticatedHostRoute
   '/_authenticated/intel': typeof AuthenticatedIntelRoute
@@ -167,6 +176,7 @@ export interface FileRouteTypes {
     | '/book'
     | '/health'
     | '/autopilot'
+    | '/billing'
     | '/dashboard'
     | '/host'
     | '/intel'
@@ -184,6 +194,7 @@ export interface FileRouteTypes {
     | '/book'
     | '/health'
     | '/autopilot'
+    | '/billing'
     | '/dashboard'
     | '/host'
     | '/intel'
@@ -202,6 +213,7 @@ export interface FileRouteTypes {
     | '/book'
     | '/health'
     | '/_authenticated/autopilot'
+    | '/_authenticated/billing'
     | '/_authenticated/dashboard'
     | '/_authenticated/host'
     | '/_authenticated/intel'
@@ -323,6 +335,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/billing': {
+      id: '/_authenticated/billing'
+      path: '/billing'
+      fullPath: '/billing'
+      preLoaderRoute: typeof AuthenticatedBillingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/autopilot': {
       id: '/_authenticated/autopilot'
       path: '/autopilot'
@@ -342,6 +361,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAutopilotRoute: typeof AuthenticatedAutopilotRoute
+  AuthenticatedBillingRoute: typeof AuthenticatedBillingRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedHostRoute: typeof AuthenticatedHostRoute
   AuthenticatedIntelRoute: typeof AuthenticatedIntelRoute
@@ -354,6 +374,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAutopilotRoute: AuthenticatedAutopilotRoute,
+  AuthenticatedBillingRoute: AuthenticatedBillingRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedHostRoute: AuthenticatedHostRoute,
   AuthenticatedIntelRoute: AuthenticatedIntelRoute,

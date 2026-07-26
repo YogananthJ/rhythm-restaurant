@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { BillingDialog } from "@/components/BillingDialog";
 import { toast } from "sonner";
 import {
   Activity,
@@ -20,6 +21,7 @@ import {
   Users,
   Brain,
   Cpu,
+  Receipt,
 } from "lucide-react";
 
 
@@ -97,6 +99,8 @@ function Dashboard() {
   const [items, setItems] = useState<MenuItem[]>([]);
   const [tables, setTables] = useState<DiningTable[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [billOrderId, setBillOrderId] = useState<string | null>(null);
+
   const [email, setEmail] = useState<string>("");
   const [resStats, setResStats] = useState<ResStats>({
     upcoming: 0,
@@ -358,6 +362,10 @@ function Dashboard() {
             <Button asChild variant="outline" size="sm">
               <Link to="/reports"><FileText className="mr-1.5 h-4 w-4" /> Reports</Link>
             </Button>
+            <Button asChild variant="outline" size="sm">
+              <Link to="/billing"><Receipt className="mr-1.5 h-4 w-4" /> Billing</Link>
+            </Button>
+
 
 
             <Button asChild variant="outline" size="sm">
@@ -598,19 +606,13 @@ function Dashboard() {
                   <div className="flex items-center gap-3">
                     <Badge>{o.status}</Badge>
                     <span className="text-muted-foreground">${(o.total_cents / 100).toFixed(2)}</span>
-                    {(o.status === "ready" || o.status === "served") && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={async () => {
-                          const { error } = await supabase.from("orders").update({ status: "closed" }).eq("id", o.id);
-                          if (error) toast.error("Could not close");
-                          else toast.success("Ticket closed & paid");
-                        }}
-                      >
-                        Close · paid
-                      </Button>
-                    )}
+                    <Button
+                      size="sm"
+                      variant={o.status === "ready" || o.status === "served" ? "default" : "outline"}
+                      onClick={() => setBillOrderId(o.id)}
+                    >
+                      <Receipt className="mr-1 h-4 w-4" />Bill
+                    </Button>
                   </div>
                 </div>
               ))}
@@ -618,6 +620,8 @@ function Dashboard() {
           )}
         </Card>
       </main>
+      <BillingDialog orderId={billOrderId} open={!!billOrderId} onOpenChange={(open: boolean) => !open && setBillOrderId(null)} onClosed={() => { setBillOrderId(null); loadOrders(); }} />
+
     </div>
   );
 }
