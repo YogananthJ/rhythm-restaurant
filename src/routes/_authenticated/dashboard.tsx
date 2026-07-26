@@ -304,7 +304,8 @@ function Dashboard() {
   }
 
   async function signOut() {
-    await supabase.auth.signOut();
+    const { signOutEverywhere } = await import("@/hooks/use-auth");
+    await signOutEverywhere();
     navigate({ to: "/auth" });
   }
 
