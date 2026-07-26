@@ -111,7 +111,7 @@ export function BillingDialog({ orderId, open, onOpenChange, onClosed }: {
   const addItem = async () => {
     if (!orderId || !addMenuId) return;
     await call(async () => {
-      const { error } = await supabase.rpc("staff_add_order_item", { p_order_id: orderId, p_menu_item_id: addMenuId, p_quantity: addQty, p_notes: null });
+      const { error } = await supabase.rpc("staff_add_order_item", { p_order_id: orderId, p_menu_item_id: addMenuId, p_quantity: addQty, p_notes: "" });
       if (error) throw new Error(error.message);
       setAddMenuId(""); setAddQty(1);
     }, "Item added");
@@ -119,7 +119,7 @@ export function BillingDialog({ orderId, open, onOpenChange, onClosed }: {
   const updateQty = async (id: string, qty: number) => {
     if (qty < 1) return;
     await call(async () => {
-      const { error } = await supabase.rpc("staff_update_order_item", { p_item_id: id, p_quantity: qty, p_notes: null });
+      const { error } = await supabase.rpc("staff_update_order_item", { p_item_id: id, p_quantity: qty, p_notes: "" });
       if (error) throw new Error(error.message);
     });
   };
@@ -134,7 +134,7 @@ export function BillingDialog({ orderId, open, onOpenChange, onClosed }: {
     await call(async () => {
       const { error } = await supabase.rpc("staff_set_order_charges", {
         p_order_id: orderId, p_discount_cents: toCents(discountInput || "0"),
-        p_tip_cents: toCents(tipInput || "0"), p_notes: notesInput || null,
+        p_tip_cents: toCents(tipInput || "0"), p_notes: notesInput,
       });
       if (error) throw new Error(error.message);
     }, "Charges updated");
@@ -155,7 +155,7 @@ export function BillingDialog({ orderId, open, onOpenChange, onClosed }: {
     await call(async () => {
       const { error } = await supabase.rpc("staff_add_payment", {
         p_order_id: orderId, p_method: payMethod, p_amount_cents: amount,
-        p_tip_cents: toCents(payTip || "0"), p_txn_ref: payRef || null,
+        p_tip_cents: toCents(payTip || "0"), p_txn_ref: payRef,
       });
       if (error) throw new Error(error.message);
       setPayAmount(""); setPayTip(""); setPayRef("");
