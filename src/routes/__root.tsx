@@ -159,6 +159,7 @@ function RootComponent() {
     const { data } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "TOKEN_REFRESHED") {
         hadSessionRef.current = !!session;
+        logAuthEvent("TOKEN_REFRESHED", { email: session?.user?.email });
         return;
       }
       if (
@@ -179,6 +180,16 @@ function RootComponent() {
         void queryClient.cancelQueries();
         queryClient.clear();
         router.invalidate();
+
+        if (wasSignedIn && !intentional) {
+          logAuthEvent("AUTH_EXPIRED", {
+            detail: "SIGNED_OUT without intentional flag — treating as expired",
+          });
+        } else {
+          logAuthEvent("SIGNED_OUT", {
+            detail: intentional ? "intentional" : wasSignedIn ? "expired" : "no prior session",
+          });
+        }
 
         if (wasSignedIn && !intentional) {
           const here =
@@ -208,6 +219,9 @@ function RootComponent() {
 
       // SIGNED_IN / USER_UPDATED
       hadSessionRef.current = !!session;
+      logAuthEvent(event === "SIGNED_IN" ? "SIGNED_IN" : "USER_UPDATED", {
+        email: session?.user?.email,
+      });
       router.invalidate();
       queryClient.invalidateQueries();
     });
@@ -221,6 +235,7 @@ function RootComponent() {
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
       <Toaster theme="dark" position="top-right" richColors />
+      <AuthDebugPanel />
     </QueryClientProvider>
   );
 }
