@@ -125,10 +125,10 @@ async def main():
 
         # ---- Phase 2: token-expiry SIGNED_OUT ----
         await sign_in_demo(page)
-        await page.goto(f"{BASE}/?debug=auth", wait_until="domcontentloaded")
         await assert_banner_visible(page)
 
         key = await get_supabase_storage_key(page)
+        assert key, "expected a supabase auth-token key in localStorage"
         await expire_token_and_refresh(page, key)
 
         await assert_banner_gone(page)
