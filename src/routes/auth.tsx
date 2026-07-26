@@ -24,6 +24,20 @@ export const Route = createFileRoute("/auth")({
 
 const RESEND_COOLDOWN_SECONDS = 60;
 
+function friendlyOAuthError(code: string, description?: string | null): string {
+  const c = code.toLowerCase();
+  const d = (description ?? "").toLowerCase();
+  if (c === "access_denied" || d.includes("cancel")) return "Google sign-in was cancelled.";
+  if (c === "server_error" || d.includes("provider is not enabled"))
+    return "Google sign-in isn't fully configured yet. Try again in a moment or use email.";
+  if (c === "unauthorized_client" || d.includes("redirect")) return "This site isn't authorized for Google sign-in yet. Contact the admin.";
+  if (c === "invalid_request") return "Malformed Google sign-in request. Please retry.";
+  if (c === "temporarily_unavailable") return "Google sign-in is temporarily unavailable. Try again shortly.";
+  if (d.includes("email")) return "Google returned an issue with the account email.";
+  return `Google sign-in failed (${code}).`;
+}
+
+
 function AuthPage() {
   const navigate = useNavigate();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
