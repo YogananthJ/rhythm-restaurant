@@ -14,6 +14,59 @@ export type Database = {
   }
   public: {
     Tables: {
+      coupons: {
+        Row: {
+          active: boolean
+          code: string
+          created_at: string
+          expires_at: string | null
+          id: string
+          kind: string
+          max_uses: number | null
+          min_subtotal_cents: number
+          restaurant_id: string
+          updated_at: string
+          uses: number
+          value: number
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          kind: string
+          max_uses?: number | null
+          min_subtotal_cents?: number
+          restaurant_id: string
+          updated_at?: string
+          uses?: number
+          value: number
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          kind?: string
+          max_uses?: number | null
+          min_subtotal_cents?: number
+          restaurant_id?: string
+          updated_at?: string
+          uses?: number
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coupons_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dining_tables: {
         Row: {
           id: string
@@ -290,34 +343,61 @@ export type Database = {
       orders: {
         Row: {
           access_token: string
+          closed_at: string | null
+          coupon_code: string | null
           created_at: string
+          discount_cents: number
           guest_name: string | null
           id: string
+          invoice_no: string | null
+          notes: string | null
           restaurant_id: string
+          service_charge_cents: number
           status: string
+          subtotal_cents: number
           table_id: string | null
+          tax_cents: number
+          tip_cents: number
           total_cents: number
           updated_at: string
         }
         Insert: {
           access_token?: string
+          closed_at?: string | null
+          coupon_code?: string | null
           created_at?: string
+          discount_cents?: number
           guest_name?: string | null
           id?: string
+          invoice_no?: string | null
+          notes?: string | null
           restaurant_id: string
+          service_charge_cents?: number
           status?: string
+          subtotal_cents?: number
           table_id?: string | null
+          tax_cents?: number
+          tip_cents?: number
           total_cents?: number
           updated_at?: string
         }
         Update: {
           access_token?: string
+          closed_at?: string | null
+          coupon_code?: string | null
           created_at?: string
+          discount_cents?: number
           guest_name?: string | null
           id?: string
+          invoice_no?: string | null
+          notes?: string | null
           restaurant_id?: string
+          service_charge_cents?: number
           status?: string
+          subtotal_cents?: number
           table_id?: string | null
+          tax_cents?: number
+          tip_cents?: number
           total_cents?: number
           updated_at?: string
         }
@@ -334,6 +414,57 @@ export type Database = {
             columns: ["table_id"]
             isOneToOne: false
             referencedRelation: "dining_tables"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payments: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          created_by: string | null
+          id: string
+          method: string
+          order_id: string
+          restaurant_id: string
+          tip_cents: number
+          txn_ref: string | null
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          method: string
+          order_id: string
+          restaurant_id: string
+          tip_cents?: number
+          txn_ref?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          method?: string
+          order_id?: string
+          restaurant_id?: string
+          tip_cents?: number
+          txn_ref?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
             referencedColumns: ["id"]
           },
         ]
@@ -457,22 +588,37 @@ export type Database = {
       }
       restaurants: {
         Row: {
+          address: string | null
           created_at: string
+          currency: string
           id: string
           name: string
+          phone: string | null
+          service_pct: number
           slug: string
+          tax_pct: number
         }
         Insert: {
+          address?: string | null
           created_at?: string
+          currency?: string
           id?: string
           name: string
+          phone?: string | null
+          service_pct?: number
           slug: string
+          tax_pct?: number
         }
         Update: {
+          address?: string | null
           created_at?: string
+          currency?: string
           id?: string
           name?: string
+          phone?: string | null
+          service_pct?: number
           slug?: string
+          tax_pct?: number
         }
         Relationships: []
       }
@@ -556,6 +702,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      _require_staff: { Args: never; Returns: undefined }
       check_reservation_capacity: {
         Args: {
           p_party_size: number
@@ -587,6 +734,7 @@ export type Database = {
         Args: { p_guest_name: string; p_items: Json; p_qr_token: string }
         Returns: Json
       }
+      recalc_order: { Args: { p_order_id: string }; Returns: undefined }
       resolve_table_by_qr: {
         Args: { p_qr_token: string }
         Returns: {
@@ -596,6 +744,56 @@ export type Database = {
           restaurant_name: string
         }[]
       }
+      staff_add_order_item: {
+        Args: {
+          p_menu_item_id: string
+          p_notes: string
+          p_order_id: string
+          p_quantity: number
+        }
+        Returns: string
+      }
+      staff_add_payment: {
+        Args: {
+          p_amount_cents: number
+          p_method: string
+          p_order_id: string
+          p_tip_cents: number
+          p_txn_ref: string
+        }
+        Returns: string
+      }
+      staff_apply_coupon: {
+        Args: { p_code: string; p_order_id: string }
+        Returns: Json
+      }
+      staff_close_order: { Args: { p_order_id: string }; Returns: Json }
+      staff_merge_orders: {
+        Args: { p_source_id: string; p_target_id: string }
+        Returns: undefined
+      }
+      staff_remove_order_item: {
+        Args: { p_item_id: string }
+        Returns: undefined
+      }
+      staff_set_order_charges: {
+        Args: {
+          p_discount_cents: number
+          p_notes: string
+          p_order_id: string
+          p_tip_cents: number
+        }
+        Returns: undefined
+      }
+      staff_split_order: {
+        Args: { p_item_ids: string[]; p_order_id: string }
+        Returns: string
+      }
+      staff_update_order_item: {
+        Args: { p_item_id: string; p_notes: string; p_quantity: number }
+        Returns: undefined
+      }
+      staff_void_payment: { Args: { p_payment_id: string }; Returns: undefined }
       submit_guest_feedback: {
         Args: {
           p_access_token: string
