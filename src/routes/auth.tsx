@@ -1,12 +1,14 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { ChefHat, Loader2, Sparkles, MailCheck } from "lucide-react";
+
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -30,10 +32,12 @@ function AuthPage() {
   const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
   const [demoLoading, setDemoLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [lastSignupEmail, setLastSignupEmail] = useState<string | null>(null);
   const [cooldown, setCooldown] = useState(0);
   const [resending, setResending] = useState(false);
   const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -147,6 +151,24 @@ function AuthPage() {
       setDemoLoading(false);
     }
   }
+  async function handleGoogle() {
+    setGoogleLoading(true);
+    try {
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin,
+      });
+      if (result.error) throw result.error;
+      if (result.redirected) return; // browser navigating to Google
+      // Popup flow: session set — go to dashboard.
+      toast.success("Signed in with Google");
+      navigate({ to: "/dashboard" });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Google sign-in failed");
+    } finally {
+      setGoogleLoading(false);
+    }
+  }
+
 
   return (
     <div className="relative min-h-screen bg-background text-foreground">
@@ -171,14 +193,31 @@ function AuthPage() {
             variant="secondary"
             className="mt-5 w-full"
             onClick={handleDemoLogin}
-            disabled={demoLoading || loading}
+            disabled={demoLoading || loading || googleLoading}
           >
             {demoLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
             One-tap demo login
           </Button>
+          <Button
+            type="button"
+            variant="outline"
+            className="mt-2 w-full border-white/15 bg-white/5 hover:bg-white/10"
+            onClick={handleGoogle}
+            disabled={googleLoading || loading || demoLoading}
+          >
+            {googleLoading ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" aria-hidden="true">
+                <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.24 1.4-1.7 4.1-5.5 4.1-3.3 0-6-2.7-6-6.1s2.7-6.1 6-6.1c1.9 0 3.1.8 3.8 1.5l2.6-2.5C16.8 3.4 14.6 2.4 12 2.4 6.7 2.4 2.4 6.7 2.4 12S6.7 21.6 12 21.6c6.9 0 11.5-4.9 11.5-11.7 0-.8-.1-1.4-.2-2H12z" />
+              </svg>
+            )}
+            Continue with Google
+          </Button>
           <div className="my-4 flex items-center gap-3 text-[11px] uppercase tracking-wider text-muted-foreground">
-            <div className="h-px flex-1 bg-white/10" /> or <div className="h-px flex-1 bg-white/10" />
+            <div className="h-px flex-1 bg-white/10" /> or email <div className="h-px flex-1 bg-white/10" />
           </div>
+
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {mode === "signup" && (
