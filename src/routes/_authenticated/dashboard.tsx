@@ -20,6 +20,7 @@ import {
   Users,
   Brain,
   Cpu,
+  Receipt,
 } from "lucide-react";
 
 
