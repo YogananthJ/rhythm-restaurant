@@ -39,20 +39,81 @@ export const Route = createFileRoute("/")({
 
 function Landing() {
   const navigate = useNavigate();
+  const [session, setSession] = useState<{ email: string } | null>(null);
+  const [redirectingIn, setRedirectingIn] = useState<number | null>(null);
+
   useEffect(() => {
-    // If the user just returned from Google/OAuth (or was already signed in),
-    // hop straight into the dashboard instead of showing marketing.
+    let timer: ReturnType<typeof setInterval> | null = null;
+    const startCountdown = (email: string) => {
+      setSession({ email });
+      setRedirectingIn(3);
+      timer = setInterval(() => {
+        setRedirectingIn((n) => {
+          if (n === null) return null;
+          if (n <= 1) {
+            if (timer) clearInterval(timer);
+            navigate({ to: "/dashboard", replace: true });
+            return 0;
+          }
+          return n - 1;
+        });
+      }, 1000);
+    };
+
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/dashboard", replace: true });
+      if (data.session?.user) startCountdown(data.session.user.email ?? "signed in");
     });
-    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_IN" && session) navigate({ to: "/dashboard", replace: true });
+    const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
+      if (event === "SIGNED_IN" && s?.user) startCountdown(s.user.email ?? "signed in");
+      if (event === "SIGNED_OUT") {
+        setSession(null);
+        setRedirectingIn(null);
+        if (timer) clearInterval(timer);
+      }
     });
-    return () => sub.subscription.unsubscribe();
+    return () => {
+      sub.subscription.unsubscribe();
+      if (timer) clearInterval(timer);
+    };
   }, [navigate]);
+
   return (
     <div className="relative min-h-screen overflow-hidden bg-background text-foreground">
-
+      {session && (
+        <div className="sticky top-0 z-50 border-b border-primary/30 bg-primary/10 backdrop-blur">
+          <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-2.5 text-sm">
+            <div className="flex items-center gap-2">
+              <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-primary" />
+              <span className="text-foreground">
+                Signed in as <span className="font-medium">{session.email}</span>
+              </span>
+              {redirectingIn !== null && redirectingIn > 0 && (
+                <span className="text-muted-foreground">
+                  · Redirecting to <span className="text-foreground">/dashboard</span> in {redirectingIn}s
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => navigate({ to: "/dashboard", replace: true })}
+                className="rounded-md bg-primary px-3 py-1 text-xs font-medium text-primary-foreground hover:opacity-90"
+              >
+                Go now →
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  await supabase.auth.signOut();
+                }}
+                className="text-xs text-muted-foreground hover:text-foreground"
+              >
+                Sign out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Ambient mesh */}
       <div
         className="pointer-events-none absolute inset-0 -z-10"
@@ -71,6 +132,7 @@ function Landing() {
     </div>
   );
 }
+
 
 function Nav() {
   return (
