@@ -57,6 +57,7 @@ const priorityTone = (p: N["priority"]) => {
 export function NotificationsBell({ restaurantId }: { restaurantId: string | null }) {
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<N[]>([]);
+  const [detail, setDetail] = useState<N | null>(null);
   const navigate = useNavigate();
 
   const load = async () => {
