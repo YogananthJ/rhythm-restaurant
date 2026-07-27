@@ -124,17 +124,114 @@ function Nav({ signedIn }: { signedIn: boolean }) {
           <Logo />
           <span className="text-[15px] font-semibold tracking-tight">Occupancy</span>
         </Link>
+function Nav({ signedIn }: { signedIn: boolean }) {
+  const [active, setActive] = useState<string>("product");
+
+  useEffect(() => {
+    const els = NAV_ITEMS
+      .map((n) => document.getElementById(n.id))
+      .filter((el): el is HTMLElement => !!el);
+    if (!els.length) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+        if (visible[0]) setActive(visible[0].target.id);
+      },
+      {
+        rootMargin: `-${NAV_OFFSET + 8}px 0px -55% 0px`,
+        threshold: [0, 0.25, 0.5, 0.75, 1],
+      },
+    );
+    els.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <header className="sticky top-0 z-40 border-b border-border/50 glass-panel">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
+        <Link to="/" className="flex items-center gap-2">
+          <Logo />
+          <span className="text-[15px] font-semibold tracking-tight">Occupancy</span>
+        </Link>
         <nav className="hidden items-center gap-8 md:flex">
-          {["Product", "Features", "Kitchen", "Analytics", "Pricing"].map((item) => (
-            <a
-              key={item}
-              href={`#${item.toLowerCase()}`}
-              className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-            >
-              {item}
-            </a>
-          ))}
+          {NAV_ITEMS.map((item) => {
+            const isActive = active === item.id;
+            return (
+              <a
+                key={item.id}
+                href={`#${item.id}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  scrollToSection(item.id);
+                }}
+                aria-current={isActive ? "true" : undefined}
+                className={`relative text-sm transition-colors ${
+                  isActive
+                    ? "text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {item.label}
+                <span
+                  className={`pointer-events-none absolute -bottom-[22px] left-0 right-0 mx-auto h-0.5 rounded-full bg-primary transition-all ${
+                    isActive ? "w-6 opacity-100" : "w-0 opacity-0"
+                  }`}
+                />
+              </a>
+            );
+          })}
         </nav>
+        <div className="flex items-center gap-2">
+          <Link
+            to="/book"
+            className="hidden rounded-lg px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground sm:inline-flex"
+          >
+            Reserve
+          </Link>
+          {signedIn ? (
+            <>
+              <button
+                type="button"
+                onClick={() => {
+                  void signOutEverywhere();
+                }}
+                className="hidden rounded-lg px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground sm:inline-flex"
+              >
+                Sign out
+              </button>
+              <Link
+                to="/dashboard"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-1.5 text-sm font-medium text-primary-foreground shadow-glow transition-all hover:brightness-110"
+              >
+                Open dashboard
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </>
+          ) : (
+            <>
+              <a
+                href="/auth"
+                className="hidden rounded-lg px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground sm:inline-flex"
+              >
+                Sign in
+              </a>
+              <a
+                href="/auth?mode=signup"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-1.5 text-sm font-medium text-primary-foreground shadow-glow transition-all hover:brightness-110"
+              >
+                Get started
+                <ArrowRight className="h-3.5 w-3.5" />
+              </a>
+            </>
+          )}
+        </div>
+      </div>
+    </header>
+  );
+}
         <div className="flex items-center gap-2">
           <Link
             to="/book"
