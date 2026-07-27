@@ -105,6 +105,45 @@ export type Database = {
           },
         ]
       }
+      guest_favorites: {
+        Row: {
+          created_at: string
+          id: string
+          menu_item_id: string
+          qr_token: string
+          restaurant_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          menu_item_id: string
+          qr_token: string
+          restaurant_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          menu_item_id?: string
+          qr_token?: string
+          restaurant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guest_favorites_menu_item_id_fkey"
+            columns: ["menu_item_id"]
+            isOneToOne: false
+            referencedRelation: "menu_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "guest_favorites_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       guest_feedback: {
         Row: {
           comment: string | null
@@ -237,38 +276,50 @@ export type Database = {
       }
       menu_items: {
         Row: {
+          allergens: string[]
           category_id: string | null
           description: string | null
+          dietary_tags: string[]
           id: string
           image_url: string | null
           is_available: boolean
           name: string
+          popularity_score: number
           prep_minutes: number
           price_cents: number
+          promo_boost: number
           restaurant_id: string
           updated_at: string
         }
         Insert: {
+          allergens?: string[]
           category_id?: string | null
           description?: string | null
+          dietary_tags?: string[]
           id?: string
           image_url?: string | null
           is_available?: boolean
           name: string
+          popularity_score?: number
           prep_minutes?: number
           price_cents?: number
+          promo_boost?: number
           restaurant_id: string
           updated_at?: string
         }
         Update: {
+          allergens?: string[]
           category_id?: string | null
           description?: string | null
+          dietary_tags?: string[]
           id?: string
           image_url?: string | null
           is_available?: boolean
           name?: string
+          popularity_score?: number
           prep_minutes?: number
           price_cents?: number
+          promo_boost?: number
           restaurant_id?: string
           updated_at?: string
         }
@@ -282,6 +333,62 @@ export type Database = {
           },
           {
             foreignKeyName: "menu_items_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          body: string | null
+          category: string
+          created_at: string
+          data: Json
+          dismissed_at: string | null
+          group_key: string | null
+          id: string
+          link: string | null
+          priority: string
+          read_at: string | null
+          restaurant_id: string
+          title: string
+          user_id: string | null
+        }
+        Insert: {
+          body?: string | null
+          category?: string
+          created_at?: string
+          data?: Json
+          dismissed_at?: string | null
+          group_key?: string | null
+          id?: string
+          link?: string | null
+          priority?: string
+          read_at?: string | null
+          restaurant_id: string
+          title: string
+          user_id?: string | null
+        }
+        Update: {
+          body?: string | null
+          category?: string
+          created_at?: string
+          data?: Json
+          dismissed_at?: string | null
+          group_key?: string | null
+          id?: string
+          link?: string | null
+          priority?: string
+          read_at?: string | null
+          restaurant_id?: string
+          title?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_restaurant_id_fkey"
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "restaurants"
@@ -723,6 +830,25 @@ export type Database = {
         Args: { p_access_token: string; p_order_id: string }
         Returns: Json
       }
+      get_recommendations: {
+        Args: {
+          p_cart_item_ids?: string[]
+          p_dietary?: string[]
+          p_limit?: number
+          p_qr_token: string
+        }
+        Returns: {
+          category_id: string
+          description: string
+          dietary_tags: string[]
+          menu_item_id: string
+          name: string
+          prep_minutes: number
+          price_cents: number
+          reasons: string[]
+          score: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -730,9 +856,34 @@ export type Database = {
         }
         Returns: boolean
       }
+      list_guest_favorites: {
+        Args: { p_qr_token: string }
+        Returns: {
+          menu_item_id: string
+        }[]
+      }
+      notify_dismiss: { Args: { p_id: string }; Returns: undefined }
+      notify_mark_all_read: {
+        Args: { p_restaurant_id: string }
+        Returns: undefined
+      }
+      notify_mark_read: { Args: { p_id: string }; Returns: undefined }
       place_guest_order: {
         Args: { p_guest_name: string; p_items: Json; p_qr_token: string }
         Returns: Json
+      }
+      push_notification: {
+        Args: {
+          p_body: string
+          p_category: string
+          p_data: Json
+          p_group_key: string
+          p_link: string
+          p_priority: string
+          p_restaurant_id: string
+          p_title: string
+        }
+        Returns: string
       }
       recalc_order: { Args: { p_order_id: string }; Returns: undefined }
       resolve_table_by_qr: {
@@ -802,6 +953,10 @@ export type Database = {
           p_rating: number
         }
         Returns: string
+      }
+      toggle_guest_favorite: {
+        Args: { p_menu_item_id: string; p_qr_token: string }
+        Returns: boolean
       }
     }
     Enums: {
