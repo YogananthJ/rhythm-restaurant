@@ -648,11 +648,14 @@ function CTA() {
 }
 
 function Pricing() {
+  const [billing, setBilling] = useState<"monthly" | "annual">("monthly");
+  const annual = billing === "annual";
+
   const tiers = [
     {
       name: "Starter",
-      price: "$0",
-      period: "/mo",
+      monthly: 0,
+      annualPerMo: 0,
       tag: "Free during VibeAthon",
       description: "For single-location cafés getting a feel for live ops.",
       features: [
@@ -662,13 +665,14 @@ function Pricing() {
         "Live floor dashboard",
       ],
       cta: "Start free",
-      to: "/auth",
+      href: "/auth?mode=signup&plan=starter",
       highlight: false,
+      custom: false as const,
     },
     {
       name: "Growth",
-      price: "$149",
-      period: "/mo",
+      monthly: 149,
+      annualPerMo: 119, // ~20% off
       tag: "Most popular",
       description: "Full nervous system for busy restaurants that need AI ops.",
       features: [
@@ -678,13 +682,14 @@ function Pricing() {
         "Sales analytics + CSV export",
       ],
       cta: "Start 14-day trial",
-      to: "/auth",
+      href: "/auth?mode=signup&plan=growth",
       highlight: true,
+      custom: false as const,
     },
     {
       name: "Scale",
-      price: "Custom",
-      period: "",
+      monthly: null,
+      annualPerMo: null,
       tag: "Multi-location",
       description: "For groups running multiple venues on shared intelligence.",
       features: [
@@ -694,10 +699,11 @@ function Pricing() {
         "Dedicated success partner",
       ],
       cta: "Talk to the team",
-      to: "/book",
+      href: "/book",
       highlight: false,
+      custom: true as const,
     },
-  ] as const;
+  ];
 
   return (
     <section id="pricing" className="mx-auto max-w-7xl px-6 py-24 scroll-mt-20">
@@ -711,57 +717,119 @@ function Pricing() {
         <p className="mt-4 text-balance text-lg text-muted-foreground">
           Start free during VibeAthon. Upgrade when your kitchen is ready to run on live data.
         </p>
+
+        <div className="mt-8 inline-flex items-center gap-1 rounded-full border border-border/70 bg-surface/60 p-1 text-sm">
+          <button
+            type="button"
+            onClick={() => setBilling("monthly")}
+            className={`rounded-full px-4 py-1.5 font-medium transition-all ${
+              !annual
+                ? "bg-primary text-primary-foreground shadow-glow"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Monthly
+          </button>
+          <button
+            type="button"
+            onClick={() => setBilling("annual")}
+            className={`inline-flex items-center gap-2 rounded-full px-4 py-1.5 font-medium transition-all ${
+              annual
+                ? "bg-primary text-primary-foreground shadow-glow"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Annual
+            <span
+              className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
+                annual
+                  ? "bg-primary-foreground/15 text-primary-foreground"
+                  : "bg-primary/15 text-primary"
+              }`}
+            >
+              Save 20%
+            </span>
+          </button>
+        </div>
+        <p className="mt-3 text-xs text-muted-foreground">
+          {annual ? "Billed yearly · 2 months free" : "Billed monthly · cancel anytime"}
+        </p>
       </div>
 
       <div className="mt-14 grid gap-6 md:grid-cols-3">
-        {tiers.map((t) => (
-          <div
-            key={t.name}
-            className={`glass-panel relative flex flex-col rounded-2xl border p-6 ${
-              t.highlight
-                ? "border-primary/60 shadow-glow"
-                : "border-border/60"
-            }`}
-          >
-            {t.highlight && (
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-primary-foreground shadow-glow">
-                {t.tag}
-              </div>
-            )}
-            <div className="text-sm font-semibold text-foreground">{t.name}</div>
-            {!t.highlight && (
-              <div className="mt-1 text-xs text-muted-foreground">{t.tag}</div>
-            )}
-            <div className="mt-4 flex items-baseline gap-1">
-              <span className="text-4xl font-bold tracking-tight">{t.price}</span>
-              {t.period && (
-                <span className="text-sm text-muted-foreground">{t.period}</span>
+        {tiers.map((t) => {
+          const price = t.custom
+            ? "Custom"
+            : annual
+              ? `$${t.annualPerMo}`
+              : `$${t.monthly}`;
+          const showPeriod = !t.custom;
+          const yearlyTotal =
+            !t.custom && annual && t.annualPerMo != null ? t.annualPerMo * 12 : null;
+          const monthlyEquivSavings =
+            !t.custom && annual && t.monthly != null && t.annualPerMo != null
+              ? (t.monthly - t.annualPerMo) * 12
+              : null;
+
+          return (
+            <div
+              key={t.name}
+              className={`glass-panel relative flex flex-col rounded-2xl border p-6 ${
+                t.highlight ? "border-primary/60 shadow-glow" : "border-border/60"
+              }`}
+            >
+              {t.highlight && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-primary-foreground shadow-glow">
+                  {t.tag}
+                </div>
               )}
+              <div className="text-sm font-semibold text-foreground">{t.name}</div>
+              {!t.highlight && (
+                <div className="mt-1 text-xs text-muted-foreground">{t.tag}</div>
+              )}
+              <div className="mt-4 flex items-baseline gap-1">
+                <span className="text-4xl font-bold tracking-tight">{price}</span>
+                {showPeriod && (
+                  <span className="text-sm text-muted-foreground">/mo</span>
+                )}
+              </div>
+              <div className="mt-1 min-h-[18px] text-xs text-muted-foreground">
+                {yearlyTotal != null && `$${yearlyTotal} billed yearly`}
+                {monthlyEquivSavings != null && monthlyEquivSavings > 0 && (
+                  <span className="ml-1 text-primary">
+                    · save ${monthlyEquivSavings}/yr
+                  </span>
+                )}
+              </div>
+              <p className="mt-3 text-sm text-muted-foreground">{t.description}</p>
+              <ul className="mt-6 space-y-2 text-sm">
+                {t.features.map((f) => (
+                  <li key={f} className="flex items-start gap-2 text-foreground/85">
+                    <CircleDot className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-8">
+                <a
+                  href={
+                    t.custom
+                      ? t.href
+                      : `${t.href}&billing=${billing}`
+                  }
+                  className={`inline-flex w-full items-center justify-center gap-1.5 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all ${
+                    t.highlight
+                      ? "bg-primary text-primary-foreground shadow-glow hover:brightness-110"
+                      : "border border-border bg-background/60 text-foreground hover:bg-surface-elevated"
+                  }`}
+                >
+                  {t.cta}
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </a>
+              </div>
             </div>
-            <p className="mt-3 text-sm text-muted-foreground">{t.description}</p>
-            <ul className="mt-6 space-y-2 text-sm">
-              {t.features.map((f) => (
-                <li key={f} className="flex items-start gap-2 text-foreground/85">
-                  <CircleDot className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
-                  {f}
-                </li>
-              ))}
-            </ul>
-            <div className="mt-8">
-              <Link
-                to={t.to}
-                className={`inline-flex w-full items-center justify-center gap-1.5 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all ${
-                  t.highlight
-                    ? "bg-primary text-primary-foreground shadow-glow hover:brightness-110"
-                    : "border border-border bg-background/60 text-foreground hover:bg-surface-elevated"
-                }`}
-              >
-                {t.cta}
-                <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </section>
   );
