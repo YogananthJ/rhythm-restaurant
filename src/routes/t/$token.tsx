@@ -463,6 +463,21 @@ function GuestMenu() {
                 </div>
               ))}
             </div>
+            {cart.length > 0 && (
+              <div className="border-t border-white/10 px-5 py-3">
+                <RecommendedItems
+                  qrToken={token}
+                  cartItemIds={cartItemIds}
+                  dietary={dietary}
+                  favorites={favorites}
+                  onAdd={addRecommendationToCart}
+                  onToggleFavorite={toggleFavorite}
+                  variant="row"
+                  title="Complete your order"
+                  limit={4}
+                />
+              </div>
+            )}
             <div className="border-t border-white/10 bg-background/50 px-5 py-4">
               <Input
                 placeholder="Your name (optional)"
