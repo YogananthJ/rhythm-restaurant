@@ -234,8 +234,66 @@ export function NotificationsBell({ restaurantId }: { restaurantId: string | nul
         </ScrollArea>
       </PopoverContent>
     </Popover>
+
+      <Sheet open={!!detail} onOpenChange={(o) => !o && setDetail(null)}>
+        <SheetContent side="right" className="w-full sm:max-w-md border-white/10 bg-card/95 backdrop-blur-xl">
+          {detail && (
+            <>
+              <SheetHeader>
+                <div className="flex items-center gap-2">
+                  <div className={`grid h-8 w-8 place-items-center rounded-full border ${priorityTone(detail.priority)}`}>
+                    {categoryIcon(detail.category)}
+                  </div>
+                  <Badge variant="outline" className="h-5 border-white/10 text-[10px] uppercase tracking-wide">
+                    {detail.priority} · {detail.category}
+                  </Badge>
+                </div>
+                <SheetTitle className="mt-2 text-left">{detail.title}</SheetTitle>
+                {detail.body && (
+                  <SheetDescription className="text-left text-sm text-muted-foreground">
+                    {detail.body}
+                  </SheetDescription>
+                )}
+              </SheetHeader>
+              <div className="mt-4 space-y-3 text-xs">
+                <div className="rounded-lg border border-white/10 bg-background/50 p-3">
+                  <div className="mb-1 text-[10px] uppercase tracking-wide text-muted-foreground">Received</div>
+                  <div>{new Date(detail.created_at).toLocaleString()}</div>
+                </div>
+                {detail.data && Object.keys(detail.data).length > 0 && (
+                  <div className="rounded-lg border border-white/10 bg-background/50 p-3">
+                    <div className="mb-1 text-[10px] uppercase tracking-wide text-muted-foreground">Details</div>
+                    <pre className="whitespace-pre-wrap break-words font-mono text-[11px] text-muted-foreground">
+                      {JSON.stringify(detail.data, null, 2)}
+                    </pre>
+                  </div>
+                )}
+              </div>
+              <SheetFooter className="mt-6 flex-row gap-2 sm:justify-between">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    void dismiss(detail.id);
+                    setDetail(null);
+                  }}
+                >
+                  <X className="mr-1.5 h-3.5 w-3.5" /> Dismiss
+                </Button>
+                {detail.link && (
+                  <Button size="sm" onClick={openLink}>
+                    <ExternalLink className="mr-1.5 h-3.5 w-3.5" /> Open
+                  </Button>
+                )}
+              </SheetFooter>
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
+    </>
   );
 }
+
 
 function timeAgo(iso: string): string {
   const s = Math.max(1, Math.floor((Date.now() - new Date(iso).getTime()) / 1000));
