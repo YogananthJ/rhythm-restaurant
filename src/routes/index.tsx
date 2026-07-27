@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 
 import { useAuth, signOutEverywhere } from "@/hooks/use-auth";
 import {
@@ -16,6 +17,25 @@ import {
   Utensils,
   Zap,
 } from "lucide-react";
+
+const NAV_OFFSET = 72;
+const NAV_ITEMS = [
+  { id: "product", label: "Product" },
+  { id: "features", label: "Features" },
+  { id: "kitchen", label: "Kitchen" },
+  { id: "analytics", label: "Analytics" },
+  { id: "pricing", label: "Pricing" },
+] as const;
+
+function scrollToSection(id: string) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const top = el.getBoundingClientRect().top + window.scrollY - NAV_OFFSET;
+  window.scrollTo({ top, behavior: "smooth" });
+  if (typeof history !== "undefined") {
+    history.replaceState(null, "", `#${id}`);
+  }
+}
 
 
 export const Route = createFileRoute("/")({
@@ -97,6 +117,30 @@ function Landing() {
 
 
 function Nav({ signedIn }: { signedIn: boolean }) {
+  const [active, setActive] = useState<string>("product");
+
+  useEffect(() => {
+    const els = NAV_ITEMS
+      .map((n) => document.getElementById(n.id))
+      .filter((el): el is HTMLElement => !!el);
+    if (!els.length) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+        if (visible[0]) setActive(visible[0].target.id);
+      },
+      {
+        rootMargin: `-${NAV_OFFSET + 8}px 0px -55% 0px`,
+        threshold: [0, 0.25, 0.5, 0.75, 1],
+      },
+    );
+    els.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <header className="sticky top-0 z-40 border-b border-border/50 glass-panel">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
@@ -105,15 +149,32 @@ function Nav({ signedIn }: { signedIn: boolean }) {
           <span className="text-[15px] font-semibold tracking-tight">Occupancy</span>
         </Link>
         <nav className="hidden items-center gap-8 md:flex">
-          {["Product", "Features", "Kitchen", "Analytics", "Pricing"].map((item) => (
-            <a
-              key={item}
-              href={`#${item.toLowerCase()}`}
-              className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-            >
-              {item}
-            </a>
-          ))}
+          {NAV_ITEMS.map((item) => {
+            const isActive = active === item.id;
+            return (
+              <a
+                key={item.id}
+                href={`#${item.id}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  scrollToSection(item.id);
+                }}
+                aria-current={isActive ? "true" : undefined}
+                className={`relative text-sm transition-colors ${
+                  isActive
+                    ? "text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {item.label}
+                <span
+                  className={`pointer-events-none absolute -bottom-[22px] left-0 right-0 mx-auto h-0.5 rounded-full bg-primary transition-all ${
+                    isActive ? "w-6 opacity-100" : "w-0 opacity-0"
+                  }`}
+                />
+              </a>
+            );
+          })}
         </nav>
         <div className="flex items-center gap-2">
           <Link
@@ -143,19 +204,19 @@ function Nav({ signedIn }: { signedIn: boolean }) {
             </>
           ) : (
             <>
-              <Link
-                to="/auth"
+              <a
+                href="/auth"
                 className="hidden rounded-lg px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground sm:inline-flex"
               >
                 Sign in
-              </Link>
-              <Link
-                to="/auth"
+              </a>
+              <a
+                href="/auth?mode=signup"
                 className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-1.5 text-sm font-medium text-primary-foreground shadow-glow transition-all hover:brightness-110"
               >
                 Get started
                 <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
+              </a>
             </>
           )}
         </div>
@@ -174,7 +235,7 @@ function Logo() {
 
 function Hero() {
   return (
-    <section id="product" className="relative mx-auto max-w-7xl px-6 pb-24 pt-20 sm:pt-28">
+    <section id="product" className="relative mx-auto max-w-7xl px-6 pb-24 pt-20 sm:pt-28 scroll-mt-20">
       <div className="mx-auto max-w-3xl text-center">
         <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-border/80 bg-surface/60 px-3 py-1 text-xs text-muted-foreground backdrop-blur">
           <span className="relative flex h-1.5 w-1.5">
@@ -379,7 +440,7 @@ function Features() {
   ];
 
   return (
-    <section id="features" className="mx-auto max-w-7xl px-6 py-24">
+    <section id="features" className="mx-auto max-w-7xl px-6 py-24 scroll-mt-20">
       <div className="mx-auto max-w-2xl text-center">
         <div className="inline-flex items-center gap-1.5 rounded-full border border-border/80 bg-surface/60 px-2.5 py-0.5 text-xs text-muted-foreground">
           Platform
@@ -412,7 +473,7 @@ function Features() {
 
 function ProductPreview() {
   return (
-    <section id="kitchen" className="mx-auto max-w-7xl px-6 py-24">
+    <section id="kitchen" className="mx-auto max-w-7xl px-6 py-24 scroll-mt-20">
       <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
         <div>
           <div className="inline-flex items-center gap-1.5 rounded-full border border-border/80 bg-surface/60 px-2.5 py-0.5 text-xs text-muted-foreground">
@@ -493,7 +554,7 @@ function ProductPreview() {
 
 function AISection() {
   return (
-    <section id="analytics" className="mx-auto max-w-7xl px-6 py-24">
+    <section id="analytics" className="mx-auto max-w-7xl px-6 py-24 scroll-mt-20">
       <div className="rounded-3xl border border-border/70 bg-gradient-to-br from-surface via-surface/60 to-background p-10 sm:p-16">
         <div className="mx-auto max-w-3xl text-center">
           <div className="mx-auto inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-xs text-primary">
@@ -587,11 +648,14 @@ function CTA() {
 }
 
 function Pricing() {
+  const [billing, setBilling] = useState<"monthly" | "annual">("monthly");
+  const annual = billing === "annual";
+
   const tiers = [
     {
       name: "Starter",
-      price: "$0",
-      period: "/mo",
+      monthly: 0,
+      annualPerMo: 0,
       tag: "Free during VibeAthon",
       description: "For single-location cafés getting a feel for live ops.",
       features: [
@@ -601,13 +665,14 @@ function Pricing() {
         "Live floor dashboard",
       ],
       cta: "Start free",
-      to: "/auth",
+      href: "/auth?mode=signup&plan=starter",
       highlight: false,
+      custom: false as const,
     },
     {
       name: "Growth",
-      price: "$149",
-      period: "/mo",
+      monthly: 149,
+      annualPerMo: 119, // ~20% off
       tag: "Most popular",
       description: "Full nervous system for busy restaurants that need AI ops.",
       features: [
@@ -617,13 +682,14 @@ function Pricing() {
         "Sales analytics + CSV export",
       ],
       cta: "Start 14-day trial",
-      to: "/auth",
+      href: "/auth?mode=signup&plan=growth",
       highlight: true,
+      custom: false as const,
     },
     {
       name: "Scale",
-      price: "Custom",
-      period: "",
+      monthly: null,
+      annualPerMo: null,
       tag: "Multi-location",
       description: "For groups running multiple venues on shared intelligence.",
       features: [
@@ -633,13 +699,14 @@ function Pricing() {
         "Dedicated success partner",
       ],
       cta: "Talk to the team",
-      to: "/book",
+      href: "/book",
       highlight: false,
+      custom: true as const,
     },
-  ] as const;
+  ];
 
   return (
-    <section id="pricing" className="mx-auto max-w-7xl px-6 py-24">
+    <section id="pricing" className="mx-auto max-w-7xl px-6 py-24 scroll-mt-20">
       <div className="mx-auto max-w-2xl text-center">
         <div className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
           Pricing
@@ -650,57 +717,119 @@ function Pricing() {
         <p className="mt-4 text-balance text-lg text-muted-foreground">
           Start free during VibeAthon. Upgrade when your kitchen is ready to run on live data.
         </p>
+
+        <div className="mt-8 inline-flex items-center gap-1 rounded-full border border-border/70 bg-surface/60 p-1 text-sm">
+          <button
+            type="button"
+            onClick={() => setBilling("monthly")}
+            className={`rounded-full px-4 py-1.5 font-medium transition-all ${
+              !annual
+                ? "bg-primary text-primary-foreground shadow-glow"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Monthly
+          </button>
+          <button
+            type="button"
+            onClick={() => setBilling("annual")}
+            className={`inline-flex items-center gap-2 rounded-full px-4 py-1.5 font-medium transition-all ${
+              annual
+                ? "bg-primary text-primary-foreground shadow-glow"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Annual
+            <span
+              className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
+                annual
+                  ? "bg-primary-foreground/15 text-primary-foreground"
+                  : "bg-primary/15 text-primary"
+              }`}
+            >
+              Save 20%
+            </span>
+          </button>
+        </div>
+        <p className="mt-3 text-xs text-muted-foreground">
+          {annual ? "Billed yearly · 2 months free" : "Billed monthly · cancel anytime"}
+        </p>
       </div>
 
       <div className="mt-14 grid gap-6 md:grid-cols-3">
-        {tiers.map((t) => (
-          <div
-            key={t.name}
-            className={`glass-panel relative flex flex-col rounded-2xl border p-6 ${
-              t.highlight
-                ? "border-primary/60 shadow-glow"
-                : "border-border/60"
-            }`}
-          >
-            {t.highlight && (
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-primary-foreground shadow-glow">
-                {t.tag}
-              </div>
-            )}
-            <div className="text-sm font-semibold text-foreground">{t.name}</div>
-            {!t.highlight && (
-              <div className="mt-1 text-xs text-muted-foreground">{t.tag}</div>
-            )}
-            <div className="mt-4 flex items-baseline gap-1">
-              <span className="text-4xl font-bold tracking-tight">{t.price}</span>
-              {t.period && (
-                <span className="text-sm text-muted-foreground">{t.period}</span>
+        {tiers.map((t) => {
+          const price = t.custom
+            ? "Custom"
+            : annual
+              ? `$${t.annualPerMo}`
+              : `$${t.monthly}`;
+          const showPeriod = !t.custom;
+          const yearlyTotal =
+            !t.custom && annual && t.annualPerMo != null ? t.annualPerMo * 12 : null;
+          const monthlyEquivSavings =
+            !t.custom && annual && t.monthly != null && t.annualPerMo != null
+              ? (t.monthly - t.annualPerMo) * 12
+              : null;
+
+          return (
+            <div
+              key={t.name}
+              className={`glass-panel relative flex flex-col rounded-2xl border p-6 ${
+                t.highlight ? "border-primary/60 shadow-glow" : "border-border/60"
+              }`}
+            >
+              {t.highlight && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-primary-foreground shadow-glow">
+                  {t.tag}
+                </div>
               )}
+              <div className="text-sm font-semibold text-foreground">{t.name}</div>
+              {!t.highlight && (
+                <div className="mt-1 text-xs text-muted-foreground">{t.tag}</div>
+              )}
+              <div className="mt-4 flex items-baseline gap-1">
+                <span className="text-4xl font-bold tracking-tight">{price}</span>
+                {showPeriod && (
+                  <span className="text-sm text-muted-foreground">/mo</span>
+                )}
+              </div>
+              <div className="mt-1 min-h-[18px] text-xs text-muted-foreground">
+                {yearlyTotal != null && `$${yearlyTotal} billed yearly`}
+                {monthlyEquivSavings != null && monthlyEquivSavings > 0 && (
+                  <span className="ml-1 text-primary">
+                    · save ${monthlyEquivSavings}/yr
+                  </span>
+                )}
+              </div>
+              <p className="mt-3 text-sm text-muted-foreground">{t.description}</p>
+              <ul className="mt-6 space-y-2 text-sm">
+                {t.features.map((f) => (
+                  <li key={f} className="flex items-start gap-2 text-foreground/85">
+                    <CircleDot className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-8">
+                <a
+                  href={
+                    t.custom
+                      ? t.href
+                      : `${t.href}&billing=${billing}`
+                  }
+                  className={`inline-flex w-full items-center justify-center gap-1.5 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all ${
+                    t.highlight
+                      ? "bg-primary text-primary-foreground shadow-glow hover:brightness-110"
+                      : "border border-border bg-background/60 text-foreground hover:bg-surface-elevated"
+                  }`}
+                >
+                  {t.cta}
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </a>
+              </div>
             </div>
-            <p className="mt-3 text-sm text-muted-foreground">{t.description}</p>
-            <ul className="mt-6 space-y-2 text-sm">
-              {t.features.map((f) => (
-                <li key={f} className="flex items-start gap-2 text-foreground/85">
-                  <CircleDot className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
-                  {f}
-                </li>
-              ))}
-            </ul>
-            <div className="mt-8">
-              <Link
-                to={t.to}
-                className={`inline-flex w-full items-center justify-center gap-1.5 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all ${
-                  t.highlight
-                    ? "bg-primary text-primary-foreground shadow-glow hover:brightness-110"
-                    : "border border-border bg-background/60 text-foreground hover:bg-surface-elevated"
-                }`}
-              >
-                {t.cta}
-                <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </section>
   );
