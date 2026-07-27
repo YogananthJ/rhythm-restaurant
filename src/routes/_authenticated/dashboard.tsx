@@ -125,6 +125,9 @@ function Dashboard() {
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? ""));
+    supabase.from("restaurants").select("id").limit(1).maybeSingle().then(({ data }) => {
+      if (data?.id) setRestaurantId(data.id);
+    });
     void loadAll();
 
     const ch = supabase
