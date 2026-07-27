@@ -123,9 +123,14 @@ export function NotificationsBell({ restaurantId }: { restaurantId: string | nul
 
   const onClick = async (n: N) => {
     await markRead(n.id);
-    if (n.link) {
+    setDetail({ ...n, read_at: n.read_at ?? new Date().toISOString() });
+  };
+
+  const openLink = () => {
+    if (detail?.link) {
       setOpen(false);
-      navigate({ to: n.link } as never);
+      setDetail(null);
+      navigate({ to: detail.link } as never);
     }
   };
 
