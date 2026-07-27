@@ -101,6 +101,7 @@ function Dashboard() {
   const [tables, setTables] = useState<DiningTable[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [billOrderId, setBillOrderId] = useState<string | null>(null);
+  const [restaurantId, setRestaurantId] = useState<string | null>(null);
 
   const [email, setEmail] = useState<string>("");
   const [resStats, setResStats] = useState<ResStats>({
