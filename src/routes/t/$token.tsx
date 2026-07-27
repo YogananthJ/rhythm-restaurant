@@ -7,7 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { ChefHat, Clock, Minus, Plus, ShoppingBag, Sparkles, X } from "lucide-react";
+import { ChefHat, Clock, Heart, Minus, Plus, Search, ShoppingBag, Sparkles, X } from "lucide-react";
+import { RecommendedItems, type Recommendation } from "@/components/RecommendedItems";
 
 type Category = { id: string; name: string; sort_order: number };
 type MenuItem = {
