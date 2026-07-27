@@ -173,7 +173,7 @@ function Logo() {
 
 function Hero() {
   return (
-    <section className="relative mx-auto max-w-7xl px-6 pb-24 pt-20 sm:pt-28">
+    <section id="product" className="relative mx-auto max-w-7xl px-6 pb-24 pt-20 sm:pt-28">
       <div className="mx-auto max-w-3xl text-center">
         <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-border/80 bg-surface/60 px-3 py-1 text-xs text-muted-foreground backdrop-blur">
           <span className="relative flex h-1.5 w-1.5">
