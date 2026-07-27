@@ -62,6 +62,12 @@ function GuestMenu() {
   const [dietary, setDietary] = useState<string[]>([]);
   const [q, setQ] = useState("");
 
+  const loadFavorites = async () => {
+    const { data } = await supabase.rpc("list_guest_favorites" as never, { p_qr_token: token } as never);
+    const rows = (data as unknown as { menu_item_id: string }[] | null) ?? [];
+    setFavorites(new Set(rows.map((r) => r.menu_item_id)));
+  };
+
   useEffect(() => {
     (async () => {
       const { data: rows, error } = await supabase.rpc("resolve_table_by_qr", { p_qr_token: token });
@@ -79,6 +85,7 @@ function GuestMenu() {
       ]);
       setCategories((cats as Category[]) ?? []);
       setItems((its as MenuItem[]) ?? []);
+      void loadFavorites();
       setLoading(false);
     })();
 
@@ -92,15 +99,53 @@ function GuestMenu() {
     return () => {
       void supabase.removeChannel(ch);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
+  const toggleFavorite = async (id: string) => {
+    const wasFav = favorites.has(id);
+    setFavorites((prev) => {
+      const next = new Set(prev);
+      if (wasFav) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+    const { error } = await supabase.rpc("toggle_guest_favorite" as never, {
+      p_qr_token: token,
+      p_menu_item_id: id,
+    } as never);
+    if (error) {
+      // revert
+      setFavorites((prev) => {
+        const next = new Set(prev);
+        if (wasFav) next.add(id);
+        else next.delete(id);
+        return next;
+      });
+      toast.error("Couldn't update favorite");
+    } else {
+      toast.success(wasFav ? "Removed from favorites" : "Saved to favorites");
+    }
+  };
+
+  const matchesDietary = (it: MenuItem) => {
+    if (dietary.length === 0) return true;
+    const tags = it.dietary_tags ?? [];
+    return dietary.every((d) => tags.includes(d));
+  };
 
   const grouped = useMemo(() => {
+    const ql = q.trim().toLowerCase();
     return categories.map((c) => ({
       category: c,
-      items: items.filter((i) => i.category_id === c.id),
+      items: items.filter((i) => {
+        if (i.category_id !== c.id) return false;
+        if (!matchesDietary(i)) return false;
+        if (ql && !`${i.name} ${i.description ?? ""}`.toLowerCase().includes(ql)) return false;
+        return true;
+      }),
     }));
-  }, [categories, items]);
+  }, [categories, items, q, dietary]);
 
   const cartCount = cart.reduce((s, l) => s + l.qty, 0);
   const cartTotal = cart.reduce((s, l) => s + l.qty * l.item.price_cents, 0);
