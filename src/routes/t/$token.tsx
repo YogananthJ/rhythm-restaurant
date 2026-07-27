@@ -273,7 +273,7 @@ function GuestMenu() {
       </header>
 
       <main className="mx-auto max-w-3xl px-5 py-6">
-        <div className="mb-6 rounded-2xl border border-white/10 bg-card/60 p-5 backdrop-blur">
+        <div className="mb-4 rounded-2xl border border-white/10 bg-card/60 p-5 backdrop-blur">
           <div className="flex items-start gap-3">
             <Sparkles className="mt-0.5 h-4 w-4 text-primary" />
             <div>
@@ -285,11 +285,58 @@ function GuestMenu() {
           </div>
         </div>
 
+        <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Search dishes…"
+              className="border-white/10 bg-card/50 pl-9"
+            />
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {DIETARY_OPTIONS.map((d) => {
+              const active = dietary.includes(d.key);
+              return (
+                <button
+                  key={d.key}
+                  onClick={() =>
+                    setDietary((prev) =>
+                      active ? prev.filter((x) => x !== d.key) : [...prev, d.key],
+                    )
+                  }
+                  className={`rounded-full border px-3 py-1 text-xs transition ${
+                    active
+                      ? "border-primary/60 bg-primary/15 text-primary"
+                      : "border-white/10 text-muted-foreground hover:border-white/20"
+                  }`}
+                >
+                  {d.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <RecommendedItems
+          qrToken={token}
+          cartItemIds={cartItemIds}
+          dietary={dietary}
+          favorites={favorites}
+          onAdd={addRecommendationToCart}
+          onToggleFavorite={toggleFavorite}
+          variant="row"
+          title="Chef's picks for you"
+        />
+
         {grouped.map(({ category, items: catItems }) => (
           <section key={category.id} className="mb-8">
             <h2 className="mb-3 text-lg font-semibold tracking-tight">{category.name}</h2>
             <div className="grid gap-3">
-              {catItems.map((item) => (
+              {catItems.map((item) => {
+                const fav = favorites.has(item.id);
+                return (
                 <Card
                   key={item.id}
                   className={`border-white/10 bg-card/70 p-4 backdrop-blur transition-all ${
@@ -307,6 +354,11 @@ function GuestMenu() {
                             86'd
                           </Badge>
                         )}
+                        {(item.dietary_tags ?? []).slice(0, 2).map((t) => (
+                          <Badge key={t} variant="outline" className="h-4 border-primary/20 px-1.5 text-[9px] text-primary/80">
+                            {t}
+                          </Badge>
+                        ))}
                       </div>
                       {item.description && (
                         <p className="mt-1 text-xs text-muted-foreground">{item.description}</p>
@@ -320,17 +372,30 @@ function GuestMenu() {
                         </span>
                       </div>
                     </div>
-                    <Button
-                      size="sm"
-                      disabled={!item.is_available}
-                      onClick={() => addToCart(item)}
-                      className="shrink-0"
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
+                    <div className="flex shrink-0 flex-col items-end gap-1.5">
+                      <button
+                        aria-label="Favorite"
+                        onClick={() => toggleFavorite(item.id)}
+                        className={`grid h-7 w-7 place-items-center rounded-full border transition ${
+                          fav
+                            ? "border-red-500/40 bg-red-500/15 text-red-300"
+                            : "border-white/10 text-muted-foreground hover:border-white/30"
+                        }`}
+                      >
+                        <Heart className="h-3.5 w-3.5" fill={fav ? "currentColor" : "none"} />
+                      </button>
+                      <Button
+                        size="sm"
+                        disabled={!item.is_available}
+                        onClick={() => addToCart(item)}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 </Card>
-              ))}
+                );
+              })}
               {catItems.length === 0 && (
                 <p className="text-xs text-muted-foreground">Nothing in this section yet.</p>
               )}
@@ -338,6 +403,7 @@ function GuestMenu() {
           </section>
         ))}
       </main>
+
 
       {/* Sticky cart bar */}
       {cartCount > 0 && !showCart && (
