@@ -8,8 +8,16 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Bell, Check, CheckCheck, X, AlertTriangle, ChefHat, Receipt, CalendarClock, Sparkles } from "lucide-react";
+import { Bell, Check, CheckCheck, X, AlertTriangle, ChefHat, Receipt, CalendarClock, Sparkles, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 
 type N = {
