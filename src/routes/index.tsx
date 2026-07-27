@@ -88,6 +88,7 @@ function Landing() {
       <Features />
       <ProductPreview />
       <AISection />
+      <Pricing />
       <CTA />
       <Footer />
     </div>
@@ -173,7 +174,7 @@ function Logo() {
 
 function Hero() {
   return (
-    <section className="relative mx-auto max-w-7xl px-6 pb-24 pt-20 sm:pt-28">
+    <section id="product" className="relative mx-auto max-w-7xl px-6 pb-24 pt-20 sm:pt-28">
       <div className="mx-auto max-w-3xl text-center">
         <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-border/80 bg-surface/60 px-3 py-1 text-xs text-muted-foreground backdrop-blur">
           <span className="relative flex h-1.5 w-1.5">
@@ -580,6 +581,126 @@ function CTA() {
           </Link>
         </div>
 
+      </div>
+    </section>
+  );
+}
+
+function Pricing() {
+  const tiers = [
+    {
+      name: "Starter",
+      price: "$0",
+      period: "/mo",
+      tag: "Free during VibeAthon",
+      description: "For single-location cafés getting a feel for live ops.",
+      features: [
+        "Up to 15 tables",
+        "Guest QR menu + order tracker",
+        "Kitchen Display System",
+        "Live floor dashboard",
+      ],
+      cta: "Start free",
+      to: "/auth",
+      highlight: false,
+    },
+    {
+      name: "Growth",
+      price: "$149",
+      period: "/mo",
+      tag: "Most popular",
+      description: "Full nervous system for busy restaurants that need AI ops.",
+      features: [
+        "Unlimited tables & staff",
+        "AI Ops Copilot + Autopilot",
+        "Reservations & waitlist",
+        "Sales analytics + CSV export",
+      ],
+      cta: "Start 14-day trial",
+      to: "/auth",
+      highlight: true,
+    },
+    {
+      name: "Scale",
+      price: "Custom",
+      period: "",
+      tag: "Multi-location",
+      description: "For groups running multiple venues on shared intelligence.",
+      features: [
+        "Multi-restaurant tenancy",
+        "SLA + priority support",
+        "Custom integrations",
+        "Dedicated success partner",
+      ],
+      cta: "Talk to the team",
+      to: "/book",
+      highlight: false,
+    },
+  ] as const;
+
+  return (
+    <section id="pricing" className="mx-auto max-w-7xl px-6 py-24">
+      <div className="mx-auto max-w-2xl text-center">
+        <div className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
+          Pricing
+        </div>
+        <h2 className="mt-3 text-balance text-4xl font-bold tracking-tight sm:text-5xl">
+          Simple pricing. Real-time value.
+        </h2>
+        <p className="mt-4 text-balance text-lg text-muted-foreground">
+          Start free during VibeAthon. Upgrade when your kitchen is ready to run on live data.
+        </p>
+      </div>
+
+      <div className="mt-14 grid gap-6 md:grid-cols-3">
+        {tiers.map((t) => (
+          <div
+            key={t.name}
+            className={`glass-panel relative flex flex-col rounded-2xl border p-6 ${
+              t.highlight
+                ? "border-primary/60 shadow-glow"
+                : "border-border/60"
+            }`}
+          >
+            {t.highlight && (
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-primary-foreground shadow-glow">
+                {t.tag}
+              </div>
+            )}
+            <div className="text-sm font-semibold text-foreground">{t.name}</div>
+            {!t.highlight && (
+              <div className="mt-1 text-xs text-muted-foreground">{t.tag}</div>
+            )}
+            <div className="mt-4 flex items-baseline gap-1">
+              <span className="text-4xl font-bold tracking-tight">{t.price}</span>
+              {t.period && (
+                <span className="text-sm text-muted-foreground">{t.period}</span>
+              )}
+            </div>
+            <p className="mt-3 text-sm text-muted-foreground">{t.description}</p>
+            <ul className="mt-6 space-y-2 text-sm">
+              {t.features.map((f) => (
+                <li key={f} className="flex items-start gap-2 text-foreground/85">
+                  <CircleDot className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+                  {f}
+                </li>
+              ))}
+            </ul>
+            <div className="mt-8">
+              <Link
+                to={t.to}
+                className={`inline-flex w-full items-center justify-center gap-1.5 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all ${
+                  t.highlight
+                    ? "bg-primary text-primary-foreground shadow-glow hover:brightness-110"
+                    : "border border-border bg-background/60 text-foreground hover:bg-surface-elevated"
+                }`}
+              >
+                {t.cta}
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+          </div>
+        ))}
       </div>
     </section>
   );
