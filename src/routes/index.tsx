@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 
 import { useAuth, signOutEverywhere } from "@/hooks/use-auth";
 import {
@@ -16,6 +17,25 @@ import {
   Utensils,
   Zap,
 } from "lucide-react";
+
+const NAV_OFFSET = 72;
+const NAV_ITEMS = [
+  { id: "product", label: "Product" },
+  { id: "features", label: "Features" },
+  { id: "kitchen", label: "Kitchen" },
+  { id: "analytics", label: "Analytics" },
+  { id: "pricing", label: "Pricing" },
+] as const;
+
+function scrollToSection(id: string) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const top = el.getBoundingClientRect().top + window.scrollY - NAV_OFFSET;
+  window.scrollTo({ top, behavior: "smooth" });
+  if (typeof history !== "undefined") {
+    history.replaceState(null, "", `#${id}`);
+  }
+}
 
 
 export const Route = createFileRoute("/")({
