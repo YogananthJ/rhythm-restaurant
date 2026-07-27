@@ -135,6 +135,7 @@ export function NotificationsBell({ restaurantId }: { restaurantId: string | nul
   };
 
   return (
+    <>
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button variant="outline" size="sm" className="relative">
