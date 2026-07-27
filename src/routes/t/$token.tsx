@@ -164,6 +164,27 @@ function GuestMenu() {
     toast.success(`${item.name} added`);
   }
 
+  function addRecommendationToCart(r: Recommendation) {
+    const existing = items.find((i) => i.id === r.menu_item_id);
+    if (existing) {
+      addToCart(existing);
+      return;
+    }
+    const shim: MenuItem = {
+      id: r.menu_item_id,
+      category_id: r.category_id,
+      name: r.name,
+      description: r.description,
+      price_cents: r.price_cents,
+      is_available: true,
+      prep_minutes: r.prep_minutes,
+      dietary_tags: r.dietary_tags,
+    };
+    addToCart(shim);
+  }
+
+  const cartItemIds = useMemo(() => cart.map((l) => l.item.id), [cart]);
+
   function updateQty(id: string, delta: number) {
     setCart((prev) =>
       prev
