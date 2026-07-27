@@ -88,6 +88,7 @@ function Landing() {
       <Features />
       <ProductPreview />
       <AISection />
+      <Pricing />
       <CTA />
       <Footer />
     </div>
