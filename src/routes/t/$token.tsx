@@ -58,6 +58,9 @@ function GuestMenu() {
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  const [dietary, setDietary] = useState<string[]>([]);
+  const [q, setQ] = useState("");
 
   useEffect(() => {
     (async () => {
