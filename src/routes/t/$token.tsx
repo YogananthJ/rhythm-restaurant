@@ -19,10 +19,19 @@ type MenuItem = {
   price_cents: number;
   is_available: boolean;
   prep_minutes: number;
+  dietary_tags?: string[] | null;
+  allergens?: string[] | null;
 };
 type Table = { id: string; label: string; restaurant_id: string };
 type Restaurant = { id: string; name: string };
 type CartLine = { item: MenuItem; qty: number; notes?: string };
+
+const DIETARY_OPTIONS = [
+  { key: "vegetarian", label: "Veg" },
+  { key: "vegan", label: "Vegan" },
+  { key: "gluten-free", label: "GF" },
+  { key: "dairy-free", label: "DF" },
+];
 
 export const Route = createFileRoute("/t/$token")({
   head: () => ({
