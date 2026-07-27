@@ -232,54 +232,6 @@ function Nav({ signedIn }: { signedIn: boolean }) {
     </header>
   );
 }
-        <div className="flex items-center gap-2">
-          <Link
-            to="/book"
-            className="hidden rounded-lg px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground sm:inline-flex"
-          >
-            Reserve
-          </Link>
-          {signedIn ? (
-            <>
-              <button
-                type="button"
-                onClick={() => {
-                  void signOutEverywhere();
-                }}
-                className="hidden rounded-lg px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground sm:inline-flex"
-              >
-                Sign out
-              </button>
-              <Link
-                to="/dashboard"
-                className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-1.5 text-sm font-medium text-primary-foreground shadow-glow transition-all hover:brightness-110"
-              >
-                Open dashboard
-                <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
-            </>
-          ) : (
-            <>
-              <Link
-                to="/auth"
-                className="hidden rounded-lg px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground sm:inline-flex"
-              >
-                Sign in
-              </Link>
-              <Link
-                to="/auth"
-                className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-1.5 text-sm font-medium text-primary-foreground shadow-glow transition-all hover:brightness-110"
-              >
-                Get started
-                <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
-            </>
-          )}
-        </div>
-      </div>
-    </header>
-  );
-}
 
 function Logo() {
   return (
