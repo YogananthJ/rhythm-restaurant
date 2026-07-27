@@ -117,14 +117,6 @@ function Landing() {
 
 
 function Nav({ signedIn }: { signedIn: boolean }) {
-  return (
-    <header className="sticky top-0 z-40 border-b border-border/50 glass-panel">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
-        <Link to="/" className="flex items-center gap-2">
-          <Logo />
-          <span className="text-[15px] font-semibold tracking-tight">Occupancy</span>
-        </Link>
-function Nav({ signedIn }: { signedIn: boolean }) {
   const [active, setActive] = useState<string>("product");
 
   useEffect(() => {
