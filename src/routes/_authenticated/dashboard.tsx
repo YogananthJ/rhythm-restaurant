@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { BillingDialog } from "@/components/BillingDialog";
+import { NotificationsBell } from "@/components/NotificationsBell";
 import { toast } from "sonner";
 import {
   Activity,
@@ -100,6 +101,7 @@ function Dashboard() {
   const [tables, setTables] = useState<DiningTable[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [billOrderId, setBillOrderId] = useState<string | null>(null);
+  const [restaurantId, setRestaurantId] = useState<string | null>(null);
 
   const [email, setEmail] = useState<string>("");
   const [resStats, setResStats] = useState<ResStats>({
@@ -123,6 +125,9 @@ function Dashboard() {
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? ""));
+    supabase.from("restaurants").select("id").limit(1).maybeSingle().then(({ data }) => {
+      if (data?.id) setRestaurantId(data.id);
+    });
     void loadAll();
 
     const ch = supabase
@@ -340,6 +345,7 @@ function Dashboard() {
               Realtime
             </Badge>
             <span className="hidden text-xs text-muted-foreground sm:inline">{email}</span>
+            <NotificationsBell restaurantId={restaurantId} />
             <Button asChild variant="outline" size="sm">
               <Link to="/autopilot"><Cpu className="mr-1.5 h-4 w-4" /> Autopilot</Link>
             </Button>
