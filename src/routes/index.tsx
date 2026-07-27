@@ -235,7 +235,7 @@ function Logo() {
 
 function Hero() {
   return (
-    <section id="product" className="relative mx-auto max-w-7xl px-6 pb-24 pt-20 sm:pt-28">
+    <section id="product" className="relative mx-auto max-w-7xl px-6 pb-24 pt-20 sm:pt-28 scroll-mt-20">
       <div className="mx-auto max-w-3xl text-center">
         <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-border/80 bg-surface/60 px-3 py-1 text-xs text-muted-foreground backdrop-blur">
           <span className="relative flex h-1.5 w-1.5">
@@ -440,7 +440,7 @@ function Features() {
   ];
 
   return (
-    <section id="features" className="mx-auto max-w-7xl px-6 py-24">
+    <section id="features" className="mx-auto max-w-7xl px-6 py-24 scroll-mt-20">
       <div className="mx-auto max-w-2xl text-center">
         <div className="inline-flex items-center gap-1.5 rounded-full border border-border/80 bg-surface/60 px-2.5 py-0.5 text-xs text-muted-foreground">
           Platform
@@ -473,7 +473,7 @@ function Features() {
 
 function ProductPreview() {
   return (
-    <section id="kitchen" className="mx-auto max-w-7xl px-6 py-24">
+    <section id="kitchen" className="mx-auto max-w-7xl px-6 py-24 scroll-mt-20">
       <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
         <div>
           <div className="inline-flex items-center gap-1.5 rounded-full border border-border/80 bg-surface/60 px-2.5 py-0.5 text-xs text-muted-foreground">
@@ -554,7 +554,7 @@ function ProductPreview() {
 
 function AISection() {
   return (
-    <section id="analytics" className="mx-auto max-w-7xl px-6 py-24">
+    <section id="analytics" className="mx-auto max-w-7xl px-6 py-24 scroll-mt-20">
       <div className="rounded-3xl border border-border/70 bg-gradient-to-br from-surface via-surface/60 to-background p-10 sm:p-16">
         <div className="mx-auto max-w-3xl text-center">
           <div className="mx-auto inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-xs text-primary">
@@ -700,7 +700,7 @@ function Pricing() {
   ] as const;
 
   return (
-    <section id="pricing" className="mx-auto max-w-7xl px-6 py-24">
+    <section id="pricing" className="mx-auto max-w-7xl px-6 py-24 scroll-mt-20">
       <div className="mx-auto max-w-2xl text-center">
         <div className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
           Pricing
