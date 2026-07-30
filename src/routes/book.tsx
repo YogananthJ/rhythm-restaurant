@@ -142,7 +142,7 @@ function BookPage() {
             <p className="mt-2 text-sm text-muted-foreground">
               Table for {confirmed.party} · {confirmed.when}
             </p>
-            <p className="mt-1 text-xs text-muted-foreground">Ref: {confirmed.id.slice(0, 8).toUpperCase()}</p>
+            <p className="mt-1 text-xs text-muted-foreground">The host stand has your request.</p>
             <div className="mt-6 flex justify-center gap-2">
               <Button variant="outline" onClick={() => setConfirmed(null)}>Book another</Button>
               <Button asChild>
