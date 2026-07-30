@@ -7,6 +7,8 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { BillingDialog } from "@/components/BillingDialog";
 import { AnimatedNumber } from "@/components/AnimatedNumber";
+import { ReviewsWidget } from "@/components/reviews/ReviewsWidget";
+
 import { toast } from "sonner";
 import {
   BarChart3,
@@ -338,6 +340,7 @@ function Dashboard() {
           <Kpi index={3} icon={<Sparkles className="h-4 w-4" />} label="Avg prep" value={`${avgPrep(items)} min`} num={avgPrep(items)} suffix=" min" />
         </div>
 
+        <ReviewsWidget />
 
 
         {/* Kitchen KPIs */}

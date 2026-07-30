@@ -269,3 +269,35 @@
     transition-duration: 0.001ms !important;
   }
 }
+
+/* ---------- Reviews / testimonials motion ---------- */
+
+@keyframes occ-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@keyframes occ-float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-14px) rotate(6deg); }
+}
+
+@utility float-slow {
+  animation: occ-float 9s ease-in-out infinite;
+}
+
+@utility marquee {
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+  & .marquee-track {
+    animation: occ-marquee 60s linear infinite;
+  }
+  &:hover .marquee-track,
+  &:focus-within .marquee-track {
+    animation-play-state: paused;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee .marquee-track { animation: none !important; }
+}
