@@ -1,3 +1,5 @@
+import { Illustration } from "@/components/Illustration";
+import qrIllustration from "@/assets/illus-qr.jpg";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
@@ -78,6 +80,13 @@ function TablesPage() {
       </header>
 
       <main className="mx-auto max-w-7xl px-6 py-8 print:px-0 print:py-0">
+        <Illustration
+          src={qrIllustration}
+          alt="Illustration of a guest scanning a QR code at a restaurant table"
+          width={1024}
+          height={768}
+          className="mb-8 max-h-64 print:hidden"
+        />
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 print:grid-cols-2 print:gap-4">
           {tables.map((t) => (
             <Card

@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { ArrowLeft, CalendarClock, CheckCircle2, Users, Phone, Mail, StickyNote } from "lucide-react";
+import { Illustration } from "@/components/Illustration";
+import diningIllustration from "@/assets/illus-hero.jpg";
 
 export const Route = createFileRoute("/book")({
   head: () => ({
@@ -123,6 +125,13 @@ function BookPage() {
       </header>
 
       <main className="mx-auto max-w-2xl px-6 py-12">
+        <Illustration
+          src={diningIllustration}
+          alt="Illustration of a warmly lit restaurant dining room ready for guests"
+          width={1280}
+          height={960}
+          className="mb-8"
+        />
         <div className="mb-8 text-center">
           <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-2xl bg-primary/15 text-primary">
             <CalendarClock className="h-6 w-6" />

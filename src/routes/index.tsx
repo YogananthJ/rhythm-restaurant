@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 
 import { useAuth, signOutEverywhere } from "@/hooks/use-auth";
 import { MenuShowcase } from "@/components/MenuShowcase";
+import { Illustration } from "@/components/Illustration";
+import heroIllustration from "@/assets/illus-hero.jpg";
 import {
   Activity,
   ArrowRight,
@@ -367,6 +369,17 @@ function Hero() {
         <p className="mt-4 text-xs text-muted-foreground">
           No credit card · Deploy in under 10 minutes
         </p>
+      </div>
+
+      <div className="relative mx-auto mt-14 max-w-5xl">
+        <Illustration
+          src={heroIllustration}
+          alt="Isometric illustration of a modern restaurant dining room with live data panels"
+          width={1280}
+          height={960}
+          priority
+          className="shadow-elegant"
+        />
       </div>
 
       {/* Hero preview card */}

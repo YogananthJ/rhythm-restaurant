@@ -3,12 +3,13 @@ import { useCallback, useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { getMenuRecommendations, getRevenueInsights, listAiAudit } from "@/lib/ai-insights.functions";
 import { Card } from "@/components/ui/card";
+import { Illustration } from "@/components/Illustration";
+import analyticsIllustration from "@/assets/illus-analytics.jpg";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import {
   ArrowLeft,
-  BarChart3,
   ChefHat,
   ClipboardList,
   RefreshCw,
@@ -151,7 +152,14 @@ function InsightsPage() {
             <ArrowLeft className="h-4 w-4" /> Dashboard
           </Link>
           <div className="flex min-w-0 items-center gap-2">
-            <BarChart3 className="h-5 w-5 text-primary" />
+            <Illustration
+              src={analyticsIllustration}
+              alt="Isometric illustration of a restaurant floor with live data overlays"
+              width={1024}
+              height={768}
+              rounded="rounded-md"
+              className="h-8 w-10 shrink-0"
+            />
             <h1 className="min-w-0 truncate text-base font-semibold">Revenue & Menu Insights</h1>
           </div>
           <div className="ml-auto flex flex-wrap items-center gap-2">
