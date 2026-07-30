@@ -207,7 +207,7 @@ function InsightsPage() {
                 </div>
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">Loading revenue…</p>
+              <div className="space-y-3"><div className="skeleton-shine h-4 w-40 rounded bg-muted" /><div className="skeleton-shine h-32 w-full rounded-xl bg-muted" /><div className="skeleton-shine h-4 w-2/3 rounded bg-muted" /></div>
             )}
 
             {revenue && (

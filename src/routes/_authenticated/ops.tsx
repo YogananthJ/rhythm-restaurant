@@ -229,7 +229,7 @@ function OpsPage() {
           </div>
           <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto p-5">
             {messages.map((m, i) => (
-              <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+              <div key={i} className={`rise-in flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
                 <div
                   className={`max-w-[80%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-sm ${
                     m.role === "user"
@@ -243,7 +243,8 @@ function OpsPage() {
             ))}
             {pending && (
               <div className="flex justify-start">
-                <div className="rounded-2xl border border-white/10 bg-background/60 px-4 py-2.5 text-sm text-muted-foreground">
+                <div className="rise-in flex items-center gap-2 rounded-2xl border border-white/10 bg-background/60 px-4 py-2.5 text-sm text-muted-foreground">
+                  <span className="animate-pulse">Thinking…</span>
                   <span className="inline-flex items-center gap-1">
                     <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary [animation-delay:-0.3s]" />
                     <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary [animation-delay:-0.15s]" />
