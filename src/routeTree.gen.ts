@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as RewardsRouteImport } from './routes/rewards'
 import { Route as ReviewsRouteImport } from './routes/reviews'
 import { Route as HealthRouteImport } from './routes/health'
 import { Route as BookRouteImport } from './routes/book'
@@ -30,6 +31,11 @@ import { Route as AuthenticatedAutopilotRouteImport } from './routes/_authentica
 import { Route as TTokenIndexRouteImport } from './routes/t/$token/index'
 import { Route as TTokenOrderOrderIdRouteImport } from './routes/t/$token/order/$orderId'
 
+const RewardsRoute = RewardsRouteImport.update({
+  id: '/rewards',
+  path: '/rewards',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ReviewsRoute = ReviewsRouteImport.update({
   id: '/reviews',
   path: '/reviews',
@@ -136,6 +142,7 @@ export interface FileRoutesByFullPath {
   '/book': typeof BookRoute
   '/health': typeof HealthRoute
   '/reviews': typeof ReviewsRoute
+  '/rewards': typeof RewardsRoute
   '/autopilot': typeof AuthenticatedAutopilotRoute
   '/billing': typeof AuthenticatedBillingRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -157,6 +164,7 @@ export interface FileRoutesByTo {
   '/book': typeof BookRoute
   '/health': typeof HealthRoute
   '/reviews': typeof ReviewsRoute
+  '/rewards': typeof RewardsRoute
   '/autopilot': typeof AuthenticatedAutopilotRoute
   '/billing': typeof AuthenticatedBillingRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -180,6 +188,7 @@ export interface FileRoutesById {
   '/book': typeof BookRoute
   '/health': typeof HealthRoute
   '/reviews': typeof ReviewsRoute
+  '/rewards': typeof RewardsRoute
   '/_authenticated/autopilot': typeof AuthenticatedAutopilotRoute
   '/_authenticated/billing': typeof AuthenticatedBillingRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -203,6 +212,7 @@ export interface FileRouteTypes {
     | '/book'
     | '/health'
     | '/reviews'
+    | '/rewards'
     | '/autopilot'
     | '/billing'
     | '/dashboard'
@@ -224,6 +234,7 @@ export interface FileRouteTypes {
     | '/book'
     | '/health'
     | '/reviews'
+    | '/rewards'
     | '/autopilot'
     | '/billing'
     | '/dashboard'
@@ -246,6 +257,7 @@ export interface FileRouteTypes {
     | '/book'
     | '/health'
     | '/reviews'
+    | '/rewards'
     | '/_authenticated/autopilot'
     | '/_authenticated/billing'
     | '/_authenticated/dashboard'
@@ -269,12 +281,20 @@ export interface RootRouteChildren {
   BookRoute: typeof BookRoute
   HealthRoute: typeof HealthRoute
   ReviewsRoute: typeof ReviewsRoute
+  RewardsRoute: typeof RewardsRoute
   TTokenIndexRoute: typeof TTokenIndexRoute
   TTokenOrderOrderIdRoute: typeof TTokenOrderOrderIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/rewards': {
+      id: '/rewards'
+      path: '/rewards'
+      fullPath: '/rewards'
+      preLoaderRoute: typeof RewardsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reviews': {
       id: '/reviews'
       path: '/reviews'
@@ -458,9 +478,20 @@ const rootRouteChildren: RootRouteChildren = {
   BookRoute: BookRoute,
   HealthRoute: HealthRoute,
   ReviewsRoute: ReviewsRoute,
+  RewardsRoute: RewardsRoute,
   TTokenIndexRoute: TTokenIndexRoute,
   TTokenOrderOrderIdRoute: TTokenOrderOrderIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
