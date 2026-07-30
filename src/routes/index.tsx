@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 
 import { useAuth, signOutEverywhere } from "@/hooks/use-auth";
 import { MenuShowcase } from "@/components/MenuShowcase";
+import { Testimonials } from "@/components/reviews/Testimonials";
+
 import { Illustration } from "@/components/Illustration";
 import heroIllustration from "@/assets/illus-hero.jpg";
 import {
@@ -121,7 +123,9 @@ function Landing() {
         <ProductPreview />
         <AISection />
         <Pricing />
+        <Testimonials />
         <CTA />
+
       </main>
       <Footer />
 
