@@ -80,7 +80,7 @@ async def main() -> int:
                     await page.keyboard.press("Escape")
                     await page.wait_for_timeout(300)
             else:
-                for menu in ["Operations", "Intelligence", "Guest"]:
+                for menu in ["Operations", "Analytics", "AI"]:
                     btn = page.get_by_role("button", name=menu)
                     if await btn.count():
                         await btn.first.click()
