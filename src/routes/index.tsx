@@ -12,7 +12,10 @@ import {
   LayoutDashboard,
   LineChart,
   LogOut,
+  Menu,
   QrCode,
+  X,
+
   Sparkles,
   Utensils,
   Zap,
