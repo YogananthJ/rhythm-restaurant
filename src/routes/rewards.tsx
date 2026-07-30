@@ -147,14 +147,8 @@ function RewardsHub() {
         balance={state.balance}
         tier={tier.name}
         streak={state.streak}
-        onClaim={(id, name, cost) => {
-          if (rewards.redeem(id, name, cost)) {
-            toast.success(`${name} claimed — find it in My Rewards.`);
-            setSection("mine");
-          } else {
-            setSection("store");
-          }
-        }}
+        onClaim={claimById}
+
         onStore={() => setSection("store")}
       />
 
