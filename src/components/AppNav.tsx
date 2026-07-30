@@ -86,6 +86,18 @@ export const NAV_GROUPS: Group[] = [
   },
 ];
 
+// Cache these once per browser session — the nav mounts on every authenticated
+// route change and previously refetched the user + restaurant each time.
+let restaurantIdPromise: Promise<string | null> | null = null;
+function loadRestaurantId(): Promise<string | null> {
+  if (!restaurantIdPromise) {
+    restaurantIdPromise = Promise.resolve(
+      supabase.from("restaurants").select("id").limit(1).maybeSingle(),
+    ).then(({ data }) => data?.id ?? null);
+  }
+  return restaurantIdPromise;
+}
+
 export function AppNav() {
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -94,15 +106,16 @@ export function AppNav() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? ""));
-    supabase
-      .from("restaurants")
-      .select("id")
-      .limit(1)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data?.id) setRestaurantId(data.id);
-      });
+    let alive = true;
+    supabase.auth.getUser().then(({ data }) => {
+      if (alive) setEmail(data.user?.email ?? "");
+    });
+    void loadRestaurantId().then((id) => {
+      if (alive && id) setRestaurantId(id);
+    });
+    return () => {
+      alive = false;
+    };
   }, []);
 
   useEffect(() => {

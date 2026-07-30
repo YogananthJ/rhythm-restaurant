@@ -4,13 +4,14 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { askOpsAssistant, generateShiftSummary } from "@/lib/ai-ops.functions";
 import { Card } from "@/components/ui/card";
+import { Illustration } from "@/components/Illustration";
+import aiIllustration from "@/assets/illus-ai.jpg";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import {
   ArrowLeft,
-  Bot,
   DollarSign,
   FileText,
   Send,
@@ -167,9 +168,14 @@ function OpsPage() {
               <Link to="/dashboard"><ArrowLeft className="mr-1.5 h-4 w-4" /> Floor</Link>
             </Button>
             <div className="hidden items-center gap-2 sm:flex">
-              <div className="grid h-8 w-8 place-items-center rounded-lg bg-accent/15 text-accent">
-                <Bot className="h-4 w-4" />
-              </div>
+              <Illustration
+                src={aiIllustration}
+                alt="Illustration of an AI assistant surrounded by restaurant analytics"
+                width={1024}
+                height={768}
+                rounded="rounded-lg"
+                className="h-9 w-9 shrink-0"
+              />
               <div>
                 <div className="text-sm font-semibold leading-none">Ops Copilot</div>
                 <div className="mt-0.5 text-[11px] text-muted-foreground">AI + live analytics</div>

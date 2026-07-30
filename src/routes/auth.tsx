@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { ArrowLeft, ChefHat, Loader2, Sparkles, MailCheck } from "lucide-react";
+import { Illustration } from "@/components/Illustration";
+import chefIllustration from "@/assets/illus-chef.jpg";
 
 
 export const Route = createFileRoute("/auth")({
@@ -236,9 +238,17 @@ function AuthPage() {
         Back to Home
       </Link>
       <main className="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center px-6 py-20">
-        <Link to="/" className="mb-8 flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+        <Link to="/" className="mb-6 flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
           <ChefHat className="h-4 w-4 text-primary" /> Occupancy
         </Link>
+        <Illustration
+          src={chefIllustration}
+          alt="Illustrated chef waving hello"
+          width={900}
+          height={900}
+          rounded="rounded-full"
+          className="mb-6 w-28 shadow-glow"
+        />
         <Card className="w-full border-white/10 bg-card/80 p-8 backdrop-blur">
           <h1 className="text-2xl font-semibold tracking-tight">
             {mode === "signin" ? "Welcome back" : "Create your workspace"}
