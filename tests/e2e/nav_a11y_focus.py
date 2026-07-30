@@ -91,10 +91,16 @@ async def desktop_dropdown_checks(page):
     await page.wait_for_timeout(400)
     menu = page.locator('[role="menu"]').first
     check("desktop: dropdown exposes role=menu", await menu.is_visible())
-    check(
-        "desktop: trigger reports aria-expanded=true when open",
-        (await trigger.get_attribute("aria-expanded")) == "true",
+    # Radix marks outside content aria-hidden while the menu is open, so read the
+    # trigger straight from the DOM rather than through the a11y-role query.
+    expanded = await page.evaluate(
+        """() => {
+            const b = Array.from(document.querySelectorAll('header button'))
+              .find(el => el.textContent.trim().startsWith('Operations'));
+            return b ? b.getAttribute('aria-expanded') : null;
+        }"""
     )
+    check("desktop: trigger reports aria-expanded=true when open", expanded == "true", str(expanded))
 
     await page.keyboard.press("ArrowDown")
     await page.wait_for_timeout(200)
