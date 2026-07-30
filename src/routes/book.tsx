@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { ArrowLeft, CalendarClock, CheckCircle2, Users, Phone, Mail, StickyNote } from "lucide-react";
 import { Illustration } from "@/components/Illustration";
+import { SuccessScreen } from "@/components/SuccessScreen";
+import { saveReservation } from "@/lib/guest-prefs";
 import diningIllustration from "@/assets/illus-hero.jpg";
 
 export const Route = createFileRoute("/book")({
@@ -29,7 +31,9 @@ type Restaurant = { id: string; name: string };
 function BookPage() {
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [busy, setBusy] = useState(false);
-  const [confirmed, setConfirmed] = useState<{ when: string; party: number } | null>(null);
+  const [confirmed, setConfirmed] = useState<{ when: string; party: number; seating: string } | null>(null);
+  const [availability, setAvailability] = useState<{ seats_available: number; total_seats: number; can_book: boolean } | null>(null);
+  const [checking, setChecking] = useState(false);
 
   const defaults = useMemo(() => {
     const d = new Date();
@@ -46,6 +50,7 @@ function BookPage() {
     party_size: 2,
     requested_at: defaults,
     notes: "",
+    seating: "any" as "any" | "indoor" | "outdoor",
   });
 
   useEffect(() => {
@@ -54,6 +59,30 @@ function BookPage() {
       if (data) setRestaurant(data as Restaurant);
     })();
   }, []);
+
+  // Live availability preview for the chosen slot
+  useEffect(() => {
+    if (!restaurant || !form.requested_at) return;
+    const when = new Date(form.requested_at);
+    if (Number.isNaN(when.getTime())) return;
+    let cancelled = false;
+    setChecking(true);
+    const t = setTimeout(async () => {
+      const { data } = await supabase.rpc("check_reservation_capacity", {
+        p_restaurant_id: restaurant.id,
+        p_requested_at: when.toISOString(),
+        p_party_size: form.party_size,
+      });
+      if (!cancelled) {
+        setAvailability((data as { seats_available: number; total_seats: number; can_book: boolean } | null) ?? null);
+        setChecking(false);
+      }
+    }, 400);
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+    };
+  }, [restaurant, form.requested_at, form.party_size]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -93,7 +122,9 @@ function BookPage() {
         email: form.email.trim() || null,
         party_size: form.party_size,
         requested_at: when.toISOString(),
-        notes: form.notes.trim() || null,
+        notes: [form.seating !== "any" ? `Seating: ${form.seating}` : null, form.notes.trim() || null]
+          .filter(Boolean)
+          .join(" · ") || null,
         status: "pending",
       });
     setBusy(false);
@@ -101,7 +132,16 @@ function BookPage() {
       toast.error(error.message);
       return;
     }
-    setConfirmed({ when: when.toLocaleString(), party: form.party_size });
+    const seatingLabel = form.seating === "any" ? "Any seating" : form.seating === "indoor" ? "Indoor" : "Outdoor";
+    setConfirmed({ when: when.toLocaleString(), party: form.party_size, seating: seatingLabel });
+    saveReservation({
+      id: crypto.randomUUID(),
+      when: when.toLocaleString(),
+      party: form.party_size,
+      seating: seatingLabel,
+      name: form.guest_name.trim(),
+      notes: form.notes.trim() || undefined,
+    });
     toast.success("Reservation confirmed instantly");
   }
 
@@ -145,20 +185,19 @@ function BookPage() {
         </div>
 
         {confirmed ? (
-          <Card className="border-primary/30 bg-primary/5 p-8 text-center backdrop-blur">
-            <CheckCircle2 className="mx-auto mb-3 h-10 w-10 text-primary" />
-            <h2 className="text-xl font-semibold">Request received</h2>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Table for {confirmed.party} · {confirmed.when}
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground">The host stand has your request.</p>
-            <div className="mt-6 flex justify-center gap-2">
-              <Button variant="outline" onClick={() => setConfirmed(null)}>Book another</Button>
-              <Button asChild>
-                <Link to="/">Back home</Link>
-              </Button>
-            </div>
-          </Card>
+          <SuccessScreen
+            title="Reservation confirmed"
+            message="Your table is on the host stand. We hold it for 15 minutes past your booking time."
+            details={[
+              { label: "When", value: confirmed.when },
+              { label: "Party", value: `${confirmed.party} guest${confirmed.party === 1 ? "" : "s"}` },
+              { label: "Seating", value: confirmed.seating },
+            ]}
+          >
+            <Button variant="outline" onClick={() => setConfirmed(null)}>Book another</Button>
+            <Button asChild><Link to="/profile">View in my profile</Link></Button>
+            <Button asChild variant="ghost"><Link to="/our-menu">Browse the menu</Link></Button>
+          </SuccessScreen>
         ) : (
           <Card className="border-white/10 bg-card/70 p-6 backdrop-blur sm:p-8">
             <form onSubmit={submit} className="space-y-5">
@@ -214,6 +253,46 @@ function BookPage() {
                     onChange={(e) => setForm({ ...form, email: e.target.value })}
                   />
                 </div>
+              </div>
+
+              <div>
+                <Label>Seating preference</Label>
+                <div className="flex flex-wrap gap-2">
+                  {(["any", "indoor", "outdoor"] as const).map((sIt) => (
+                    <button
+                      key={sIt}
+                      type="button"
+                      aria-pressed={form.seating === sIt}
+                      onClick={() => setForm({ ...form, seating: sIt })}
+                      className={`press rounded-xl border px-4 py-2 text-sm capitalize transition-colors ${
+                        form.seating === sIt
+                          ? "border-primary/50 bg-primary/15 text-primary"
+                          : "border-white/10 bg-surface/40 text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      {sIt === "any" ? "No preference" : sIt}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div
+                className="rounded-xl border border-white/10 bg-surface/40 px-4 py-3 text-sm"
+                aria-live="polite"
+              >
+                {checking && <span className="text-muted-foreground">Checking live table availability…</span>}
+                {!checking && availability && (
+                  availability.can_book ? (
+                    <span className="text-primary">
+                      {availability.seats_available} of {availability.total_seats} seats free around that time — your table is available.
+                    </span>
+                  ) : (
+                    <span className="text-amber-300">
+                      Only {availability.seats_available} seats free within 90 minutes of that slot. Try another time.
+                    </span>
+                  )
+                )}
+                {!checking && !availability && <span className="text-muted-foreground">Pick a date & time to see live availability.</span>}
               </div>
 
               <div>

@@ -11,7 +11,12 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as RewardsRouteImport } from './routes/rewards'
 import { Route as ReviewsRouteImport } from './routes/reviews'
+import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as OurMenuRouteImport } from './routes/our-menu'
 import { Route as HealthRouteImport } from './routes/health'
+import { Route as GalleryRouteImport } from './routes/gallery'
+import { Route as FaqRouteImport } from './routes/faq'
+import { Route as ContactRouteImport } from './routes/contact'
 import { Route as BookRouteImport } from './routes/book'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
@@ -41,9 +46,34 @@ const ReviewsRoute = ReviewsRouteImport.update({
   path: '/reviews',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OurMenuRoute = OurMenuRouteImport.update({
+  id: '/our-menu',
+  path: '/our-menu',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const HealthRoute = HealthRouteImport.update({
   id: '/health',
   path: '/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GalleryRoute = GalleryRouteImport.update({
+  id: '/gallery',
+  path: '/gallery',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FaqRoute = FaqRouteImport.update({
+  id: '/faq',
+  path: '/faq',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BookRoute = BookRouteImport.update({
@@ -140,7 +170,12 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/book': typeof BookRoute
+  '/contact': typeof ContactRoute
+  '/faq': typeof FaqRoute
+  '/gallery': typeof GalleryRoute
   '/health': typeof HealthRoute
+  '/our-menu': typeof OurMenuRoute
+  '/profile': typeof ProfileRoute
   '/reviews': typeof ReviewsRoute
   '/rewards': typeof RewardsRoute
   '/autopilot': typeof AuthenticatedAutopilotRoute
@@ -162,7 +197,12 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/book': typeof BookRoute
+  '/contact': typeof ContactRoute
+  '/faq': typeof FaqRoute
+  '/gallery': typeof GalleryRoute
   '/health': typeof HealthRoute
+  '/our-menu': typeof OurMenuRoute
+  '/profile': typeof ProfileRoute
   '/reviews': typeof ReviewsRoute
   '/rewards': typeof RewardsRoute
   '/autopilot': typeof AuthenticatedAutopilotRoute
@@ -186,7 +226,12 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/book': typeof BookRoute
+  '/contact': typeof ContactRoute
+  '/faq': typeof FaqRoute
+  '/gallery': typeof GalleryRoute
   '/health': typeof HealthRoute
+  '/our-menu': typeof OurMenuRoute
+  '/profile': typeof ProfileRoute
   '/reviews': typeof ReviewsRoute
   '/rewards': typeof RewardsRoute
   '/_authenticated/autopilot': typeof AuthenticatedAutopilotRoute
@@ -210,7 +255,12 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/book'
+    | '/contact'
+    | '/faq'
+    | '/gallery'
     | '/health'
+    | '/our-menu'
+    | '/profile'
     | '/reviews'
     | '/rewards'
     | '/autopilot'
@@ -232,7 +282,12 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/book'
+    | '/contact'
+    | '/faq'
+    | '/gallery'
     | '/health'
+    | '/our-menu'
+    | '/profile'
     | '/reviews'
     | '/rewards'
     | '/autopilot'
@@ -255,7 +310,12 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/book'
+    | '/contact'
+    | '/faq'
+    | '/gallery'
     | '/health'
+    | '/our-menu'
+    | '/profile'
     | '/reviews'
     | '/rewards'
     | '/_authenticated/autopilot'
@@ -279,7 +339,12 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   BookRoute: typeof BookRoute
+  ContactRoute: typeof ContactRoute
+  FaqRoute: typeof FaqRoute
+  GalleryRoute: typeof GalleryRoute
   HealthRoute: typeof HealthRoute
+  OurMenuRoute: typeof OurMenuRoute
+  ProfileRoute: typeof ProfileRoute
   ReviewsRoute: typeof ReviewsRoute
   RewardsRoute: typeof RewardsRoute
   TTokenIndexRoute: typeof TTokenIndexRoute
@@ -302,11 +367,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReviewsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/our-menu': {
+      id: '/our-menu'
+      path: '/our-menu'
+      fullPath: '/our-menu'
+      preLoaderRoute: typeof OurMenuRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/health': {
       id: '/health'
       path: '/health'
       fullPath: '/health'
       preLoaderRoute: typeof HealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/gallery': {
+      id: '/gallery'
+      path: '/gallery'
+      fullPath: '/gallery'
+      preLoaderRoute: typeof GalleryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/faq': {
+      id: '/faq'
+      path: '/faq'
+      fullPath: '/faq'
+      preLoaderRoute: typeof FaqRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/book': {
@@ -476,7 +576,12 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   BookRoute: BookRoute,
+  ContactRoute: ContactRoute,
+  FaqRoute: FaqRoute,
+  GalleryRoute: GalleryRoute,
   HealthRoute: HealthRoute,
+  OurMenuRoute: OurMenuRoute,
+  ProfileRoute: ProfileRoute,
   ReviewsRoute: ReviewsRoute,
   RewardsRoute: RewardsRoute,
   TTokenIndexRoute: TTokenIndexRoute,

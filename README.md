@@ -414,3 +414,14 @@ Stable URLs:
 **Business value.** Faster tables, fewer 86'd surprises, higher average tickets from AI upsells, fewer no-shows from confirmed reservations, and a manager who spends the shift *on the floor* — not in a spreadsheet.
 
 Occupancy isn't a POS. It's the operating system restaurants have been missing.
+
+### Guest experience layer (latest)
+
+- Public routes: `/our-menu` (search, diet/spice/allergen filters), `/gallery` (masonry lightbox), `/faq`, `/contact`, `/profile` (orders, favourites, reservations, rewards).
+- Landing additions: featured categories, "Why choose Occupancy", gallery strip, reserve/browse hero CTAs, expanded footer.
+- Reservations: seating preference, live seat availability preview, celebratory confirmation saved to the guest profile.
+- Order tracker: stage copy, progress bar and live ETA; friendly 404 for expired links.
+- Errors: unified `StatusScreen` for 404 / 500 / offline / expired session, wired into the router root.
+- Tests: `tests/e2e/visual_nav_regression.py` screenshots navbar dropdowns, mobile drawer and focus rings at 390 / 768 / 1440 and diffs against baselines in `tests/e2e/__screenshots__/`.
+
+> Note: the staff menu manager stays at `/menu`; the public menu lives at `/our-menu`.
