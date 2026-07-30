@@ -37,6 +37,7 @@ import {
   Cpu,
   FileText,
   Gauge,
+  Gift,
   LayoutDashboard,
   LogOut,
   Menu as MenuIcon,
@@ -61,6 +62,7 @@ export const NAV_GROUPS: Group[] = [
     items: [
       { to: "/host", label: "Host", icon: Users },
       { to: "/book", label: "Reserve a Table", icon: CalendarPlus },
+      { to: "/rewards", label: "Rewards Hub", icon: Gift },
       { to: "/tables", label: "QR Ordering", icon: QrCode },
       { to: "/menu", label: "Menu", icon: Utensils },
       { to: "/kds", label: "Kitchen Display", icon: ChefHat },
