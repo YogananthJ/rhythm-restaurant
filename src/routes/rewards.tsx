@@ -816,9 +816,9 @@ function RewardsStore({
                   type="button"
                   disabled={!affordable}
                   onClick={() => {
-                    if (redeem(r.id, r.name, r.cost)) {
-                      toast.success(`${r.name} redeemed — find it in My Rewards.`);
-                    }
+                    const result = redeem(r.id, r.name, r.cost);
+                    if (result) onClaimed(result);
+
                   }}
                   className="press mt-4 inline-flex min-h-11 items-center justify-center rounded-xl bg-primary text-sm font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-40"
                 >
