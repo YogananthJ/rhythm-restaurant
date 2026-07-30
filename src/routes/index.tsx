@@ -26,6 +26,7 @@ const NAV_OFFSET = 72;
 const NAV_ITEMS = [
   { id: "product", label: "Product" },
   { id: "features", label: "Features" },
+  { id: "menu", label: "Menu" },
   { id: "kitchen", label: "Kitchen" },
   { id: "analytics", label: "Analytics" },
   { id: "pricing", label: "Pricing" },
