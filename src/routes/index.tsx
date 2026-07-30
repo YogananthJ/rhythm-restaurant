@@ -124,6 +124,8 @@ function Landing() {
 
 function Nav({ signedIn }: { signedIn: boolean }) {
   const [active, setActive] = useState<string>("product");
+  const [menuOpen, setMenuOpen] = useState(false);
+
 
   useEffect(() => {
     const els = NAV_ITEMS
