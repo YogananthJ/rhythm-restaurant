@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -53,6 +57,7 @@ export function BillingDialog({ orderId, open, onOpenChange, onClosed }: {
   const [addMenuId, setAddMenuId] = useState<string>("");
   const [addQty, setAddQty] = useState(1);
   const [mergeTarget, setMergeTarget] = useState<string>("");
+  const [confirm, setConfirm] = useState<{ title: string; body: string; action: () => void } | null>(null);
 
   const currency = restaurant?.currency ?? "USD";
 
@@ -98,7 +103,11 @@ export function BillingDialog({ orderId, open, onOpenChange, onClosed }: {
 
   const paidCents = useMemo(() => payments.reduce((s, p) => s + p.amount_cents, 0), [payments]);
   const tipsCents = useMemo(() => payments.reduce((s, p) => s + p.tip_cents, 0), [payments]);
-  const dueCents = Math.max((order?.total_cents ?? 0) - paidCents, 0);
+  // Server-side settlement check is (payments.amount + payments.tip) >= order.total,
+  // so the client must use the same figure or the Close button lies about the state.
+  const collectedCents = paidCents + tipsCents;
+  const dueCents = Math.max((order?.total_cents ?? 0) - collectedCents, 0);
+  const changeCents = Math.max(collectedCents - (order?.total_cents ?? 0), 0);
   const tableLabel = order?.table_id ? tables.find((t) => t.id === order.table_id)?.label : undefined;
 
   const call = async <T,>(fn: () => Promise<T>, msg?: string) => {
@@ -148,14 +157,16 @@ export function BillingDialog({ orderId, open, onOpenChange, onClosed }: {
       setDiscountInput((disc / 100).toFixed(2)); setCouponInput("");
     }, "Coupon applied");
   };
-  const addPayment = async (amt?: number) => {
+  const addPayment = async (amt?: number, tipOverride?: number) => {
     if (!orderId) return;
     const amount = amt ?? toCents(payAmount || "0");
-    if (amount <= 0) { toast.error("Enter amount"); return; }
+    if (!Number.isFinite(amount) || amount <= 0) { toast.error("Enter a payment amount greater than zero"); return; }
+    const tip = tipOverride ?? toCents(payTip || "0");
+    if (tip < 0) { toast.error("Tip cannot be negative"); return; }
     await call(async () => {
       const { error } = await supabase.rpc("staff_add_payment", {
         p_order_id: orderId, p_method: payMethod, p_amount_cents: amount,
-        p_tip_cents: toCents(payTip || "0"), p_txn_ref: payRef,
+        p_tip_cents: tip, p_txn_ref: payRef,
       });
       if (error) throw new Error(error.message);
       setPayAmount(""); setPayTip(""); setPayRef("");
@@ -173,11 +184,24 @@ export function BillingDialog({ orderId, open, onOpenChange, onClosed }: {
     await call(async () => {
       const { data, error } = await supabase.rpc("staff_close_order", { p_order_id: orderId });
       if (error) throw new Error(error.message);
-      const inv = (data as { invoice_no: string } | null)?.invoice_no;
-      toast.success(`Invoice ${inv ?? ""} issued`);
+      const res = data as { invoice_no: string; change_cents?: number; already_closed?: boolean } | null;
+      if (res?.already_closed) toast.info(`Already settled · ${res.invoice_no ?? ""}`);
+      else toast.success(`Invoice ${res?.invoice_no ?? ""} issued${res?.change_cents ? ` · change due ${formatCents(res.change_cents, currency)}` : ""}`);
+      // Re-read the settled row: the closure above still holds the pre-close
+      // order, so printing from state would omit the invoice number/tip.
+      const [fresh, freshPays] = await Promise.all([
+        supabase.from("orders").select("*").eq("id", orderId).maybeSingle(),
+        supabase.from("payments").select("*").eq("order_id", orderId).order("created_at"),
+      ]);
       await load();
-      // print
-      setTimeout(() => downloadPDF(true), 100);
+      if (fresh.data && restaurant) {
+        const doc = generateReceiptPDF({
+          restaurant, order: fresh.data as OrderRow, items,
+          payments: (freshPays.data as PayRow[]) ?? payments, tableLabel,
+        });
+        doc.autoPrint();
+        doc.save(`receipt-${(fresh.data as OrderRow).invoice_no ?? orderId.slice(0, 8)}.pdf`);
+      }
       onClosed?.();
     });
   };
@@ -196,12 +220,21 @@ export function BillingDialog({ orderId, open, onOpenChange, onClosed }: {
     }, "Order split");
   };
   const splitEqual = async (ways: number) => {
-    if (!order || ways < 2) return;
+    if (!orderId || ways < 2 || dueCents <= 0) return;
     const each = Math.floor(dueCents / ways);
-    for (let i = 0; i < ways; i++) {
-      const amt = i === ways - 1 ? dueCents - each * (ways - 1) : each;
-      await addPayment(amt);
-    }
+    if (each <= 0) { toast.error("Amount too small to split that many ways"); return; }
+    const tip = toCents(payTip || "0"); // tip is charged once, not once per share
+    await call(async () => {
+      for (let i = 0; i < ways; i++) {
+        const amt = i === ways - 1 ? dueCents - each * (ways - 1) : each;
+        const { error } = await supabase.rpc("staff_add_payment", {
+          p_order_id: orderId, p_method: payMethod, p_amount_cents: amt,
+          p_tip_cents: i === 0 ? tip : 0, p_txn_ref: payRef ? `${payRef}-${i + 1}` : "",
+        });
+        if (error) throw new Error(`Split ${i + 1}/${ways} failed: ${error.message}`);
+      }
+      setPayAmount(""); setPayTip(""); setPayRef("");
+    }, `Recorded ${ways} equal payments`);
   };
   const mergeInto = async () => {
     if (!orderId || !mergeTarget) return;
@@ -218,6 +251,11 @@ export function BillingDialog({ orderId, open, onOpenChange, onClosed }: {
     const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n;
   });
 
+  // 'paid' is not the only terminal state — closed/cancelled tickets are locked too.
+  const locked = !order || ["paid", "closed", "cancelled"].includes(order.status);
+
+  const ask = (title: string, body: string, action: () => void) => setConfirm({ title, body, action });
+
   if (!open || !orderId) return null;
 
   return (
@@ -229,9 +267,12 @@ export function BillingDialog({ orderId, open, onOpenChange, onClosed }: {
             {order?.invoice_no && <Badge variant="secondary">{order.invoice_no}</Badge>}
             {order?.status && <Badge>{order.status}</Badge>}
           </DialogTitle>
+          <DialogDescription>
+            Edit items, apply discounts and coupons, take payment, then issue the invoice.
+          </DialogDescription>
         </DialogHeader>
 
-        {!order ? <div className="py-10 text-center text-muted-foreground"><Loader2 className="mx-auto h-5 w-5 animate-spin" /></div> : (
+        {!order ? <div className="py-10 text-center text-muted-foreground" role="status" aria-live="polite"><Loader2 className="mx-auto h-5 w-5 animate-spin" /><span className="sr-only">Loading bill…</span></div> : (
         <Tabs defaultValue="items">
           <TabsList className="grid grid-cols-4">
             <TabsTrigger value="items">Items</TabsTrigger>
@@ -251,16 +292,16 @@ export function BillingDialog({ orderId, open, onOpenChange, onClosed }: {
                       <div className="text-xs text-muted-foreground">{formatCents(it.unit_price_cents, currency)} · {it.status}</div>
                     </div>
                     <div className="flex items-center gap-1">
-                      <Button size="icon" variant="ghost" disabled={busy || order.status === "paid"} onClick={() => updateQty(it.id, it.quantity - 1)}><Minus className="h-3.5 w-3.5" /></Button>
+                      <Button size="icon" variant="ghost" disabled={busy || locked} aria-label={`Decrease quantity of ${it.name_snapshot}`} onClick={() => updateQty(it.id, it.quantity - 1)}><Minus className="h-3.5 w-3.5" /></Button>
                       <span className="w-6 text-center text-sm">{it.quantity}</span>
-                      <Button size="icon" variant="ghost" disabled={busy || order.status === "paid"} onClick={() => updateQty(it.id, it.quantity + 1)}><Plus className="h-3.5 w-3.5" /></Button>
+                      <Button size="icon" variant="ghost" disabled={busy || locked} aria-label={`Increase quantity of ${it.name_snapshot}`} onClick={() => updateQty(it.id, it.quantity + 1)}><Plus className="h-3.5 w-3.5" /></Button>
                     </div>
                     <div className="w-20 text-right text-sm">{formatCents(it.unit_price_cents * it.quantity, currency)}</div>
-                    <Button size="icon" variant="ghost" disabled={busy || order.status === "paid"} onClick={() => removeItem(it.id)}><Trash2 className="h-3.5 w-3.5 text-red-400" /></Button>
+                    <Button size="icon" variant="ghost" disabled={busy || locked} aria-label={`Remove ${it.name_snapshot}`} onClick={() => ask("Remove this item?", `${it.name_snapshot} × ${it.quantity} will be removed and the bill re-totalled.`, () => removeItem(it.id))}><Trash2 className="h-3.5 w-3.5 text-red-400" /></Button>
                   </div>
                 ))}
             </div>
-            {order.status !== "paid" && (
+            {!locked && (
               <div className="flex gap-2">
                 <Select value={addMenuId} onValueChange={setAddMenuId}>
                   <SelectTrigger className="flex-1"><SelectValue placeholder="Add menu item…" /></SelectTrigger>
@@ -279,13 +320,13 @@ export function BillingDialog({ orderId, open, onOpenChange, onClosed }: {
               <div><Label>Tip ({currency})</Label><Input type="number" step="0.01" value={tipInput} onChange={(e) => setTipInput(e.target.value)} /></div>
             </div>
             <div><Label>Notes</Label><Textarea value={notesInput} onChange={(e) => setNotesInput(e.target.value)} rows={2} maxLength={500} /></div>
-            <Button onClick={applyCharges} disabled={busy || order.status === "paid"}>Apply</Button>
+            <Button onClick={applyCharges} disabled={busy || locked}>Apply</Button>
             <Separator />
             <div>
               <Label>Coupon code</Label>
               <div className="flex gap-2 mt-1">
                 <Input value={couponInput} onChange={(e) => setCouponInput(e.target.value.toUpperCase())} placeholder="WELCOME10" />
-                <Button onClick={applyCoupon} disabled={busy || !couponInput.trim() || order.status === "paid"}><Tag className="mr-1 h-4 w-4" />Apply</Button>
+                <Button onClick={applyCoupon} disabled={busy || !couponInput.trim() || locked}><Tag className="mr-1 h-4 w-4" />Apply</Button>
               </div>
               {order.coupon_code && <div className="mt-2 text-xs text-emerald-400">Applied: {order.coupon_code}</div>}
             </div>
@@ -293,8 +334,8 @@ export function BillingDialog({ orderId, open, onOpenChange, onClosed }: {
           </TabsContent>
 
           <TabsContent value="pay" className="space-y-3">
-            <TotalsPanel order={order} currency={currency} paid={paidCents} due={dueCents} />
-            {order.status !== "paid" && (
+            <TotalsPanel order={order} currency={currency} paid={collectedCents} due={dueCents} change={changeCents} />
+            {!locked && (
               <>
                 <div className="grid grid-cols-4 gap-2">
                   <Select value={payMethod} onValueChange={setPayMethod}>
@@ -307,10 +348,10 @@ export function BillingDialog({ orderId, open, onOpenChange, onClosed }: {
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <Button size="sm" variant="outline" onClick={() => setPayAmount((dueCents / 100).toFixed(2))}>Pay due ({formatCents(dueCents, currency)})</Button>
-                  <Button size="sm" variant="outline" onClick={() => splitEqual(2)} disabled={dueCents <= 0}>Split 2-way</Button>
-                  <Button size="sm" variant="outline" onClick={() => splitEqual(3)} disabled={dueCents <= 0}>Split 3-way</Button>
-                  <Button size="sm" variant="outline" onClick={() => splitEqual(4)} disabled={dueCents <= 0}>Split 4-way</Button>
-                  <Button onClick={() => addPayment()} disabled={busy}><CreditCard className="mr-1 h-4 w-4" />Record</Button>
+                  <Button size="sm" variant="outline" onClick={() => splitEqual(2)} disabled={busy || dueCents <= 0}>Split 2-way</Button>
+                  <Button size="sm" variant="outline" onClick={() => splitEqual(3)} disabled={busy || dueCents <= 0}>Split 3-way</Button>
+                  <Button size="sm" variant="outline" onClick={() => splitEqual(4)} disabled={busy || dueCents <= 0}>Split 4-way</Button>
+                  <Button onClick={() => addPayment()} disabled={busy || !payAmount}><CreditCard className="mr-1 h-4 w-4" />Record</Button>
                 </div>
               </>
             )}
@@ -321,7 +362,7 @@ export function BillingDialog({ orderId, open, onOpenChange, onClosed }: {
                     <div><Badge variant="outline">{p.method.toUpperCase()}</Badge> {p.txn_ref && <span className="ml-2 text-xs text-muted-foreground">{p.txn_ref}</span>}</div>
                     <div className="flex items-center gap-3">
                       <span>{formatCents(p.amount_cents, currency)}{p.tip_cents > 0 && ` + ${formatCents(p.tip_cents, currency)} tip`}</span>
-                      {order.status !== "paid" && <Button size="icon" variant="ghost" onClick={() => voidPayment(p.id)}><Trash2 className="h-3.5 w-3.5 text-red-400" /></Button>}
+                      {!locked && <Button size="icon" variant="ghost" aria-label={`Void ${p.method} payment of ${formatCents(p.amount_cents, currency)}`} onClick={() => ask("Void this payment?", `${p.method.toUpperCase()} ${formatCents(p.amount_cents, currency)} will be removed from this ticket.`, () => voidPayment(p.id))}><Trash2 className="h-3.5 w-3.5 text-red-400" /></Button>}
                     </div>
                   </div>
                 ))}
@@ -333,7 +374,7 @@ export function BillingDialog({ orderId, open, onOpenChange, onClosed }: {
             <div className="rounded-lg border border-white/10 p-3">
               <div className="mb-2 text-sm font-semibold">Split order by item</div>
               <div className="text-xs text-muted-foreground mb-2">Select items in the Items tab, then move them to a new ticket.</div>
-              <Button onClick={splitSelected} disabled={busy || selectedItemIds.size === 0 || order.status === "paid"}>
+              <Button onClick={splitSelected} disabled={busy || selectedItemIds.size === 0 || locked}>
                 <Split className="mr-1 h-4 w-4" />Split {selectedItemIds.size} item(s) to new ticket
               </Button>
             </div>
@@ -344,7 +385,7 @@ export function BillingDialog({ orderId, open, onOpenChange, onClosed }: {
                   <SelectTrigger className="flex-1"><SelectValue placeholder="Choose target ticket…" /></SelectTrigger>
                   <SelectContent>{openOrders.map((o) => <SelectItem key={o.id} value={o.id}>{o.guest_name ?? "Guest"} · {formatCents(o.total_cents, currency)}</SelectItem>)}</SelectContent>
                 </Select>
-                <Button variant="destructive" onClick={mergeInto} disabled={busy || !mergeTarget || order.status === "paid"}>
+                <Button variant="destructive" disabled={busy || !mergeTarget || locked} onClick={() => ask("Merge this ticket?", "This ticket will be deleted and its items and payments moved to the target ticket. This cannot be undone.", mergeInto)}>
                   <Merge className="mr-1 h-4 w-4" />Merge
                 </Button>
               </div>
@@ -357,7 +398,7 @@ export function BillingDialog({ orderId, open, onOpenChange, onClosed }: {
         <DialogFooter className="flex-wrap gap-2">
           <Button variant="outline" onClick={() => downloadPDF(false)} disabled={!order}><Download className="mr-1 h-4 w-4" />PDF</Button>
           <Button variant="outline" onClick={() => downloadPDF(true)} disabled={!order}><Printer className="mr-1 h-4 w-4" />Print</Button>
-          {order && order.status !== "paid" && (
+          {order && !locked && (
             <Button onClick={closeAndPrint} disabled={busy || dueCents > 0}>
               {busy ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : null}
               Close & issue invoice
@@ -365,11 +406,24 @@ export function BillingDialog({ orderId, open, onOpenChange, onClosed }: {
           )}
         </DialogFooter>
       </DialogContent>
+
+      <AlertDialog open={!!confirm} onOpenChange={(o) => !o && setConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{confirm?.title}</AlertDialogTitle>
+            <AlertDialogDescription>{confirm?.body}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { const a = confirm?.action; setConfirm(null); a?.(); }}>Confirm</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }
 
-function TotalsPanel({ order, currency, paid, due }: { order: OrderRow; currency: string; paid?: number; due?: number }) {
+function TotalsPanel({ order, currency, paid, due, change }: { order: OrderRow; currency: string; paid?: number; due?: number; change?: number }) {
   const R = ({ l, v, bold }: { l: string; v: string; bold?: boolean }) => (
     <div className={`flex justify-between text-sm ${bold ? "font-semibold" : ""}`}><span className="text-muted-foreground">{l}</span><span>{v}</span></div>
   );
@@ -384,6 +438,8 @@ function TotalsPanel({ order, currency, paid, due }: { order: OrderRow; currency
       <R l="Total" v={formatCents(order.total_cents, currency)} bold />
       {paid !== undefined && <R l="Paid" v={formatCents(paid, currency)} />}
       {due !== undefined && due > 0 && <R l="Due" v={formatCents(due, currency)} bold />}
+      {due !== undefined && due === 0 && paid !== undefined && paid > 0 && !change && <R l="Settled" v="Paid in full" />}
+      {change !== undefined && change > 0 && <R l="Change due to guest" v={formatCents(change, currency)} bold />}
     </div>
   );
 }
