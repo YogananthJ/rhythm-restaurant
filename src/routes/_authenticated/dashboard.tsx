@@ -326,18 +326,18 @@ function Dashboard() {
       <div className="pointer-events-none absolute inset-0 -z-10" style={{ background: "var(--gradient-mesh)" }} />
 
       <header className="sticky top-0 z-20 border-b border-white/10 bg-background/70 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="grid h-8 w-8 place-items-center rounded-lg bg-primary/15 text-primary">
+        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-4 sm:px-6 xl:flex-row xl:items-center xl:justify-between">
+          <Link to="/" className="flex min-w-0 items-center gap-2">
+            <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary/15 text-primary">
               <ChefHat className="h-4 w-4" />
             </div>
-            <div>
-              <div className="text-sm font-semibold leading-none">Occupancy</div>
+            <div className="min-w-0">
+              <div className="truncate text-sm font-semibold leading-none">Occupancy</div>
               <div className="mt-0.5 text-[11px] text-muted-foreground">Live floor</div>
             </div>
           </Link>
-          <div className="flex items-center gap-3">
-            <Badge variant="secondary" className="gap-1.5">
+          <div className="flex min-w-0 max-w-full items-center gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden xl:flex-wrap xl:justify-end xl:overflow-visible xl:pb-0">
+            <Badge variant="secondary" className="shrink-0 gap-1.5">
               <span className="relative flex h-2 w-2">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
@@ -346,39 +346,39 @@ function Dashboard() {
             </Badge>
             <span className="hidden text-xs text-muted-foreground sm:inline">{email}</span>
             <NotificationsBell restaurantId={restaurantId} />
-            <Button asChild variant="outline" size="sm">
+            <Button asChild variant="outline" size="sm" className="shrink-0">
               <Link to="/autopilot"><Cpu className="mr-1.5 h-4 w-4" /> Autopilot</Link>
             </Button>
-            <Button asChild variant="outline" size="sm">
+            <Button asChild variant="outline" size="sm" className="shrink-0">
               <Link to="/intel"><Brain className="mr-1.5 h-4 w-4" /> Intel</Link>
             </Button>
-            <Button asChild variant="outline" size="sm">
+            <Button asChild variant="outline" size="sm" className="shrink-0">
               <Link to="/ops"><Sparkles className="mr-1.5 h-4 w-4" /> Copilot</Link>
             </Button>
 
-            <Button asChild variant="outline" size="sm">
+            <Button asChild variant="outline" size="sm" className="shrink-0">
               <Link to="/host"><Users className="mr-1.5 h-4 w-4" /> Host</Link>
             </Button>
-            <Button asChild variant="outline" size="sm">
+            <Button asChild variant="outline" size="sm" className="shrink-0">
               <Link to="/tables"><QrCode className="mr-1.5 h-4 w-4" /> QR</Link>
             </Button>
-            <Button asChild variant="outline" size="sm">
+            <Button asChild variant="outline" size="sm" className="shrink-0">
               <Link to="/menu"><Utensils className="mr-1.5 h-4 w-4" /> Menu</Link>
             </Button>
-            <Button asChild variant="outline" size="sm">
+            <Button asChild variant="outline" size="sm" className="shrink-0">
               <Link to="/reports"><FileText className="mr-1.5 h-4 w-4" /> Reports</Link>
             </Button>
-            <Button asChild variant="outline" size="sm">
+            <Button asChild variant="outline" size="sm" className="shrink-0">
               <Link to="/billing"><Receipt className="mr-1.5 h-4 w-4" /> Billing</Link>
             </Button>
 
 
 
-            <Button asChild variant="outline" size="sm">
+            <Button asChild variant="outline" size="sm" className="shrink-0">
               <Link to="/kds"><ChefHat className="mr-1.5 h-4 w-4" /> KDS</Link>
             </Button>
 
-            <Button variant="ghost" size="sm" onClick={signOut}>
+            <Button variant="ghost" size="sm" className="shrink-0" onClick={signOut}>
               <LogOut className="mr-1.5 h-4 w-4" /> Sign out
             </Button>
           </div>
@@ -464,7 +464,7 @@ function Dashboard() {
 
         {/* Reservations analytics + audit log */}
         <div className="mt-8 grid gap-6 lg:grid-cols-3">
-          <Card className="border-white/10 bg-card/70 p-6 backdrop-blur lg:col-span-2">
+          <Card className="min-w-0 border-white/10 bg-card/70 p-6 backdrop-blur lg:col-span-2">
             <div className="mb-5 flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-semibold">Reservations · today</h2>
@@ -496,7 +496,7 @@ function Dashboard() {
             </div>
           </Card>
 
-          <Card className="border-white/10 bg-card/70 p-6 backdrop-blur">
+          <Card className="min-w-0 border-white/10 bg-card/70 p-6 backdrop-blur">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Event log</h2>
               <Badge variant="outline" className="text-[10px]">Audit</Badge>
@@ -528,7 +528,7 @@ function Dashboard() {
 
         <div className="mt-8 grid gap-6 lg:grid-cols-3">
           {/* Menu */}
-          <Card className="border-white/10 bg-card/70 p-6 backdrop-blur lg:col-span-2">
+          <Card className="min-w-0 border-white/10 bg-card/70 p-6 backdrop-blur lg:col-span-2">
             <div className="mb-5 flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-semibold">Live menu</h2>
@@ -566,7 +566,7 @@ function Dashboard() {
           </Card>
 
           {/* Tables */}
-          <Card className="border-white/10 bg-card/70 p-6 backdrop-blur">
+          <Card className="min-w-0 border-white/10 bg-card/70 p-6 backdrop-blur">
             <div className="mb-5 flex items-center justify-between">
               <h2 className="text-lg font-semibold">Floor status</h2>
               <span className="text-xs text-muted-foreground">Tap to cycle</span>

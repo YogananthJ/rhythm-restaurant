@@ -338,7 +338,7 @@ function ReportsPage() {
     <div className="min-h-dvh bg-background">
       <header className="border-b border-white/5 bg-background/80 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 flex-wrap items-center gap-3">
             <Button asChild variant="ghost" size="sm">
               <Link to="/dashboard"><ArrowLeft className="mr-1 h-4 w-4" /> Dashboard</Link>
             </Button>

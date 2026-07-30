@@ -126,8 +126,8 @@ function KDS() {
       <div className="pointer-events-none absolute inset-0 -z-10" style={{ background: "var(--gradient-mesh)" }} />
 
       <header className="sticky top-0 z-20 border-b border-white/10 bg-background/70 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <Link to="/dashboard" className="flex items-center gap-2">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-6">
+          <Link to="/dashboard" className="flex min-w-0 flex-wrap items-center gap-2">
             <div className="grid h-8 w-8 place-items-center rounded-lg bg-primary/15 text-primary">
               <ChefHat className="h-4 w-4" />
             </div>
@@ -136,7 +136,7 @@ function KDS() {
               <div className="mt-0.5 text-[11px] text-muted-foreground">One tap per stage</div>
             </div>
           </Link>
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 flex-wrap items-center gap-3">
             <Badge variant="secondary" className="gap-1.5">
               <span className="relative flex h-2 w-2">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
