@@ -125,7 +125,7 @@ function KDS() {
     <div className="relative min-h-dvh bg-background text-foreground">
       <div className="pointer-events-none absolute inset-0 -z-10" style={{ background: "var(--gradient-mesh)" }} />
 
-      <header className="sticky top-0 z-20 border-b border-white/10 bg-background/70 backdrop-blur-xl">
+      <header className="relative z-10 border-b border-white/10 bg-background/70 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-6">
           <Link to="/dashboard" className="flex min-w-0 flex-wrap items-center gap-2">
             <div className="grid h-8 w-8 place-items-center rounded-lg bg-primary/15 text-primary">

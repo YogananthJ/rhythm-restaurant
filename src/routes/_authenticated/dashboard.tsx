@@ -313,11 +313,7 @@ function Dashboard() {
     await supabase.from("dining_tables").update({ status: next }).eq("id", t.id);
   }
 
-  async function signOut() {
-    const { signOutEverywhere } = await import("@/hooks/use-auth");
-    await signOutEverywhere();
-    navigate({ to: "/auth" });
-  }
+
 
   const availableCount = items.filter((i) => i.is_available).length;
   const seatedCount = tables.filter((t) => t.status === "seated").length;

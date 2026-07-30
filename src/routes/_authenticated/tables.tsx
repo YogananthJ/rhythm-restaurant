@@ -55,7 +55,7 @@ function TablesPage() {
     <div className="relative min-h-dvh bg-background text-foreground">
       <div className="pointer-events-none absolute inset-0 -z-10" style={{ background: "var(--gradient-mesh)" }} />
 
-      <header className="sticky top-0 z-20 border-b border-white/10 bg-background/70 backdrop-blur-xl print:hidden">
+      <header className="relative z-10 border-b border-white/10 bg-background/70 backdrop-blur-xl print:hidden">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-6">
           <div className="flex min-w-0 flex-wrap items-center gap-3">
             <Button asChild variant="ghost" size="sm">

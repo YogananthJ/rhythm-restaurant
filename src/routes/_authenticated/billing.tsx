@@ -130,7 +130,7 @@ function BillingPage() {
 
   return (
     <div className="min-h-dvh">
-      <header className="sticky top-0 z-40 border-b border-white/10 bg-background/70 backdrop-blur">
+      <header className="relative z-10 border-b border-white/10 bg-background/70 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between p-4">
           <div className="flex min-w-0 flex-wrap items-center gap-3">
             <Button size="sm" variant="ghost" asChild><Link to="/dashboard"><ArrowLeft className="mr-1 h-4 w-4" />Dashboard</Link></Button>
