@@ -30,6 +30,7 @@ import {
   Bell,
   Bot,
   Brain,
+  CalendarPlus,
   ChefHat,
   ChevronDown,
   Cpu,
