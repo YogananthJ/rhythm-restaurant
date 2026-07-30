@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ReviewsRouteImport } from './routes/reviews'
 import { Route as HealthRouteImport } from './routes/health'
 import { Route as BookRouteImport } from './routes/book'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -29,6 +30,11 @@ import { Route as AuthenticatedAutopilotRouteImport } from './routes/_authentica
 import { Route as TTokenIndexRouteImport } from './routes/t/$token/index'
 import { Route as TTokenOrderOrderIdRouteImport } from './routes/t/$token/order/$orderId'
 
+const ReviewsRoute = ReviewsRouteImport.update({
+  id: '/reviews',
+  path: '/reviews',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const HealthRoute = HealthRouteImport.update({
   id: '/health',
   path: '/health',
@@ -129,6 +135,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/book': typeof BookRoute
   '/health': typeof HealthRoute
+  '/reviews': typeof ReviewsRoute
   '/autopilot': typeof AuthenticatedAutopilotRoute
   '/billing': typeof AuthenticatedBillingRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -149,6 +156,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/book': typeof BookRoute
   '/health': typeof HealthRoute
+  '/reviews': typeof ReviewsRoute
   '/autopilot': typeof AuthenticatedAutopilotRoute
   '/billing': typeof AuthenticatedBillingRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -171,6 +179,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/book': typeof BookRoute
   '/health': typeof HealthRoute
+  '/reviews': typeof ReviewsRoute
   '/_authenticated/autopilot': typeof AuthenticatedAutopilotRoute
   '/_authenticated/billing': typeof AuthenticatedBillingRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -193,6 +202,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/book'
     | '/health'
+    | '/reviews'
     | '/autopilot'
     | '/billing'
     | '/dashboard'
@@ -213,6 +223,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/book'
     | '/health'
+    | '/reviews'
     | '/autopilot'
     | '/billing'
     | '/dashboard'
@@ -234,6 +245,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/book'
     | '/health'
+    | '/reviews'
     | '/_authenticated/autopilot'
     | '/_authenticated/billing'
     | '/_authenticated/dashboard'
@@ -256,12 +268,20 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   BookRoute: typeof BookRoute
   HealthRoute: typeof HealthRoute
+  ReviewsRoute: typeof ReviewsRoute
   TTokenIndexRoute: typeof TTokenIndexRoute
   TTokenOrderOrderIdRoute: typeof TTokenOrderOrderIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/reviews': {
+      id: '/reviews'
+      path: '/reviews'
+      fullPath: '/reviews'
+      preLoaderRoute: typeof ReviewsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/health': {
       id: '/health'
       path: '/health'
@@ -437,6 +457,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   BookRoute: BookRoute,
   HealthRoute: HealthRoute,
+  ReviewsRoute: ReviewsRoute,
   TTokenIndexRoute: TTokenIndexRoute,
   TTokenOrderOrderIdRoute: TTokenOrderOrderIdRoute,
 }
