@@ -86,11 +86,11 @@ export function RewardModule({
                 key={s.label}
                 className="rounded-2xl border border-border/70 bg-surface/40 p-3 backdrop-blur-sm"
               >
-                <dt className="truncate text-[0.68rem] uppercase tracking-wider text-muted-foreground">
+                <dt className="text-[0.62rem] uppercase leading-tight tracking-wider text-muted-foreground">
                   {s.label}
                 </dt>
                 <dd
-                  className={`mt-0.5 font-display text-lg font-bold tabular-nums sm:text-xl ${
+                  className={`mt-1 font-display text-base font-bold leading-tight tabular-nums break-words sm:text-lg ${
                     s.accent ? "rw-gold-text" : "text-foreground"
                   }`}
                 >

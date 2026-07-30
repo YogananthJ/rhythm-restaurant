@@ -324,7 +324,7 @@ function Dashboard({ rewards, onGo }: { rewards: RewardsApi; onGo: (s: SectionId
         transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
         className="rw-module group p-5 sm:p-8"
       >
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:items-center">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:items-start">
           <div className="min-w-0">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-[color-mix(in_oklab,var(--rw-gold)_45%,transparent)] bg-[color-mix(in_oklab,var(--rw-gold)_12%,transparent)] px-3 py-1 text-xs font-semibold text-[var(--rw-gold-soft)]">
               <Medal className="h-3.5 w-3.5" aria-hidden="true" />
