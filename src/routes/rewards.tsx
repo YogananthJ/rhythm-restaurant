@@ -22,8 +22,20 @@ import {
   Wallet,
 } from "lucide-react";
 
+import { motion } from "framer-motion";
+
 import { AnimatedNumber } from "@/components/AnimatedNumber";
 import { Reveal } from "@/components/Reveal";
+import { RewardModule } from "@/components/rewards/RewardModule";
+import {
+  BadgesIllustration,
+  EarnIllustration,
+  HelpIllustration,
+  HistoryIllustration,
+  SpinIllustration,
+  StoreIllustration,
+  WalletIllustration,
+} from "@/components/rewards/illustrations";
 import { SpinWheel } from "@/components/rewards/SpinWheel";
 import { isSameDay, useRewards, type Voucher } from "@/components/rewards/useRewards";
 import {
