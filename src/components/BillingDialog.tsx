@@ -357,7 +357,7 @@ export function BillingDialog({ orderId, open, onOpenChange, onClosed }: {
                   <Button size="sm" variant="outline" onClick={() => splitEqual(2)} disabled={busy || dueCents <= 0}>Split 2-way</Button>
                   <Button size="sm" variant="outline" onClick={() => splitEqual(3)} disabled={busy || dueCents <= 0}>Split 3-way</Button>
                   <Button size="sm" variant="outline" onClick={() => splitEqual(4)} disabled={busy || dueCents <= 0}>Split 4-way</Button>
-                  <Button onClick={() => addPayment()} disabled={busy || !payAmount}><CreditCard className="mr-1 h-4 w-4" />Record</Button>
+                  <Button onClick={() => addPayment()} disabled={busy || locked || !payAmount}><CreditCard className="mr-1 h-4 w-4" />Record</Button>
                 </div>
               </>
             )}
