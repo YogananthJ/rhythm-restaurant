@@ -44,6 +44,8 @@ import {
   Receipt,
   Settings,
   Sparkles,
+  Star,
+
   Users,
   Utensils,
 } from "lucide-react";
@@ -73,7 +75,9 @@ export const NAV_GROUPS: Group[] = [
       { to: "/reports", label: "Reports", icon: FileText },
       { to: "/intel", label: "Intel", icon: Brain },
       { to: "/insights", label: "Insights", icon: Gauge },
+      { to: "/reviews", label: "Reviews", icon: Star },
     ],
+
   },
   {
     id: "ai",
