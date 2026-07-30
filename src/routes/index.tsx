@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
 import { useAuth, signOutEverywhere } from "@/hooks/use-auth";
+import { MenuShowcase } from "@/components/MenuShowcase";
 import {
   Activity,
   ArrowRight,
