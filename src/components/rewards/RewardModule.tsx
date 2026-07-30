@@ -115,29 +115,37 @@ export function RewardModule({
           <h3 className="mt-2 font-display text-xl font-bold tracking-tight sm:text-2xl">{title}</h3>
           <p className="mt-1.5 text-sm text-muted-foreground">{description}</p>
 
-          <dl className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {stats.map((s) => (
-              <div
-                key={s.label}
-                className="rounded-2xl border border-border/70 bg-surface/40 p-3 backdrop-blur-sm"
-              >
-                <dt className="text-[0.62rem] uppercase leading-tight tracking-wider text-muted-foreground">
-                  {s.label}
-                </dt>
-                <dd
-                  className={`mt-1 font-display text-base font-bold leading-tight tabular-nums break-words sm:text-lg ${
-                    s.accent ? "rw-gold-text" : "text-foreground"
-                  }`}
+          {empty ? (
+            <div className="mt-4 rounded-2xl border border-dashed border-border/80 bg-surface/30 px-4 py-6 text-center">
+              <p className="text-sm font-semibold">{empty.title}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{empty.message}</p>
+            </div>
+          ) : (
+            <dl className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {stats.map((s) => (
+                <div
+                  key={s.label}
+                  className="rounded-2xl border border-border/70 bg-surface/40 p-3 backdrop-blur-sm"
                 >
-                  {typeof s.value === "number" && s.animate !== false ? (
-                    <AnimatedNumber value={s.value} />
-                  ) : (
-                    s.value
-                  )}
-                </dd>
-              </div>
-            ))}
-          </dl>
+                  <dt className="text-[0.62rem] uppercase leading-tight tracking-wider text-muted-foreground">
+                    {s.label}
+                  </dt>
+                  <dd
+                    className={`mt-1 font-display text-base font-bold leading-tight tabular-nums break-words sm:text-lg ${
+                      s.accent ? "rw-gold-text" : "text-foreground"
+                    }`}
+                  >
+                    {typeof s.value === "number" && s.animate !== false ? (
+                      <AnimatedNumber value={s.value} />
+                    ) : (
+                      s.value
+                    )}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          )}
+
 
           {progress && (
             <div className="mt-4">
