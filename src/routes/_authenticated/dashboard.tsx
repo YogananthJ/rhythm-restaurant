@@ -9,6 +9,7 @@ import { BillingDialog } from "@/components/BillingDialog";
 import { NotificationsBell } from "@/components/NotificationsBell";
 import { toast } from "sonner";
 import {
+  BarChart3,
   Activity,
   CalendarClock,
   ChefHat,
@@ -354,6 +355,9 @@ function Dashboard() {
             </Button>
             <Button asChild variant="outline" size="sm" className="shrink-0">
               <Link to="/ops"><Sparkles className="mr-1.5 h-4 w-4" /> Copilot</Link>
+            </Button>
+            <Button asChild variant="outline" size="sm" className="shrink-0">
+              <Link to="/insights"><BarChart3 className="mr-1.5 h-4 w-4" /> Insights</Link>
             </Button>
 
             <Button asChild variant="outline" size="sm" className="shrink-0">

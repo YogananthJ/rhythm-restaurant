@@ -155,6 +155,9 @@ function OpsPage() {
               </div>
             </div>
           </div>
+          <Button asChild variant="outline" size="sm" className="shrink-0">
+            <Link to="/insights"><TrendingUp className="mr-1.5 h-4 w-4" /> Insights</Link>
+          </Button>
           <Badge variant="secondary" className="gap-1.5">
             <Sparkles className="h-3 w-3 text-accent" /> Powered by Lovable AI
           </Badge>

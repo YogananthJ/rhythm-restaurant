@@ -95,16 +95,34 @@ Occupancy integrates **Google Gemini** to provide an AI-powered Restaurant Copil
 - Assists users using the application's available context
 - Natural language interaction through a chatbot interface
 
+### AI Safety Guardrails (`src/lib/ai-guardrails.ts`)
+
+- Hardened Occupancy Copilot system prompt — restaurant-scope only, never invents data.
+- Prompt-injection, role-override, credential-probe, destructive-SQL and jailbreak detection.
+- Off-topic redirection, prompt length caps, control-character normalisation.
+- Live data is wrapped in a `LIVE CONTEXT` block marked as data, never instructions.
+- Secrets, emails and phone numbers are redacted from prompts, answers and logs.
+
+### AI Audit Log (`ai_audit_log` table + `/insights`)
+
+Every AI call records the feature, prompt, retrieved context, answer, outcome
+(`answered` / `blocked` / `error`), block reason, model, latency and token usage —
+scoped per restaurant, staff-readable, insert-only (no edits or deletes).
+
+### Shipped AI Modules
+
+- **Revenue insights** — hour-of-day, weekday and daily trends with AI-explained drivers (`getRevenueInsights`).
+- **Intelligent menu recommendations** — predicted demand + availability + kitchen-load-adjusted prep times (`getMenuRecommendations`).
+- **Context-aware copilot** — answers from live occupancy, kitchen status, tables, reservations, waitlist and recent orders (`askOpsAssistant`).
+
 ### Future Enhancements
 
-- Live business analytics
-- AI-powered demand forecasting
-- Intelligent menu recommendations
-- Revenue insights
-- Restaurant performance analysis
-- Operational decision support
+- AI-powered demand forecasting across seasons
+- Automated staffing recommendations
 
 ---
+
+
 
 
 ## 🏗 Architecture
