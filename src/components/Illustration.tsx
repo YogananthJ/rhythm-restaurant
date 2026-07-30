@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 
 type Props = {
   src: string;
@@ -26,12 +26,19 @@ export function Illustration({
 }: Props) {
   const [loaded, setLoaded] = useState(false);
 
+  // Images cached/decoded before hydration never fire onLoad, which would leave
+  // the illustration stuck at opacity-0. Check `complete` when the node mounts.
+  const imgRef = useCallback((node: HTMLImageElement | null) => {
+    if (node?.complete) setLoaded(true);
+  }, []);
+
   return (
     <div
       className={`skeleton-shine relative overflow-hidden ${rounded} border border-white/10 bg-surface/60 ${className}`}
       style={{ aspectRatio: `${width} / ${height}` }}
     >
       <img
+        ref={imgRef}
         src={src}
         alt={alt}
         width={width}
