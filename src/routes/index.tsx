@@ -195,7 +195,14 @@ function Nav({ signedIn }: { signedIn: boolean }) {
               </a>
             );
           })}
+          <Link
+            to="/rewards"
+            className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Rewards
+          </Link>
         </nav>
+
         <div className="flex items-center gap-2">
           <Link
             to="/book"
