@@ -182,19 +182,41 @@ function RewardsHub() {
       </nav>
 
       <main className="mx-auto w-full max-w-7xl px-4 pb-20 pt-6 sm:px-6">
-        {section === "dashboard" && <Dashboard rewards={rewards} onGo={setSection} />}
-        {section === "spin" && <DailySpin rewards={rewards} />}
-        {section === "store" && <RewardsStore rewards={rewards} />}
-        {section === "badges" && <Badges />}
-        {section === "mine" && <MyRewards rewards={rewards} onBrowse={() => setSection("store")} />}
-        {section === "earn" && <HowToEarn />}
-        {section === "history" && <HistoryView rewards={rewards} />}
-        {section === "leaderboard" && <Leaderboard points={state.balance} />}
-        {section === "faq" && <Faq />}
+        {!rewards.hydrated ? (
+          <div className="grid gap-5 lg:grid-cols-2">
+            {[0, 1, 2, 3].map((i) => (
+              <RewardModuleSkeleton key={i} index={i} />
+            ))}
+          </div>
+        ) : (
+          <>
+            {section === "dashboard" && <Dashboard rewards={rewards} onGo={setSection} />}
+            {section === "spin" && <DailySpin rewards={rewards} />}
+            {section === "store" && <RewardsStore rewards={rewards} onClaimed={celebrate} />}
+            {section === "badges" && <Badges />}
+            {section === "mine" && <MyRewards rewards={rewards} onBrowse={() => setSection("store")} />}
+            {section === "earn" && <HowToEarn />}
+            {section === "history" && <HistoryView rewards={rewards} />}
+            {section === "leaderboard" && <Leaderboard points={state.balance} />}
+            {section === "faq" && <Faq />}
+          </>
+        )}
       </main>
+
+      {claim && (
+        <ClaimSuccessOverlay
+          claim={claim}
+          onClose={() => setClaim(null)}
+          onViewRewards={() => {
+            setClaim(null);
+            setSection("mine");
+          }}
+        />
+      )}
     </div>
   );
 }
+
 
 /* ------------------------------------------------------------------ */
 
