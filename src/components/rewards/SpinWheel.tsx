@@ -73,10 +73,8 @@ export function SpinWheel({
           {SPIN_SEGMENTS.map((s, i) => (
             <span
               key={s.label}
-              className="absolute left-1/2 top-1/2 origin-left text-[10px] font-bold tracking-tight text-background sm:text-xs"
-              style={{
-                transform: `rotate(${i * SEG + SEG / 2}deg) translateX(38%)`,
-              }}
+              className="absolute left-1/2 top-1/2 -mt-3 flex h-6 w-1/2 origin-left items-center justify-end pr-5 text-[10px] font-bold tracking-tight text-background sm:text-xs"
+              style={{ transform: `rotate(${i * SEG + SEG / 2}deg)` }}
             >
               {s.label}
             </span>

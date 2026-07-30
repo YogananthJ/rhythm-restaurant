@@ -25,7 +25,7 @@ export type RewardsState = {
 
 const INITIAL: RewardsState = {
   balance: 1250,
-  lifetime: 4310,
+  lifetime: 1310,
   streak: 7,
   lastSpinAt: null,
   lastCheckInAt: null,
