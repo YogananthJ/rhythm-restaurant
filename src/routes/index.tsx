@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useAuth, signOutEverywhere } from "@/hooks/use-auth";
 import { MenuShowcase } from "@/components/MenuShowcase";
 import { Testimonials } from "@/components/reviews/Testimonials";
+import { FeaturedCategories, WhyChoose, GalleryStrip } from "@/components/guest/GuestSections";
 
 import { Illustration } from "@/components/Illustration";
 import heroIllustration from "@/assets/illus-hero.jpg";
@@ -120,8 +121,11 @@ function Landing() {
         <LogoStrip />
         <Features />
         <MenuShowcase />
+        <FeaturedCategories />
+        <WhyChoose />
         <ProductPreview />
         <AISection />
+        <GalleryStrip />
         <Testimonials signedIn={signedIn} />
         <Pricing />
         <CTA />
@@ -365,6 +369,19 @@ function Hero() {
           >
             Start free trial
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+          </Link>
+          <Link
+            to="/book"
+            className="inline-flex items-center gap-2 rounded-lg border border-primary/40 bg-primary/10 px-5 py-2.5 text-sm font-semibold text-primary backdrop-blur transition-colors hover:bg-primary/20"
+          >
+            Reserve a table
+          </Link>
+          <Link
+            to="/our-menu"
+            className="inline-flex items-center gap-2 rounded-lg border border-border bg-surface/60 px-5 py-2.5 text-sm font-semibold text-foreground backdrop-blur transition-colors hover:bg-surface-elevated"
+          >
+            <Utensils className="h-4 w-4" />
+            Browse menu
           </Link>
           <Link
             to="/t/$token"
@@ -976,6 +993,11 @@ function Footer() {
             title: "Company",
             items: [
               { label: "Pricing", section: "pricing" },
+              { label: "Menu", href: "/our-menu" },
+              { label: "Gallery", href: "/gallery" },
+              { label: "FAQ", href: "/faq" },
+              { label: "Contact", href: "/contact" },
+              { label: "My profile", href: "/profile" },
               { label: "Guest reviews", href: "/reviews" },
               { label: "Reserve a table", href: "/book" },
               { label: "Sign in", href: "/auth" },

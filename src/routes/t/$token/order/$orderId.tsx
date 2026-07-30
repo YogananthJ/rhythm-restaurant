@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { ChefHat, CheckCircle2, Clock, Flame, Star, Utensils } from "lucide-react";
 import { z } from "zod";
+import { StatusScreen } from "@/components/StatusScreen";
 
 type Order = {
   id: string;
@@ -41,6 +42,13 @@ export const Route = createFileRoute("/t/$token/order/$orderId")({
 });
 
 const STAGES = ["placed", "preparing", "ready", "served"] as const;
+
+const STAGE_COPY: Record<(typeof STAGES)[number], string> = {
+  placed: "Ticket received — the kitchen has your order",
+  preparing: "On the range — your dishes are cooking",
+  ready: "Ready at the pass — heading to your table",
+  served: "Served. Enjoy your meal!",
+};
 
 function OrderStatus() {
   const { orderId } = Route.useParams();
@@ -121,16 +129,25 @@ function OrderStatus() {
 
   if (notFound) {
     return (
-      <div className="grid min-h-dvh place-items-center bg-background px-6 text-center">
-        <div>
-          <h1 className="text-2xl font-semibold">Order not found</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            This link is invalid or has expired. Ask your server for help.
-          </p>
-        </div>
-      </div>
+      <StatusScreen
+        kind="404"
+        title="Order not found"
+        message="This tracking link is invalid or has expired. Ask your server and we'll bring it back up."
+        primaryHref="/"
+        primaryLabel="Back to home"
+      />
     );
   }
+
+  const etaLabel = (() => {
+    if (!order) return "";
+    if (order.status === "served" || order.status === "closed") return "Completed";
+    const placed = new Date(order.created_at).getTime();
+    const target = placed + 18 * 60 * 1000;
+    const mins = Math.round((target - Date.now()) / 60000);
+    if (order.status === "ready") return "Arriving now";
+    return mins > 0 ? `~${mins} min to your table` : "Any moment now";
+  })();
 
   const stageIdx = order ? Math.max(0, STAGES.indexOf(order.status as (typeof STAGES)[number])) : 0;
 
@@ -166,6 +183,18 @@ function OrderStatus() {
         </div>
 
         <Card className="border-white/10 bg-card/70 p-6 backdrop-blur">
+          <div className="mb-5">
+            <div className="flex items-center justify-between text-sm">
+              <span className="font-semibold">{STAGE_COPY[STAGES[stageIdx]]}</span>
+              <span className="text-muted-foreground" aria-live="polite">{etaLabel}</span>
+            </div>
+            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
+              <div
+                className="h-full rounded-full bg-primary transition-[width] duration-700 ease-out"
+                style={{ width: `${((stageIdx + 1) / STAGES.length) * 100}%` }}
+              />
+            </div>
+          </div>
           <div className="grid grid-cols-4 gap-2">
             {STAGES.map((s, i) => (
               <StageDot key={s} label={s} active={i <= stageIdx} icon={stageIcon(s)} />
