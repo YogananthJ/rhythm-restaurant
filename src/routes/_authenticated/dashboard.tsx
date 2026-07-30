@@ -464,7 +464,7 @@ function Dashboard() {
 
         {/* Reservations analytics + audit log */}
         <div className="mt-8 grid gap-6 lg:grid-cols-3">
-          <Card className="border-white/10 bg-card/70 p-6 backdrop-blur lg:col-span-2">
+          <Card className="min-w-0 border-white/10 bg-card/70 p-6 backdrop-blur lg:col-span-2">
             <div className="mb-5 flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-semibold">Reservations · today</h2>
@@ -496,7 +496,7 @@ function Dashboard() {
             </div>
           </Card>
 
-          <Card className="border-white/10 bg-card/70 p-6 backdrop-blur">
+          <Card className="min-w-0 border-white/10 bg-card/70 p-6 backdrop-blur">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Event log</h2>
               <Badge variant="outline" className="text-[10px]">Audit</Badge>
@@ -528,7 +528,7 @@ function Dashboard() {
 
         <div className="mt-8 grid gap-6 lg:grid-cols-3">
           {/* Menu */}
-          <Card className="border-white/10 bg-card/70 p-6 backdrop-blur lg:col-span-2">
+          <Card className="min-w-0 border-white/10 bg-card/70 p-6 backdrop-blur lg:col-span-2">
             <div className="mb-5 flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-semibold">Live menu</h2>
@@ -566,7 +566,7 @@ function Dashboard() {
           </Card>
 
           {/* Tables */}
-          <Card className="border-white/10 bg-card/70 p-6 backdrop-blur">
+          <Card className="min-w-0 border-white/10 bg-card/70 p-6 backdrop-blur">
             <div className="mb-5 flex items-center justify-between">
               <h2 className="text-lg font-semibold">Floor status</h2>
               <span className="text-xs text-muted-foreground">Tap to cycle</span>
