@@ -53,7 +53,10 @@ export const Route = createFileRoute("/")({
         content:
           "Stop stitching together three disconnected systems. Occupancy is the shared real-time state of your restaurant.",
       },
+      { property: "og:image", content: "https://rhythm-restaurant.lovable.app/og-image.jpg" },
+      { name: "twitter:image", content: "https://rhythm-restaurant.lovable.app/og-image.jpg" },
     ],
+
   }),
   component: Landing,
 });
@@ -103,14 +106,17 @@ function Landing() {
       <div className="pointer-events-none absolute inset-0 -z-10 grid-pattern opacity-[0.15]" />
 
       <Nav signedIn={signedIn} />
-      <Hero />
-      <LogoStrip />
-      <Features />
-      <ProductPreview />
-      <AISection />
-      <Pricing />
-      <CTA />
+      <main>
+        <Hero />
+        <LogoStrip />
+        <Features />
+        <ProductPreview />
+        <AISection />
+        <Pricing />
+        <CTA />
+      </main>
       <Footer />
+
     </div>
   );
 }

@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /kds
+Disallow: /host
+Disallow: /billing
+Disallow: /reports
+Disallow: /intel
+Disallow: /ops
+Disallow: /autopilot
+Disallow: /menu
+Disallow: /tables
+Disallow: /t/
+
+Sitemap: https://rhythm-restaurant.lovable.app/sitemap.xml
