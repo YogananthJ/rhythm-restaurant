@@ -33,7 +33,7 @@ const DIETARY_OPTIONS = [
   { key: "dairy-free", label: "DF" },
 ];
 
-export const Route = createFileRoute("/t/$token")({
+export const Route = createFileRoute("/t/$token/")({
   head: () => ({
     meta: [
       { title: "Order at your table — Occupancy" },
