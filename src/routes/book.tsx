@@ -27,7 +27,7 @@ type Restaurant = { id: string; name: string };
 function BookPage() {
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [busy, setBusy] = useState(false);
-  const [confirmed, setConfirmed] = useState<{ id: string; when: string; party: number } | null>(null);
+  const [confirmed, setConfirmed] = useState<{ when: string; party: number } | null>(null);
 
   const defaults = useMemo(() => {
     const d = new Date();
