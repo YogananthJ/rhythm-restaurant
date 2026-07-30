@@ -808,7 +808,7 @@ function Pricing() {
           <button
             type="button"
             onClick={() => setBilling("monthly")}
-            className={`rounded-full px-4 py-1.5 font-medium transition-all ${
+            className={`min-h-11 rounded-full px-4 py-1.5 font-medium md:min-h-0 transition-all ${
               !annual
                 ? "bg-primary text-primary-foreground shadow-glow"
                 : "text-muted-foreground hover:text-foreground"
@@ -819,7 +819,7 @@ function Pricing() {
           <button
             type="button"
             onClick={() => setBilling("annual")}
-            className={`inline-flex items-center gap-2 rounded-full px-4 py-1.5 font-medium transition-all ${
+            className={`inline-flex items-center gap-2 min-h-11 rounded-full px-4 py-1.5 font-medium md:min-h-0 transition-all ${
               annual
                 ? "bg-primary text-primary-foreground shadow-glow"
                 : "text-muted-foreground hover:text-foreground"
