@@ -112,6 +112,7 @@ function Landing() {
       <main>
         <Hero />
         <LogoStrip />
+        <MenuShowcase />
         <Features />
         <ProductPreview />
         <AISection />
