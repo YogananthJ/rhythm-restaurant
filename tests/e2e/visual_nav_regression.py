@@ -89,11 +89,15 @@ async def main() -> int:
                         await page.keyboard.press("Escape")
                         await page.wait_for_timeout(200)
 
-                # focus ring styling on the first nav control
+                # focus ring styling on the first nav control (header only, stable region)
+                await page.evaluate("window.scrollTo(0, 0)")
                 await page.keyboard.press("Tab")
                 await page.keyboard.press("Tab")
-                await page.wait_for_timeout(200)
-                failures.append(await shoot(page, f"nav_focus_ring_{label}", tmp))
+                await page.wait_for_timeout(300)
+                header = page.locator("header").first
+                out = tmp / f"nav_focus_ring_{label}.png"
+                await header.screenshot(path=str(out))
+                failures.append(compare(f"nav_focus_ring_{label}", out))
 
             await ctx.close()
         await browser.close()
