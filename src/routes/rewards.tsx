@@ -282,123 +282,318 @@ type RewardsApi = ReturnType<typeof useRewards>;
 function Dashboard({ rewards, onGo }: { rewards: RewardsApi; onGo: (s: SectionId) => void }) {
   const { state, checkIn } = rewards;
   const checkedIn = isSameDay(state.lastCheckInAt);
+  const spun = isSameDay(state.lastSpinAt);
   const tier = tierFor(state.lifetime);
   const next = TIERS[TIERS.findIndex((t) => t.id === tier.id) + 1];
   const tierPct = next
     ? Math.min(100, Math.round(((state.lifetime - tier.min) / (next.min - tier.min)) * 100))
     : 100;
 
+  const activeVouchers = state.vouchers.filter((v) => !v.used);
+  const feed = [...state.log, ...HISTORY];
+  const lastEarned = feed.find((h) => h.points > 0);
+  const totalEarned = HISTORY.filter((h) => h.points > 0).reduce((s, h) => s + h.points, 0) + state.lifetime;
+  const earnedBadges = BADGES.filter((b) => b.earned).length;
+  const nextBadge = BADGES.find((b) => !b.earned);
+  const affordable = STORE.filter((r) => r.cost <= state.balance);
+  const featured = [...STORE].sort((a, b) => a.cost - b.cost)[0];
+  const nextTierGoal = next ? next.min - state.lifetime : 0;
+  const dailyMax = 100;
+  const dailyEarnedToday = (checkedIn ? 10 : 0) + (spun ? 25 : 0);
+  const lastSpinWin = state.log.find((h) => h.label.toLowerCase().includes("spin"));
+
   return (
     <div className="space-y-6">
-      <SectionHead title="Dashboard" sub="Your points, tier progress and today's quick wins." />
-
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Points balance" value={state.balance} icon={Coins} />
-        <StatCard label="Lifetime earned" value={state.lifetime} icon={Trophy} />
-        <StatCard label="Active vouchers" value={state.vouchers.filter((v) => !v.used).length} icon={Ticket} />
-        <StatCard label="Badges earned" value={BADGES.filter((b) => b.earned).length} icon={Medal} />
-      </div>
-
-      <Reveal className="glass-panel rounded-3xl p-5 sm:p-6">
-        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+      {/* ---------------------------- Hero ---------------------------- */}
+      <motion.section
+        aria-label="Rewards overview"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        className="rw-module group p-5 sm:p-8"
+      >
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:items-center">
           <div className="min-w-0">
-            <h3 className="truncate font-semibold">Tier progress</h3>
-            <p className="text-xs text-muted-foreground">
-              {next
-                ? `${(next.min - state.lifetime).toLocaleString()} lifetime points to ${next.name}`
-                : "You've reached the top tier."}
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-[color-mix(in_oklab,var(--rw-gold)_45%,transparent)] bg-[color-mix(in_oklab,var(--rw-gold)_12%,transparent)] px-3 py-1 text-xs font-semibold text-[var(--rw-gold-soft)]">
+              <Medal className="h-3.5 w-3.5" aria-hidden="true" />
+              {tier.name} member
+            </span>
+            <div className="mt-3 font-display text-5xl font-bold leading-none rw-gold-text sm:text-6xl">
+              <AnimatedNumber value={state.balance} />
+            </div>
+            <p className="mt-1.5 text-sm text-muted-foreground">
+              Reward points available · {tier.perk}
             </p>
-          </div>
-          <span className="shrink-0 rounded-full bg-primary/15 px-3 py-1 text-xs font-semibold text-primary">
-            {tier.name}
-          </span>
-        </div>
-        <div className="mt-4 h-2.5 w-full overflow-hidden rounded-full bg-muted">
-          <div
-            className="h-full rounded-full transition-[width] duration-1000 ease-out"
-            style={{ width: `${tierPct}%`, background: "var(--gradient-primary)" }}
-          />
-        </div>
-        <ul className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-          {TIERS.map((t) => (
-            <li
-              key={t.id}
-              className={`rounded-xl border p-3 text-xs ${
-                t.id === tier.id
-                  ? "border-primary/40 bg-primary/10"
-                  : "border-border/70 bg-surface/40 text-muted-foreground"
-              }`}
-            >
-              <div className="flex items-center gap-1.5 font-semibold">
-                <t.icon className="h-3.5 w-3.5" aria-hidden="true" />
-                {t.name}
+
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              <div className="rounded-2xl border border-border/70 bg-surface/40 p-4">
+                <div className="flex items-center gap-1.5 text-xs uppercase tracking-wider text-muted-foreground">
+                  <Flame className="h-3.5 w-3.5 text-destructive" aria-hidden="true" />
+                  Daily streak
+                </div>
+                <div className="mt-1 font-display text-2xl font-bold tabular-nums">
+                  <AnimatedNumber value={state.streak} /> days
+                </div>
               </div>
-              <div className="mt-1">{t.perk}</div>
-            </li>
-          ))}
-        </ul>
-      </Reveal>
+              <div className="rounded-2xl border border-border/70 bg-surface/40 p-4">
+                <div className="flex items-center gap-1.5 text-xs uppercase tracking-wider text-muted-foreground">
+                  <Gift className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
+                  Next reward
+                </div>
+                <div className="mt-1 truncate text-sm font-semibold">{featured.name}</div>
+                <div className="text-xs text-muted-foreground">
+                  {state.balance >= featured.cost
+                    ? "Ready to claim"
+                    : `${(featured.cost - state.balance).toLocaleString()} points to go`}
+                </div>
+              </div>
+            </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <div className="glass-panel rounded-3xl p-5 sm:p-6">
-          <h3 className="font-semibold">Today's quick wins</h3>
-          <div className="mt-4 space-y-3">
-            <QuickAction
-              icon={CalendarCheck}
-              title={checkedIn ? "Checked in today" : "Daily check-in"}
-              sub={checkedIn ? "Come back tomorrow to keep the streak alive." : "+10 points, keeps your streak going."}
-              cta={checkedIn ? "Done" : "Check in"}
-              disabled={checkedIn}
-              onClick={() => {
-                checkIn();
-                toast.success("Checked in — +10 points!");
-              }}
-            />
-            <QuickAction
-              icon={Sparkles}
-              title="Daily spin"
-              sub={isSameDay(state.lastSpinAt) ? "Already spun today." : "One free spin, every segment wins."}
-              cta="Spin"
-              disabled={isSameDay(state.lastSpinAt)}
-              onClick={() => onGo("spin")}
-            />
-            <QuickAction
-              icon={Store}
-              title="Redeem a reward"
-              sub={`${STORE.filter((r) => r.cost <= state.balance).length} rewards within reach.`}
-              cta="Browse"
-              onClick={() => onGo("store")}
-            />
-          </div>
-        </div>
-
-        <div className="glass-panel rounded-3xl p-5 sm:p-6">
-          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
-            <h3 className="truncate font-semibold">Recent activity</h3>
-            <button
-              type="button"
-              onClick={() => onGo("history")}
-              className="shrink-0 text-xs font-medium text-primary"
-            >
-              View all
-            </button>
-          </div>
-          <ul className="mt-4 divide-y divide-border/60">
-            {[...state.log, ...HISTORY].slice(0, 6).map((h) => (
-              <li key={h.id} className="flex items-center gap-3 py-2.5 text-sm">
-                <span className="truncate">{h.label}</span>
-                <span
-                  className={`ml-auto shrink-0 font-semibold tabular-nums ${
-                    h.points > 0 ? "text-primary" : "text-muted-foreground"
-                  }`}
-                >
-                  {h.points > 0 ? "+" : ""}
-                  {h.points}
+            <div className="mt-5">
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>
+                  {next ? `Progress to ${next.name}` : "Top tier reached"}
                 </span>
-              </li>
-            ))}
-          </ul>
+                <span className="tabular-nums">{tierPct}%</span>
+              </div>
+              <div className="mt-1.5 h-2.5 w-full overflow-hidden rounded-full bg-muted">
+                <motion.div
+                  className="h-full rounded-full"
+                  style={{ background: "var(--gradient-primary)" }}
+                  initial={{ width: 0 }}
+                  animate={{ width: `${Math.max(3, tierPct)}%` }}
+                  transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+                />
+              </div>
+              {next && (
+                <p className="mt-1.5 text-xs text-muted-foreground">
+                  {nextTierGoal.toLocaleString()} lifetime points to unlock {next.perk.toLowerCase()}.
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="min-w-0 space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <StatCard label="Lifetime earned" value={state.lifetime} icon={Trophy} />
+              <StatCard label="Active vouchers" value={activeVouchers.length} icon={Ticket} />
+              <StatCard label="Badges earned" value={earnedBadges} icon={Medal} />
+              <StatCard label="Rewards in reach" value={affordable.length} icon={Store} />
+            </div>
+
+            <div className="rounded-2xl border border-border/70 bg-surface/40 p-4">
+              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+                <h3 className="truncate text-sm font-semibold">Recent activity</h3>
+                <button
+                  type="button"
+                  onClick={() => onGo("history")}
+                  className="shrink-0 text-xs font-medium text-primary"
+                >
+                  View all
+                </button>
+              </div>
+              <ul className="mt-2 divide-y divide-border/60">
+                {feed.slice(0, 4).map((h) => (
+                  <li key={h.id} className="flex items-center gap-3 py-2 text-sm">
+                    <span className="truncate">{h.label}</span>
+                    <span
+                      className={`ml-auto shrink-0 font-semibold tabular-nums ${
+                        h.points > 0 ? "text-primary" : "text-muted-foreground"
+                      }`}
+                    >
+                      {h.points > 0 ? "+" : ""}
+                      {h.points}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="space-y-2">
+              <QuickAction
+                icon={CalendarCheck}
+                title={checkedIn ? "Checked in today" : "Daily check-in"}
+                sub={checkedIn ? "Back tomorrow to keep the streak alive." : "+10 points, keeps your streak going."}
+                cta={checkedIn ? "Done" : "Check in"}
+                disabled={checkedIn}
+                onClick={() => {
+                  checkIn();
+                  toast.success("Checked in — +10 points!");
+                }}
+              />
+              <QuickAction
+                icon={Sparkles}
+                title="Daily spin"
+                sub={spun ? "Already spun today." : "One free spin, every segment wins."}
+                cta="Spin"
+                disabled={spun}
+                onClick={() => onGo("spin")}
+              />
+            </div>
+          </div>
         </div>
+      </motion.section>
+
+      {/* ------------------------ Feature modules ------------------------ */}
+      <div className="grid gap-5 lg:grid-cols-2">
+        <RewardModule
+          index={0}
+          eyebrow="Daily Spin"
+          title="Spin the wheel of the house"
+          description="One free spin every 24 hours — every segment pays out, from 5 points to a free coffee."
+          status={spun ? "Next spin in 23h" : "Spin available"}
+          statusTone={spun ? "muted" : "primary"}
+          illustration={<SpinIllustration />}
+          stats={[
+            { label: "Today's status", value: spun ? "Spun" : "Ready", animate: false },
+            { label: "Last reward won", value: lastSpinWin ? `+${lastSpinWin.points}` : "—", animate: false, accent: true },
+            { label: "Top prize", value: 500 },
+          ]}
+          cta={spun ? "View wheel" : "Spin now"}
+          ctaIcon={Sparkles}
+          onCta={() => onGo("spin")}
+        />
+
+        <RewardModule
+          index={1}
+          eyebrow="Rewards Store"
+          title="Trade points for the good stuff"
+          description="Desserts, bill discounts and chef's table experiences — redeemable the moment you can afford them."
+          status={`${STORE.length} items available`}
+          statusTone="gold"
+          illustration={<StoreIllustration />}
+          stats={[
+            { label: "Rewards available", value: STORE.length },
+            { label: "Within reach", value: affordable.length },
+            { label: "Featured", value: featured.name, animate: false, accent: true },
+          ]}
+          progress={{
+            label: `Toward ${featured.name}`,
+            pct: Math.min(100, (state.balance / featured.cost) * 100),
+            hint: `${featured.cost.toLocaleString()} points · ${featured.blurb}`,
+          }}
+          cta="Visit store"
+          ctaIcon={Store}
+          onCta={() => onGo("store")}
+        />
+
+        <RewardModule
+          index={2}
+          eyebrow="Badges"
+          title="Collect every achievement"
+          description="Unlock restaurant badges for reviews, QR orders, streaks and party bookings."
+          status={`${earnedBadges} / ${BADGES.length} unlocked`}
+          statusTone="gold"
+          illustration={<BadgesIllustration />}
+          stats={[
+            { label: "Unlocked", value: `${earnedBadges} / ${BADGES.length}`, animate: false },
+            { label: "Current badge", value: tier.name, animate: false, accent: true },
+            { label: "Next badge", value: nextBadge?.name ?? "All done", animate: false },
+          ]}
+          progress={{
+            label: "Badge collection",
+            pct: (earnedBadges / BADGES.length) * 100,
+            hint: nextBadge ? `Next up — ${nextBadge.desc}.` : "Every badge unlocked.",
+          }}
+          cta="View badges"
+          ctaIcon={Medal}
+          onCta={() => onGo("badges")}
+        />
+
+        <RewardModule
+          index={3}
+          eyebrow="My Rewards"
+          title="Your reward wallet"
+          description="Live vouchers, membership perks and everything waiting to be shown to your server."
+          status={`${activeVouchers.length} active`}
+          statusTone={activeVouchers.length ? "primary" : "muted"}
+          illustration={<WalletIllustration />}
+          stats={[
+            { label: "Active rewards", value: activeVouchers.length },
+            { label: "Coupons", value: activeVouchers.filter((v) => v.name.toLowerCase().includes("off")).length },
+            { label: "Membership", value: tier.name.split(" ")[0], animate: false, accent: true },
+          ]}
+          cta="Open wallet"
+          ctaIcon={Wallet}
+          onCta={() => onGo("mine")}
+        />
+
+        <RewardModule
+          index={4}
+          eyebrow="Ways to Earn"
+          title="Stack points on every visit"
+          description="Scan, order, review and refer — each action drops points straight into your balance."
+          status={`Earn up to ${dailyMax} today`}
+          statusTone="primary"
+          illustration={<EarnIllustration />}
+          stats={[
+            { label: "Earn actions", value: EARN_RULES.length },
+            { label: "Today's cap", value: dailyMax },
+            { label: "Biggest bonus", value: "+500", animate: false, accent: true },
+          ]}
+          progress={{
+            label: "Daily goal",
+            pct: (dailyEarnedToday / dailyMax) * 100,
+            hint: `${dailyEarnedToday} of ${dailyMax} points earned today.`,
+          }}
+          cta="See all activities"
+          ctaIcon={Coins}
+          onCta={() => onGo("earn")}
+        />
+
+        <RewardModule
+          index={5}
+          eyebrow="Reward History"
+          title="Every point, on the timeline"
+          description="A complete ledger of earnings, redemptions and expiries across your dining history."
+          status={lastEarned ? `Last earned ${lastEarned.points > 0 ? `+${lastEarned.points}` : ""}` : "No activity yet"}
+          statusTone="muted"
+          illustration={<HistoryIllustration />}
+          stats={[
+            { label: "Total earned", value: totalEarned },
+            { label: "Entries", value: feed.length },
+            { label: "Last earned", value: lastEarned?.label.split(" —")[0] ?? "—", animate: false, accent: true },
+          ]}
+          cta="View timeline"
+          ctaIcon={Clock}
+          onCta={() => onGo("history")}
+        />
+
+        <RewardModule
+          index={6}
+          eyebrow="Help & FAQ"
+          title="The reward guide"
+          description="How points, tiers, streaks and vouchers work — answered by the house."
+          status={`${FAQS.length} articles`}
+          statusTone="muted"
+          illustration={<HelpIllustration />}
+          stats={[
+            { label: "Common questions", value: FAQS.length },
+            { label: "Reward tiers", value: TIERS.length },
+            { label: "Latest update", value: "Streaks", animate: false, accent: true },
+          ]}
+          cta="Learn more"
+          ctaIcon={HelpCircle}
+          onCta={() => onGo("faq")}
+        />
+
+        <RewardModule
+          index={7}
+          eyebrow="Leaderboard"
+          title="The house regulars"
+          description="See where you rank against the most loyal diners this season."
+          status={`Rank #${LEADERBOARD.find((l) => l.you)?.rank ?? "—"}`}
+          statusTone="gold"
+          illustration={<BadgesIllustration />}
+          stats={[
+            { label: "Your points", value: state.balance },
+            { label: "Diners ranked", value: LEADERBOARD.length },
+            { label: "Leader", value: LEADERBOARD[0].name.split(" ")[0], animate: false, accent: true },
+          ]}
+          cta="View leaderboard"
+          ctaIcon={Trophy}
+          onCta={() => onGo("leaderboard")}
+        />
       </div>
     </div>
   );
