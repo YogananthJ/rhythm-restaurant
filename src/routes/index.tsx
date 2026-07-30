@@ -414,7 +414,7 @@ function DashboardMock() {
       </div>
 
       {/* Main */}
-      <div className="p-6">
+      <div className="p-4 md:p-6">
         <div className="flex items-center justify-between">
           <div>
             <div className="text-xs text-muted-foreground">Friday · Dinner service</div>
@@ -426,7 +426,7 @@ function DashboardMock() {
           </div>
         </div>
 
-        <div className="mt-5 grid grid-cols-3 gap-3">
+        <div className="mt-5 grid grid-cols-3 gap-2 md:gap-3">
           {[
             { label: "Tables occupied", value: "18/24", accent: "text-primary" },
             { label: "Avg wait", value: "12m", accent: "text-accent" },
@@ -445,7 +445,7 @@ function DashboardMock() {
         </div>
 
         {/* Table grid */}
-        <div className="mt-5 grid grid-cols-6 gap-2">
+        <div className="mt-5 grid grid-cols-4 gap-2 sm:grid-cols-6">
           {Array.from({ length: 24 }).map((_, i) => {
             const state = i % 5 === 0 ? "free" : i % 3 === 0 ? "cooking" : "seated";
             const color =
