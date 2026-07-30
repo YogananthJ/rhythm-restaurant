@@ -226,8 +226,18 @@ function AuthPage() {
 
 
 
+  if (welcomeFor !== null) {
+    return (
+      <WelcomeTransition
+        name={welcomeFor || undefined}
+        onDone={() => navigate({ to: "/dashboard" })}
+      />
+    );
+  }
+
   return (
     <div className="relative min-h-dvh bg-background text-foreground">
+
       <div className="pointer-events-none absolute inset-0 -z-10" style={{ background: "var(--gradient-mesh)" }} />
       <div className="pointer-events-none absolute inset-0 -z-10 grid-pattern opacity-[0.15]" />
       <Link
