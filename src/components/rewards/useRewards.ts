@@ -63,7 +63,13 @@ export function useRewards() {
       balance: s.balance + points,
       lifetime: s.lifetime + Math.max(0, points),
       log: [
-        { id: crypto.randomUUID(), date: new Date().toISOString(), label, points, kind: "earned" },
+        {
+          id: crypto.randomUUID(),
+          date: new Date().toISOString(),
+          label,
+          points,
+          kind: "earned" as const,
+        },
         ...s.log,
       ].slice(0, 50),
     }));
