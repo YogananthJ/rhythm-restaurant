@@ -118,12 +118,12 @@ function Landing() {
       <main>
         <Hero />
         <LogoStrip />
-        <MenuShowcase />
         <Features />
+        <MenuShowcase />
         <ProductPreview />
         <AISection />
+        <Testimonials signedIn={signedIn} />
         <Pricing />
-        <Testimonials />
         <CTA />
 
       </main>
@@ -976,6 +976,7 @@ function Footer() {
             title: "Company",
             items: [
               { label: "Pricing", section: "pricing" },
+              { label: "Guest reviews", href: "/reviews" },
               { label: "Reserve a table", href: "/book" },
               { label: "Sign in", href: "/auth" },
               { label: "Create account", href: "/auth?mode=signup" },

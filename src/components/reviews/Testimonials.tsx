@@ -6,6 +6,7 @@ import { Reveal } from "@/components/Reveal";
 import { REVIEWS, REVIEW_STATS } from "@/lib/reviews-data";
 import { TestimonialCard } from "./TestimonialCard";
 import { Lightbox, Stars, useLightbox } from "./ReviewPrimitives";
+import { CarouselRail } from "./CarouselRail";
 import { useState } from "react";
 
 const FLOATERS = [
@@ -16,7 +17,7 @@ const FLOATERS = [
   { Icon: Leaf, top: "45%", left: "50%", delay: "1.7s", size: "h-8 w-8" },
 ];
 
-export function Testimonials() {
+export function Testimonials({ signedIn = false }: { signedIn?: boolean }) {
   const lightbox = useLightbox();
   const [photos, setPhotos] = useState<string[]>([]);
 
@@ -25,8 +26,40 @@ export function Testimonials() {
     lightbox.setIndex(i);
   };
 
-  // Duplicated once so the marquee loops without a visible jump.
-  const track = [...REVIEWS, ...REVIEWS];
+  // Signed-in operators already live in the product — show a compact trust strip
+  // instead of the full marketing carousel.
+  if (signedIn) {
+    return (
+      <section
+        id="testimonials"
+        aria-labelledby="testimonials-heading"
+        className="mx-auto max-w-7xl px-6 py-10"
+      >
+        <div className="glass-panel hover-lift flex flex-col items-start justify-between gap-4 rounded-2xl p-5 sm:flex-row sm:items-center">
+          <div>
+            <h2 id="testimonials-heading" className="font-display text-lg font-semibold">
+              Guest reviews
+            </h2>
+            <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
+              <Stars rating={5} className="h-3.5 w-3.5" />
+              <span className="font-semibold text-foreground">{REVIEW_STATS.average}</span>
+              · {REVIEW_STATS.total.toLocaleString()} reviews
+            </div>
+            <p className="mt-2 max-w-md text-sm text-muted-foreground">
+              “{REVIEWS[0].body.slice(0, 90)}…”
+            </p>
+          </div>
+          <Link
+            to="/reviews"
+            className="press inline-flex min-h-11 items-center gap-2 rounded-xl border border-border/60 px-4 text-sm font-semibold hover:border-primary/50"
+          >
+            View all reviews
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section
@@ -98,22 +131,27 @@ export function Testimonials() {
         </Reveal>
       </div>
 
-      {/* Infinite marquee — pauses on hover/focus, natively swipeable on touch */}
-      <div
-        className="marquee group relative mt-12 overflow-x-auto"
-        role="region"
-        aria-label="Customer testimonials carousel"
-        tabIndex={0}
-      >
-        <div className="marquee-track flex w-max gap-5 px-6 pb-4">
-          {track.map((r, i) => (
-            <TestimonialCard
-              key={`${r.id}-${i}`}
-              review={r}
-              onPhotoClick={openPhotos}
-              className="w-[85vw] max-w-[380px] sm:w-[380px]"
-            />
-          ))}
+      {/* Infinite rail — auto-scrolls, pauses on hover/focus, draggable + swipeable */}
+      <div className="relative mt-12">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-y-0 left-0 z-10 w-10 bg-gradient-to-r from-background to-transparent sm:w-24"
+        />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-background to-transparent sm:w-24"
+        />
+        <div className="px-6 pb-4">
+          <CarouselRail ariaLabel="Customer testimonials carousel" speed={34}>
+            {REVIEWS.map((r) => (
+              <TestimonialCard
+                key={r.id}
+                review={r}
+                onPhotoClick={openPhotos}
+                className="w-[85vw] max-w-[380px] sm:w-[380px]"
+              />
+            ))}
+          </CarouselRail>
         </div>
       </div>
 
