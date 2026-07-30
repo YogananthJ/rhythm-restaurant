@@ -1,0 +1,13 @@
+{
+  "name": "Occupancy — AI-Powered Restaurant Operating System",
+  "short_name": "Occupancy",
+  "description": "Live kitchen-to-table intelligence: real-time floor, KDS, QR ordering, and AI ops.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#07100c",
+  "theme_color": "#07100c",
+  "icons": [
+    { "src": "/favicon.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

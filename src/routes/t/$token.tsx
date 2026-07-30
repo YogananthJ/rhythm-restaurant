@@ -229,14 +229,14 @@ function GuestMenu() {
 
   if (loading) {
     return (
-      <div className="grid min-h-screen place-items-center bg-background text-muted-foreground">
+      <div className="grid min-h-dvh place-items-center bg-background text-muted-foreground">
         Loading menu…
       </div>
     );
   }
   if (notFound) {
     return (
-      <div className="grid min-h-screen place-items-center bg-background px-6 text-center">
+      <div className="grid min-h-dvh place-items-center bg-background px-6 text-center">
         <div>
           <h1 className="text-2xl font-semibold">Table not found</h1>
           <p className="mt-2 text-sm text-muted-foreground">
@@ -248,7 +248,7 @@ function GuestMenu() {
   }
 
   return (
-    <div className="relative min-h-screen bg-background pb-28 text-foreground">
+    <div className="relative min-h-dvh bg-background pb-28 text-foreground">
       <div className="pointer-events-none absolute inset-0 -z-10" style={{ background: "var(--gradient-mesh)" }} />
 
       <header className="sticky top-0 z-20 border-b border-white/10 bg-background/80 backdrop-blur-xl">

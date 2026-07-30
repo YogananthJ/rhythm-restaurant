@@ -121,7 +121,7 @@ function OrderStatus() {
 
   if (notFound) {
     return (
-      <div className="grid min-h-screen place-items-center bg-background px-6 text-center">
+      <div className="grid min-h-dvh place-items-center bg-background px-6 text-center">
         <div>
           <h1 className="text-2xl font-semibold">Order not found</h1>
           <p className="mt-2 text-sm text-muted-foreground">
@@ -135,7 +135,7 @@ function OrderStatus() {
   const stageIdx = order ? Math.max(0, STAGES.indexOf(order.status as (typeof STAGES)[number])) : 0;
 
   return (
-    <div className="relative min-h-screen bg-background text-foreground">
+    <div className="relative min-h-dvh bg-background text-foreground">
       <div className="pointer-events-none absolute inset-0 -z-10" style={{ background: "var(--gradient-mesh)" }} />
 
       <header className="border-b border-white/10 bg-background/70 backdrop-blur-xl">
