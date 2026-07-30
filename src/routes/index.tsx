@@ -118,12 +118,12 @@ function Landing() {
       <main>
         <Hero />
         <LogoStrip />
-        <MenuShowcase />
         <Features />
+        <MenuShowcase />
         <ProductPreview />
         <AISection />
-        <Pricing />
         <Testimonials />
+        <Pricing />
         <CTA />
 
       </main>

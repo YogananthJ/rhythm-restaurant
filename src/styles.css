@@ -301,3 +301,10 @@
 @media (prefers-reduced-motion: reduce) {
   .marquee .marquee-track { animation: none !important; }
 }
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}

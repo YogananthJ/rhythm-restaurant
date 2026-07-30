@@ -6,6 +6,7 @@ import { Reveal } from "@/components/Reveal";
 import { REVIEWS, REVIEW_STATS } from "@/lib/reviews-data";
 import { TestimonialCard } from "./TestimonialCard";
 import { Lightbox, Stars, useLightbox } from "./ReviewPrimitives";
+import { CarouselRail } from "./CarouselRail";
 import { useState } from "react";
 
 const FLOATERS = [
@@ -24,9 +25,6 @@ export function Testimonials() {
     setPhotos(set);
     lightbox.setIndex(i);
   };
-
-  // Duplicated once so the marquee loops without a visible jump.
-  const track = [...REVIEWS, ...REVIEWS];
 
   return (
     <section
@@ -98,22 +96,27 @@ export function Testimonials() {
         </Reveal>
       </div>
 
-      {/* Infinite marquee — pauses on hover/focus, natively swipeable on touch */}
-      <div
-        className="marquee group relative mt-12 overflow-x-auto"
-        role="region"
-        aria-label="Customer testimonials carousel"
-        tabIndex={0}
-      >
-        <div className="marquee-track flex w-max gap-5 px-6 pb-4">
-          {track.map((r, i) => (
-            <TestimonialCard
-              key={`${r.id}-${i}`}
-              review={r}
-              onPhotoClick={openPhotos}
-              className="w-[85vw] max-w-[380px] sm:w-[380px]"
-            />
-          ))}
+      {/* Infinite rail — auto-scrolls, pauses on hover/focus, draggable + swipeable */}
+      <div className="relative mt-12">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-y-0 left-0 z-10 w-10 bg-gradient-to-r from-background to-transparent sm:w-24"
+        />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-background to-transparent sm:w-24"
+        />
+        <div className="px-6 pb-4">
+          <CarouselRail ariaLabel="Customer testimonials carousel" speed={34}>
+            {REVIEWS.map((r) => (
+              <TestimonialCard
+                key={r.id}
+                review={r}
+                onPhotoClick={openPhotos}
+                className="w-[85vw] max-w-[380px] sm:w-[380px]"
+              />
+            ))}
+          </CarouselRail>
         </div>
       </div>
 
