@@ -96,6 +96,27 @@ function OpsPage() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, pending]);
 
+  // Restore & persist chat history across visits
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("occ.copilot.history");
+      if (raw) {
+        const parsed = JSON.parse(raw) as Msg[];
+        if (Array.isArray(parsed) && parsed.length) setMessages(parsed);
+      }
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("occ.copilot.history", JSON.stringify(messages.slice(-40)));
+    } catch {
+      /* ignore */
+    }
+  }, [messages]);
+
   async function load() {
     const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
     const [o, i] = await Promise.all([
