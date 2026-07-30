@@ -330,7 +330,7 @@ export function AppNav() {
                 </Accordion>
 
                 {email && <p className="mt-4 truncate text-xs text-muted-foreground">{email}</p>}
-              </div>
+              </nav>
             </SheetContent>
           </Sheet>
         </div>
