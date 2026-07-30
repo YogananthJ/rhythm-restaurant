@@ -110,11 +110,17 @@ export function BillingDialog({ orderId, open, onOpenChange, onClosed }: {
   const changeCents = Math.max(collectedCents - (order?.total_cents ?? 0), 0);
   const tableLabel = order?.table_id ? tables.find((t) => t.id === order.table_id)?.label : undefined;
 
+  // `busy` alone cannot stop a double-click: React commits state after the
+  // handler returns, so two clicks in the same tick both see busy === false
+  // and both fire the RPC — a duplicate payment. The ref flips synchronously.
+  const inFlight = useRef(false);
   const call = async <T,>(fn: () => Promise<T>, msg?: string) => {
+    if (inFlight.current) return undefined as T;
+    inFlight.current = true;
     setBusy(true);
     try { const r = await fn(); if (msg) toast.success(msg); return r; }
     catch (e: unknown) { const m = e instanceof Error ? e.message : String(e); toast.error(m); throw e; }
-    finally { setBusy(false); }
+    finally { inFlight.current = false; setBusy(false); }
   };
 
   const addItem = async () => {
