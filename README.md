@@ -79,6 +79,34 @@ Guest scans QR
 
 ---
 
+## 🤖 AI Usage
+
+Occupancy integrates **Google Gemini** to provide an AI-powered Restaurant Copilot.
+
+### AI Model
+
+- Google Gemini (via the Lovable AI Gateway — no user-supplied API key required)
+
+### Current AI Capabilities
+
+- Conversational restaurant assistant
+- Answers restaurant-related queries
+- Provides operational guidance
+- Assists users using the application's available context
+- Natural language interaction through a chatbot interface
+
+### Future Enhancements
+
+- Live business analytics
+- AI-powered demand forecasting
+- Intelligent menu recommendations
+- Revenue insights
+- Restaurant performance analysis
+- Operational decision support
+
+---
+
+
 ## 🏗 Architecture
 
 ```text
