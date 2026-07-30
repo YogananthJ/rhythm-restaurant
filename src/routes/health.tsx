@@ -95,7 +95,7 @@ function HealthPage() {
   return (
     <div className="relative min-h-dvh bg-background text-foreground">
       <div className="pointer-events-none absolute inset-0 -z-10" style={{ background: "var(--gradient-mesh)" }} />
-      <div className="mx-auto max-w-2xl px-6 py-16">
+      <main className="mx-auto max-w-2xl px-6 py-16">
         <Link to="/" className="mb-8 flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
           <ChefHat className="h-4 w-4 text-primary" /> Occupancy
         </Link>
@@ -151,7 +151,7 @@ function HealthPage() {
         <div className="mt-8 text-center text-xs text-muted-foreground">
           <Link to="/auth" className="hover:text-foreground">← Back to sign in</Link>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

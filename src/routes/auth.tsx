@@ -225,7 +225,7 @@ function AuthPage() {
     <div className="relative min-h-dvh bg-background text-foreground">
       <div className="pointer-events-none absolute inset-0 -z-10" style={{ background: "var(--gradient-mesh)" }} />
       <div className="pointer-events-none absolute inset-0 -z-10 grid-pattern opacity-[0.15]" />
-      <div className="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center px-6 py-16">
+      <main className="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center px-6 py-16">
         <Link to="/" className="mb-8 flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
           <ChefHat className="h-4 w-4 text-primary" /> Occupancy
         </Link>
@@ -329,7 +329,7 @@ function AuthPage() {
             </Link>
           </div>
         </Card>
-      </div>
+      </main>
     </div>
   );
 }
