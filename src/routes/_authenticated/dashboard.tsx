@@ -338,6 +338,7 @@ function Dashboard() {
           <Kpi index={3} icon={<Sparkles className="h-4 w-4" />} label="Avg prep" value={`${avgPrep(items)} min`} num={avgPrep(items)} suffix=" min" />
         </div>
 
+        <ReviewsWidget />
 
 
         {/* Kitchen KPIs */}
