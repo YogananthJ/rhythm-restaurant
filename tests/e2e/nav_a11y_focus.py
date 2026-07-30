@@ -180,9 +180,10 @@ async def landmark_checks(page):
     )
     unnamed = await page.evaluate(
         """() => Array.from(document.querySelectorAll('header button'))
-             .filter(b => !b.textContent.trim() && !b.getAttribute('aria-label')).length"""
+             .filter(b => !b.textContent.trim() && !b.getAttribute('aria-label') && !b.getAttribute('aria-labelledby'))
+             .map(b => b.outerHTML.slice(0, 160))"""
     )
-    check("aria: no unnamed icon-only buttons in the header", unnamed == 0, f"{unnamed} unnamed")
+    check("aria: no unnamed icon-only buttons in the header", len(unnamed) == 0, str(unnamed))
 
 
 async def main():
