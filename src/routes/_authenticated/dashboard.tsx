@@ -336,7 +336,7 @@ function Dashboard() {
               <div className="mt-0.5 text-[11px] text-muted-foreground">Live floor</div>
             </div>
           </Link>
-          <div className="-mx-4 flex min-w-0 items-center gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden xl:mx-0 xl:flex-wrap xl:justify-end xl:overflow-visible xl:px-0 xl:pb-0">
+          <div className="flex min-w-0 max-w-full items-center gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden xl:flex-wrap xl:justify-end xl:overflow-visible xl:pb-0">
             <Badge variant="secondary" className="shrink-0 gap-1.5">
               <span className="relative flex h-2 w-2">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
