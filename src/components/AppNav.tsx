@@ -247,15 +247,23 @@ export function AppNav() {
                 <MenuIcon className="h-4 w-4" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-full border-white/10 bg-card/95 backdrop-blur-xl sm:max-w-sm">
+            <SheetContent
+              side="right"
+              className="w-full border-white/10 bg-card/95 backdrop-blur-xl sm:max-w-sm"
+              aria-label="Navigation menu"
+            >
               <SheetHeader>
                 <SheetTitle className="flex items-center gap-2">
                   <ChefHat className="h-4 w-4 text-primary" /> Occupancy
                 </SheetTitle>
+                <SheetDescription className="sr-only">
+                  Browse operations, analytics, AI and account sections. Press Escape to close.
+                </SheetDescription>
               </SheetHeader>
-              <div className="mt-2 overflow-y-auto px-4 pb-8">
+              <nav aria-label="Mobile navigation" className="mt-2 overflow-y-auto px-4 pb-8">
                 <Link
                   to="/dashboard"
+                  aria-current={isActive("/dashboard") ? "page" : undefined}
                   className={`nav-item mb-2 flex items-center gap-2 rounded-lg border border-transparent px-3 py-2.5 text-sm font-medium ${
                     isActive("/dashboard") ? "nav-item-active" : "text-muted-foreground"
                   }`}
