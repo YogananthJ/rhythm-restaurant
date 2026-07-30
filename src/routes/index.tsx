@@ -382,9 +382,10 @@ function Hero() {
 
 function DashboardMock() {
   return (
-    <div className="grid grid-cols-[220px_1fr] min-h-[440px]">
+    <div className="grid min-h-[440px] grid-cols-1 md:grid-cols-[220px_1fr]" aria-hidden="true">
       {/* Sidebar */}
-      <div className="border-r border-border/60 bg-background/40 p-4">
+      <div className="hidden border-r border-border/60 bg-background/40 p-4 md:block">
+
         <div className="flex items-center gap-2 pb-4">
           <Logo />
           <span className="text-sm font-semibold">Occupancy</span>
