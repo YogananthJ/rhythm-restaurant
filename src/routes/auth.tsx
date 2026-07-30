@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { ChefHat, Loader2, Sparkles, MailCheck } from "lucide-react";
+import { ArrowLeft, ChefHat, Loader2, Sparkles, MailCheck } from "lucide-react";
 
 
 export const Route = createFileRoute("/auth")({
@@ -228,7 +228,14 @@ function AuthPage() {
     <div className="relative min-h-dvh bg-background text-foreground">
       <div className="pointer-events-none absolute inset-0 -z-10" style={{ background: "var(--gradient-mesh)" }} />
       <div className="pointer-events-none absolute inset-0 -z-10 grid-pattern opacity-[0.15]" />
-      <main className="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center px-6 py-16">
+      <Link
+        to="/"
+        className="group absolute left-4 top-4 z-10 inline-flex items-center gap-2 rounded-lg border border-white/10 bg-card/60 px-3 py-2 text-sm text-muted-foreground backdrop-blur transition-colors hover:border-primary/40 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:left-6 sm:top-6"
+      >
+        <ArrowLeft className="h-4 w-4 transition-transform duration-200 group-hover:-translate-x-0.5" />
+        Back to Home
+      </Link>
+      <main className="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center px-6 py-20">
         <Link to="/" className="mb-8 flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
           <ChefHat className="h-4 w-4 text-primary" /> Occupancy
         </Link>

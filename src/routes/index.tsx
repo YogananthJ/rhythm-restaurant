@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
 import { useAuth, signOutEverywhere } from "@/hooks/use-auth";
+import { MenuShowcase } from "@/components/MenuShowcase";
 import {
   Activity,
   ArrowRight,
@@ -25,6 +26,7 @@ const NAV_OFFSET = 72;
 const NAV_ITEMS = [
   { id: "product", label: "Product" },
   { id: "features", label: "Features" },
+  { id: "menu", label: "Menu" },
   { id: "kitchen", label: "Kitchen" },
   { id: "analytics", label: "Analytics" },
   { id: "pricing", label: "Pricing" },
@@ -112,6 +114,7 @@ function Landing() {
       <main>
         <Hero />
         <LogoStrip />
+        <MenuShowcase />
         <Features />
         <ProductPreview />
         <AISection />
