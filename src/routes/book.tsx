@@ -27,7 +27,7 @@ type Restaurant = { id: string; name: string };
 function BookPage() {
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [busy, setBusy] = useState(false);
-  const [confirmed, setConfirmed] = useState<{ id: string; when: string; party: number } | null>(null);
+  const [confirmed, setConfirmed] = useState<{ when: string; party: number } | null>(null);
 
   const defaults = useMemo(() => {
     const d = new Date();
@@ -82,7 +82,7 @@ function BookPage() {
       );
     }
 
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from("reservations")
       .insert({
         restaurant_id: restaurant.id,
@@ -93,15 +93,13 @@ function BookPage() {
         requested_at: when.toISOString(),
         notes: form.notes.trim() || null,
         status: "pending",
-      })
-      .select("id")
-      .maybeSingle();
+      });
     setBusy(false);
     if (error) {
       toast.error(error.message);
       return;
     }
-    setConfirmed({ id: data!.id, when: when.toLocaleString(), party: form.party_size });
+    setConfirmed({ when: when.toLocaleString(), party: form.party_size });
     toast.success("Reservation confirmed instantly");
   }
 
@@ -144,7 +142,7 @@ function BookPage() {
             <p className="mt-2 text-sm text-muted-foreground">
               Table for {confirmed.party} · {confirmed.when}
             </p>
-            <p className="mt-1 text-xs text-muted-foreground">Ref: {confirmed.id.slice(0, 8).toUpperCase()}</p>
+            <p className="mt-1 text-xs text-muted-foreground">The host stand has your request.</p>
             <div className="mt-6 flex justify-center gap-2">
               <Button variant="outline" onClick={() => setConfirmed(null)}>Book another</Button>
               <Button asChild>
