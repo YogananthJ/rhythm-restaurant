@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { BillingDialog } from "@/components/BillingDialog";
-import { NotificationsBell } from "@/components/NotificationsBell";
+import { AnimatedNumber } from "@/components/AnimatedNumber";
 import { toast } from "sonner";
 import {
   BarChart3,
@@ -582,13 +582,32 @@ function Dashboard() {
   );
 }
 
-function Kpi({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+function Kpi({
+  icon,
+  label,
+  value,
+  num,
+  suffix,
+  index = 0,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  num?: number;
+  suffix?: string;
+  index?: number;
+}) {
   return (
-    <Card className="border-white/10 bg-card/70 p-5 backdrop-blur">
+    <Card
+      className="hover-lift rise-in border-white/10 bg-card/70 p-5 backdrop-blur"
+      style={{ animationDelay: `${index * 80}ms` }}
+    >
       <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
         <span className="text-primary">{icon}</span> {label}
       </div>
-      <div className="mt-2 text-2xl font-semibold tracking-tight">{value}</div>
+      <div className="mt-2 text-2xl font-semibold tracking-tight">
+        {typeof num === "number" ? <AnimatedNumber value={num} suffix={suffix} /> : value}
+      </div>
     </Card>
   );
 }
