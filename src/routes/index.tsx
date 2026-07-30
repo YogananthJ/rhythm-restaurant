@@ -12,7 +12,10 @@ import {
   LayoutDashboard,
   LineChart,
   LogOut,
+  Menu,
   QrCode,
+  X,
+
   Sparkles,
   Utensils,
   Zap,
@@ -124,6 +127,8 @@ function Landing() {
 
 function Nav({ signedIn }: { signedIn: boolean }) {
   const [active, setActive] = useState<string>("product");
+  const [menuOpen, setMenuOpen] = useState(false);
+
 
   useEffect(() => {
     const els = NAV_ITEMS
@@ -202,7 +207,7 @@ function Nav({ signedIn }: { signedIn: boolean }) {
               </button>
               <Link
                 to="/dashboard"
-                className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-1.5 text-sm font-medium text-primary-foreground shadow-glow transition-all hover:brightness-110"
+                className="inline-flex min-h-11 items-center gap-1.5 rounded-lg bg-primary px-3.5 py-1.5 text-sm font-medium text-primary-foreground shadow-glow transition-all hover:brightness-110 md:min-h-0"
               >
                 Open dashboard
                 <ArrowRight className="h-3.5 w-3.5" />
@@ -218,18 +223,92 @@ function Nav({ signedIn }: { signedIn: boolean }) {
               </a>
               <a
                 href="/auth?mode=signup"
-                className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-1.5 text-sm font-medium text-primary-foreground shadow-glow transition-all hover:brightness-110"
+                className="inline-flex min-h-11 items-center gap-1.5 rounded-lg bg-primary px-3.5 py-1.5 text-sm font-medium text-primary-foreground shadow-glow transition-all hover:brightness-110 md:min-h-0"
               >
                 Get started
                 <ArrowRight className="h-3.5 w-3.5" />
               </a>
             </>
           )}
+          <button
+            type="button"
+            aria-label={menuOpen ? "Close navigation menu" : "Open navigation menu"}
+            aria-expanded={menuOpen}
+            aria-controls="mobile-nav"
+            onClick={() => setMenuOpen((v) => !v)}
+            className="grid h-11 w-11 place-items-center rounded-lg border border-border/70 text-foreground md:hidden"
+          >
+            {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
         </div>
       </div>
+
+      {menuOpen && (
+        <nav
+          id="mobile-nav"
+          className="border-t border-border/60 bg-background/95 px-6 py-3 backdrop-blur md:hidden"
+        >
+          <ul className="space-y-1">
+            {NAV_ITEMS.map((item) => (
+              <li key={item.id}>
+                <a
+                  href={`#${item.id}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setMenuOpen(false);
+                    scrollToSection(item.id);
+                  }}
+                  aria-current={active === item.id ? "true" : undefined}
+                  className={`flex min-h-11 items-center rounded-lg px-2 text-sm ${
+                    active === item.id
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground"
+                  }`}
+                >
+                  {item.label}
+                </a>
+              </li>
+            ))}
+            <li>
+              <Link
+                to="/book"
+                onClick={() => setMenuOpen(false)}
+                className="flex min-h-11 items-center rounded-lg px-2 text-sm text-muted-foreground"
+              >
+                Reserve a table
+              </Link>
+            </li>
+            {!signedIn && (
+              <li>
+                <a
+                  href="/auth"
+                  className="flex min-h-11 items-center rounded-lg px-2 text-sm text-muted-foreground"
+                >
+                  Sign in
+                </a>
+              </li>
+            )}
+            {signedIn && (
+              <li>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    void signOutEverywhere();
+                  }}
+                  className="flex min-h-11 w-full items-center rounded-lg px-2 text-left text-sm text-muted-foreground"
+                >
+                  Sign out
+                </button>
+              </li>
+            )}
+          </ul>
+        </nav>
+      )}
     </header>
   );
 }
+
 
 function Logo() {
   return (
@@ -303,9 +382,10 @@ function Hero() {
 
 function DashboardMock() {
   return (
-    <div className="grid grid-cols-[220px_1fr] min-h-[440px]">
+    <div className="grid min-h-[440px] grid-cols-1 md:grid-cols-[220px_1fr]" aria-hidden="true">
       {/* Sidebar */}
-      <div className="border-r border-border/60 bg-background/40 p-4">
+      <div className="hidden border-r border-border/60 bg-background/40 p-4 md:block">
+
         <div className="flex items-center gap-2 pb-4">
           <Logo />
           <span className="text-sm font-semibold">Occupancy</span>
@@ -334,7 +414,7 @@ function DashboardMock() {
       </div>
 
       {/* Main */}
-      <div className="p-6">
+      <div className="p-4 md:p-6">
         <div className="flex items-center justify-between">
           <div>
             <div className="text-xs text-muted-foreground">Friday · Dinner service</div>
@@ -346,7 +426,7 @@ function DashboardMock() {
           </div>
         </div>
 
-        <div className="mt-5 grid grid-cols-3 gap-3">
+        <div className="mt-5 grid grid-cols-3 gap-2 md:gap-3">
           {[
             { label: "Tables occupied", value: "18/24", accent: "text-primary" },
             { label: "Avg wait", value: "12m", accent: "text-accent" },
@@ -365,7 +445,7 @@ function DashboardMock() {
         </div>
 
         {/* Table grid */}
-        <div className="mt-5 grid grid-cols-6 gap-2">
+        <div className="mt-5 grid grid-cols-4 gap-2 sm:grid-cols-6">
           {Array.from({ length: 24 }).map((_, i) => {
             const state = i % 5 === 0 ? "free" : i % 3 === 0 ? "cooking" : "seated";
             const color =
@@ -728,7 +808,7 @@ function Pricing() {
           <button
             type="button"
             onClick={() => setBilling("monthly")}
-            className={`rounded-full px-4 py-1.5 font-medium transition-all ${
+            className={`min-h-11 rounded-full px-4 py-1.5 font-medium md:min-h-0 transition-all ${
               !annual
                 ? "bg-primary text-primary-foreground shadow-glow"
                 : "text-muted-foreground hover:text-foreground"
@@ -739,7 +819,7 @@ function Pricing() {
           <button
             type="button"
             onClick={() => setBilling("annual")}
-            className={`inline-flex items-center gap-2 rounded-full px-4 py-1.5 font-medium transition-all ${
+            className={`inline-flex items-center gap-2 min-h-11 rounded-full px-4 py-1.5 font-medium md:min-h-0 transition-all ${
               annual
                 ? "bg-primary text-primary-foreground shadow-glow"
                 : "text-muted-foreground hover:text-foreground"
@@ -856,19 +936,51 @@ function Footer() {
           </p>
         </div>
         {[
-          { title: "Product", items: ["Live floor", "Kitchen", "Analytics", "AI insights"] },
-          { title: "Company", items: ["About", "Careers", "Contact", "Changelog"] },
+          {
+            title: "Product",
+            items: [
+              { label: "Live floor", section: "product" },
+              { label: "Kitchen", section: "kitchen" },
+              { label: "Analytics", section: "analytics" },
+              { label: "AI insights", section: "features" },
+            ],
+          },
+          {
+            title: "Company",
+            items: [
+              { label: "Pricing", section: "pricing" },
+              { label: "Reserve a table", href: "/book" },
+              { label: "Sign in", href: "/auth" },
+              { label: "Create account", href: "/auth?mode=signup" },
+            ],
+          },
         ].map((col) => (
           <div key={col.title}>
             <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               {col.title}
             </div>
-            <ul className="mt-3 space-y-2 text-sm">
+            <ul className="mt-1 text-sm">
               {col.items.map((it) => (
-                <li key={it}>
-                  <a href="#" className="text-foreground/80 hover:text-foreground">
-                    {it}
-                  </a>
+                <li key={it.label}>
+                  {"section" in it && it.section ? (
+                    <a
+                      href={`#${it.section}`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        scrollToSection(it.section as string);
+                      }}
+                      className="flex min-h-11 items-center text-foreground/80 hover:text-foreground"
+                    >
+                      {it.label}
+                    </a>
+                  ) : (
+                    <a
+                      href={(it as { href: string }).href}
+                      className="flex min-h-11 items-center text-foreground/80 hover:text-foreground"
+                    >
+                      {it.label}
+                    </a>
+                  )}
                 </li>
               ))}
             </ul>
@@ -878,14 +990,12 @@ function Footer() {
       <div className="border-t border-border/60">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-6 py-4 text-xs text-muted-foreground">
           <div>© 2026 Occupancy · Made for VibeAthon 6.0</div>
-          <a
-            href="#"
-            className="inline-flex items-center gap-1.5 hover:text-foreground"
-          >
-            <Github className="h-3.5 w-3.5" /> View on GitHub
-          </a>
+          <div className="inline-flex items-center gap-1.5">
+            <Github className="h-3.5 w-3.5" /> Built for VibeAthon 6.0
+          </div>
         </div>
       </div>
     </footer>
   );
 }
+
