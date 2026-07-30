@@ -82,7 +82,7 @@ function BookPage() {
       );
     }
 
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from("reservations")
       .insert({
         restaurant_id: restaurant.id,
@@ -93,15 +93,13 @@ function BookPage() {
         requested_at: when.toISOString(),
         notes: form.notes.trim() || null,
         status: "pending",
-      })
-      .select("id")
-      .maybeSingle();
+      });
     setBusy(false);
     if (error) {
       toast.error(error.message);
       return;
     }
-    setConfirmed({ id: data!.id, when: when.toLocaleString(), party: form.party_size });
+    setConfirmed({ when: when.toLocaleString(), party: form.party_size });
     toast.success("Reservation confirmed instantly");
   }
 
