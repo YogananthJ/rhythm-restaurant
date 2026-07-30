@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import {
@@ -110,11 +110,17 @@ export function BillingDialog({ orderId, open, onOpenChange, onClosed }: {
   const changeCents = Math.max(collectedCents - (order?.total_cents ?? 0), 0);
   const tableLabel = order?.table_id ? tables.find((t) => t.id === order.table_id)?.label : undefined;
 
+  // `busy` alone cannot stop a double-click: React commits state after the
+  // handler returns, so two clicks in the same tick both see busy === false
+  // and both fire the RPC — a duplicate payment. The ref flips synchronously.
+  const inFlight = useRef(false);
   const call = async <T,>(fn: () => Promise<T>, msg?: string) => {
+    if (inFlight.current) return undefined as T;
+    inFlight.current = true;
     setBusy(true);
     try { const r = await fn(); if (msg) toast.success(msg); return r; }
     catch (e: unknown) { const m = e instanceof Error ? e.message : String(e); toast.error(m); throw e; }
-    finally { setBusy(false); }
+    finally { inFlight.current = false; setBusy(false); }
   };
 
   const addItem = async () => {
@@ -351,7 +357,7 @@ export function BillingDialog({ orderId, open, onOpenChange, onClosed }: {
                   <Button size="sm" variant="outline" onClick={() => splitEqual(2)} disabled={busy || dueCents <= 0}>Split 2-way</Button>
                   <Button size="sm" variant="outline" onClick={() => splitEqual(3)} disabled={busy || dueCents <= 0}>Split 3-way</Button>
                   <Button size="sm" variant="outline" onClick={() => splitEqual(4)} disabled={busy || dueCents <= 0}>Split 4-way</Button>
-                  <Button onClick={() => addPayment()} disabled={busy || !payAmount}><CreditCard className="mr-1 h-4 w-4" />Record</Button>
+                  <Button onClick={() => addPayment()} disabled={busy || locked || !payAmount}><CreditCard className="mr-1 h-4 w-4" />Record</Button>
                 </div>
               </>
             )}

@@ -33,7 +33,7 @@ const DIETARY_OPTIONS = [
   { key: "dairy-free", label: "DF" },
 ];
 
-export const Route = createFileRoute("/t/$token")({
+export const Route = createFileRoute("/t/$token/")({
   head: () => ({
     meta: [
       { title: "Order at your table — Occupancy" },
@@ -386,6 +386,8 @@ function GuestMenu() {
                       </button>
                       <Button
                         size="sm"
+                        aria-label={`Add ${item.name} to order`}
+                        title={`Add ${item.name}`}
                         disabled={!item.is_available}
                         onClick={() => addToCart(item)}
                       >

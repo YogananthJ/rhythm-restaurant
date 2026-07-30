@@ -14,7 +14,6 @@ import { Route as BookRouteImport } from './routes/book'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as TTokenRouteImport } from './routes/t/$token'
 import { Route as AuthenticatedTablesRouteImport } from './routes/_authenticated/tables'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
 import { Route as AuthenticatedOpsRouteImport } from './routes/_authenticated/ops'
@@ -25,7 +24,8 @@ import { Route as AuthenticatedHostRouteImport } from './routes/_authenticated/h
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedBillingRouteImport } from './routes/_authenticated/billing'
 import { Route as AuthenticatedAutopilotRouteImport } from './routes/_authenticated/autopilot'
-import { Route as TTokenOrderOrderIdRouteImport } from './routes/t/$token.order.$orderId'
+import { Route as TTokenIndexRouteImport } from './routes/t/$token/index'
+import { Route as TTokenOrderOrderIdRouteImport } from './routes/t/$token/order/$orderId'
 
 const HealthRoute = HealthRouteImport.update({
   id: '/health',
@@ -49,11 +49,6 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TTokenRoute = TTokenRouteImport.update({
-  id: '/t/$token',
-  path: '/t/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedTablesRoute = AuthenticatedTablesRouteImport.update({
@@ -106,10 +101,15 @@ const AuthenticatedAutopilotRoute = AuthenticatedAutopilotRouteImport.update({
   path: '/autopilot',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const TTokenIndexRoute = TTokenIndexRouteImport.update({
+  id: '/t/$token/',
+  path: '/t/$token/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TTokenOrderOrderIdRoute = TTokenOrderOrderIdRouteImport.update({
-  id: '/order/$orderId',
-  path: '/order/$orderId',
-  getParentRoute: () => TTokenRoute,
+  id: '/t/$token/order/$orderId',
+  path: '/t/$token/order/$orderId',
+  getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -127,7 +127,7 @@ export interface FileRoutesByFullPath {
   '/ops': typeof AuthenticatedOpsRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/tables': typeof AuthenticatedTablesRoute
-  '/t/$token': typeof TTokenRouteWithChildren
+  '/t/$token/': typeof TTokenIndexRoute
   '/t/$token/order/$orderId': typeof TTokenOrderOrderIdRoute
 }
 export interface FileRoutesByTo {
@@ -145,7 +145,7 @@ export interface FileRoutesByTo {
   '/ops': typeof AuthenticatedOpsRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/tables': typeof AuthenticatedTablesRoute
-  '/t/$token': typeof TTokenRouteWithChildren
+  '/t/$token': typeof TTokenIndexRoute
   '/t/$token/order/$orderId': typeof TTokenOrderOrderIdRoute
 }
 export interface FileRoutesById {
@@ -165,7 +165,7 @@ export interface FileRoutesById {
   '/_authenticated/ops': typeof AuthenticatedOpsRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/tables': typeof AuthenticatedTablesRoute
-  '/t/$token': typeof TTokenRouteWithChildren
+  '/t/$token/': typeof TTokenIndexRoute
   '/t/$token/order/$orderId': typeof TTokenOrderOrderIdRoute
 }
 export interface FileRouteTypes {
@@ -185,7 +185,7 @@ export interface FileRouteTypes {
     | '/ops'
     | '/reports'
     | '/tables'
-    | '/t/$token'
+    | '/t/$token/'
     | '/t/$token/order/$orderId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -222,7 +222,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops'
     | '/_authenticated/reports'
     | '/_authenticated/tables'
-    | '/t/$token'
+    | '/t/$token/'
     | '/t/$token/order/$orderId'
   fileRoutesById: FileRoutesById
 }
@@ -232,7 +232,8 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   BookRoute: typeof BookRoute
   HealthRoute: typeof HealthRoute
-  TTokenRoute: typeof TTokenRouteWithChildren
+  TTokenIndexRoute: typeof TTokenIndexRoute
+  TTokenOrderOrderIdRoute: typeof TTokenOrderOrderIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -270,13 +271,6 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/t/$token': {
-      id: '/t/$token'
-      path: '/t/$token'
-      fullPath: '/t/$token'
-      preLoaderRoute: typeof TTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/tables': {
@@ -349,12 +343,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAutopilotRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/t/$token/': {
+      id: '/t/$token/'
+      path: '/t/$token'
+      fullPath: '/t/$token/'
+      preLoaderRoute: typeof TTokenIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/t/$token/order/$orderId': {
       id: '/t/$token/order/$orderId'
-      path: '/order/$orderId'
+      path: '/t/$token/order/$orderId'
       fullPath: '/t/$token/order/$orderId'
       preLoaderRoute: typeof TTokenOrderOrderIdRouteImport
-      parentRoute: typeof TTokenRoute
+      parentRoute: typeof rootRouteImport
     }
   }
 }
@@ -388,24 +389,14 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
-interface TTokenRouteChildren {
-  TTokenOrderOrderIdRoute: typeof TTokenOrderOrderIdRoute
-}
-
-const TTokenRouteChildren: TTokenRouteChildren = {
-  TTokenOrderOrderIdRoute: TTokenOrderOrderIdRoute,
-}
-
-const TTokenRouteWithChildren =
-  TTokenRoute._addFileChildren(TTokenRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   BookRoute: BookRoute,
   HealthRoute: HealthRoute,
-  TTokenRoute: TTokenRouteWithChildren,
+  TTokenIndexRoute: TTokenIndexRoute,
+  TTokenOrderOrderIdRoute: TTokenOrderOrderIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

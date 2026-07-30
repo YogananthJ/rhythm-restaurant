@@ -58,7 +58,10 @@ type ItemRow = {
 
 type Granularity = "weekly" | "monthly" | "yearly";
 
-const REVENUE_STATUSES = new Set(["placed", "preparing", "ready", "served", "paid", "closed"]);
+// Only settled money counts as sales. Counting open tickets ("placed",
+// "preparing", …) inflates reported revenue above what the till actually
+// took, so end-of-day reconciliation never matches.
+const REVENUE_STATUSES = new Set(["paid", "closed"]);
 
 function isRevenue(o: OrderRow) {
   return REVENUE_STATUSES.has(o.status);
