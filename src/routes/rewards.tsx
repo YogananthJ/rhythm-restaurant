@@ -26,7 +26,9 @@ import { motion } from "framer-motion";
 
 import { AnimatedNumber } from "@/components/AnimatedNumber";
 import { Reveal } from "@/components/Reveal";
-import { RewardModule } from "@/components/rewards/RewardModule";
+import { RewardModule, RewardModuleSkeleton } from "@/components/rewards/RewardModule";
+import { ClaimSuccessOverlay, type ClaimResult } from "@/components/rewards/ClaimSuccessOverlay";
+
 import {
   BadgesIllustration,
   EarnIllustration,
