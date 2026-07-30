@@ -129,7 +129,7 @@ function BillingPage() {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-dvh">
       <header className="sticky top-0 z-40 border-b border-white/10 bg-background/70 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between p-4">
           <div className="flex items-center gap-3">

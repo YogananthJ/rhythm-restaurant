@@ -93,7 +93,7 @@ function HealthPage() {
   const anyFail = checks.some((c) => c.status === "fail");
 
   return (
-    <div className="relative min-h-screen bg-background text-foreground">
+    <div className="relative min-h-dvh bg-background text-foreground">
       <div className="pointer-events-none absolute inset-0 -z-10" style={{ background: "var(--gradient-mesh)" }} />
       <div className="mx-auto max-w-2xl px-6 py-16">
         <Link to="/" className="mb-8 flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">

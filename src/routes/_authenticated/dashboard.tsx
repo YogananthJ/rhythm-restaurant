@@ -322,7 +322,7 @@ function Dashboard() {
   const seatedCount = tables.filter((t) => t.status === "seated").length;
 
   return (
-    <div className="relative min-h-screen bg-background text-foreground">
+    <div className="relative min-h-dvh bg-background text-foreground">
       <div className="pointer-events-none absolute inset-0 -z-10" style={{ background: "var(--gradient-mesh)" }} />
 
       <header className="sticky top-0 z-20 border-b border-white/10 bg-background/70 backdrop-blur-xl">

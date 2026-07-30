@@ -390,7 +390,7 @@ function AutopilotPage() {
   const visibleRisks = plan?.risks ?? [];
 
   return (
-    <div className={`min-h-screen ${emergency ? "bg-red-950/40" : "bg-background"}`}>
+    <div className={`min-h-dvh ${emergency ? "bg-red-950/40" : "bg-background"}`}>
       {emergency && (
         <div className="border-b border-red-500/30 bg-red-500/10">
           <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-2 text-sm">

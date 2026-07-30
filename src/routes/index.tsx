@@ -63,7 +63,7 @@ function Landing() {
   const signedIn = status === "authenticated" && !!user;
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-background text-foreground">
+    <div className="relative min-h-dvh overflow-hidden bg-background text-foreground">
       {signedIn && (
         <div className="sticky top-0 z-50 border-b border-primary/30 bg-primary/10 backdrop-blur">
           <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-2.5 text-sm">
