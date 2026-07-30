@@ -26,7 +26,9 @@ import { motion } from "framer-motion";
 
 import { AnimatedNumber } from "@/components/AnimatedNumber";
 import { Reveal } from "@/components/Reveal";
-import { RewardModule } from "@/components/rewards/RewardModule";
+import { RewardModule, RewardModuleSkeleton } from "@/components/rewards/RewardModule";
+import { ClaimSuccessOverlay, type ClaimResult } from "@/components/rewards/ClaimSuccessOverlay";
+
 import {
   BadgesIllustration,
   EarnIllustration,
@@ -89,9 +91,26 @@ function tierFor(lifetime: number) {
 
 function RewardsHub() {
   const [section, setSection] = useState<SectionId>("dashboard");
+  const [claim, setClaim] = useState<ClaimResult | null>(null);
   const rewards = useRewards();
   const { state } = rewards;
   const tier = tierFor(state.lifetime);
+
+  const celebrate = (result: ClaimResult) => {
+    setClaim(result);
+    toast.success(`${result.name} claimed`, {
+      description: `Code ${result.code} · ${result.balanceAfter} points left`,
+      className: "glass-panel",
+      duration: 5000,
+    });
+  };
+
+  const claimById = (id: string, name: string, cost: number) => {
+    const result = rewards.redeem(id, name, cost);
+    if (result) celebrate(result);
+    else setSection("store");
+  };
+
 
   return (
     <div className="relative min-h-dvh bg-background text-foreground page-enter">
@@ -128,14 +147,8 @@ function RewardsHub() {
         balance={state.balance}
         tier={tier.name}
         streak={state.streak}
-        onClaim={(id, name, cost) => {
-          if (rewards.redeem(id, name, cost)) {
-            toast.success(`${name} claimed — find it in My Rewards.`);
-            setSection("mine");
-          } else {
-            setSection("store");
-          }
-        }}
+        onClaim={claimById}
+
         onStore={() => setSection("store")}
       />
 
@@ -169,19 +182,41 @@ function RewardsHub() {
       </nav>
 
       <main className="mx-auto w-full max-w-7xl px-4 pb-20 pt-6 sm:px-6">
-        {section === "dashboard" && <Dashboard rewards={rewards} onGo={setSection} />}
-        {section === "spin" && <DailySpin rewards={rewards} />}
-        {section === "store" && <RewardsStore rewards={rewards} />}
-        {section === "badges" && <Badges />}
-        {section === "mine" && <MyRewards rewards={rewards} onBrowse={() => setSection("store")} />}
-        {section === "earn" && <HowToEarn />}
-        {section === "history" && <HistoryView rewards={rewards} />}
-        {section === "leaderboard" && <Leaderboard points={state.balance} />}
-        {section === "faq" && <Faq />}
+        {!rewards.hydrated ? (
+          <div className="grid gap-5 lg:grid-cols-2">
+            {[0, 1, 2, 3].map((i) => (
+              <RewardModuleSkeleton key={i} index={i} />
+            ))}
+          </div>
+        ) : (
+          <>
+            {section === "dashboard" && <Dashboard rewards={rewards} onGo={setSection} />}
+            {section === "spin" && <DailySpin rewards={rewards} />}
+            {section === "store" && <RewardsStore rewards={rewards} onClaimed={celebrate} />}
+            {section === "badges" && <Badges />}
+            {section === "mine" && <MyRewards rewards={rewards} onBrowse={() => setSection("store")} />}
+            {section === "earn" && <HowToEarn />}
+            {section === "history" && <HistoryView rewards={rewards} />}
+            {section === "leaderboard" && <Leaderboard points={state.balance} />}
+            {section === "faq" && <Faq />}
+          </>
+        )}
       </main>
+
+      {claim && (
+        <ClaimSuccessOverlay
+          claim={claim}
+          onClose={() => setClaim(null)}
+          onViewRewards={() => {
+            setClaim(null);
+            setSection("mine");
+          }}
+        />
+      )}
     </div>
   );
 }
+
 
 /* ------------------------------------------------------------------ */
 
@@ -525,6 +560,15 @@ function Dashboard({ rewards, onGo }: { rewards: RewardsApi; onGo: (s: SectionId
             { label: "Coupons", value: activeVouchers.filter((v) => v.name.toLowerCase().includes("off")).length },
             { label: "Membership", value: tier.name.split(" ")[0], animate: false, accent: true },
           ]}
+          empty={
+            state.vouchers.length === 0
+              ? {
+                  title: "Your wallet is empty",
+                  message: "Redeem a reward from the store and the voucher lands here instantly.",
+                }
+              : undefined
+          }
+
           cta="Open wallet"
           ctaIcon={Wallet}
           onCta={() => onGo("mine")}
@@ -702,8 +746,15 @@ const CATS = [
   { id: "experience", label: "Experiences" },
 ] as const;
 
-function RewardsStore({ rewards }: { rewards: RewardsApi }) {
+function RewardsStore({
+  rewards,
+  onClaimed,
+}: {
+  rewards: RewardsApi;
+  onClaimed: (result: ClaimResult) => void;
+}) {
   const { state, redeem } = rewards;
+
   const [cat, setCat] = useState<string>("all");
   const list = useMemo(
     () => STORE.filter((r) => cat === "all" || r.category === cat).sort((a, b) => a.cost - b.cost),
@@ -774,9 +825,9 @@ function RewardsStore({ rewards }: { rewards: RewardsApi }) {
                   type="button"
                   disabled={!affordable}
                   onClick={() => {
-                    if (redeem(r.id, r.name, r.cost)) {
-                      toast.success(`${r.name} redeemed — find it in My Rewards.`);
-                    }
+                    const result = redeem(r.id, r.name, r.cost);
+                    if (result) onClaimed(result);
+
                   }}
                   className="press mt-4 inline-flex min-h-11 items-center justify-center rounded-xl bg-primary text-sm font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-40"
                 >

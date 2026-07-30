@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
+import { WelcomeTransition } from "@/components/WelcomeTransition";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
@@ -42,6 +43,7 @@ function friendlyOAuthError(code: string, description?: string | null): string {
 
 function AuthPage() {
   const navigate = useNavigate();
+  const [welcomeFor, setWelcomeFor] = useState<string | null>(null);
   // NOTE: must not read window during render — that desyncs SSR/client markup
   // and triggers a hydration mismatch. Resolve ?mode=signup after mount.
   const [mode, setMode] = useState<"signin" | "signup">("signin");
@@ -123,7 +125,7 @@ function AuthPage() {
         // With auto-confirm on, session exists immediately → straight to dashboard.
         if (data.session) {
           toast.success("Account created. Redirecting…");
-          navigate({ to: "/dashboard" });
+          setWelcomeFor(email);
           return;
         }
         // Fallback: confirmation required — show resend UI.
@@ -133,7 +135,7 @@ function AuthPage() {
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        navigate({ to: "/dashboard" });
+        setWelcomeFor(email);
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Something went wrong";
@@ -186,7 +188,7 @@ function AuthPage() {
         if (signInError) throw signInError;
       }
       toast.success("Signed in as demo guest");
-      navigate({ to: "/dashboard" });
+      setWelcomeFor("Demo Guest");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Demo login failed");
     } finally {
@@ -210,7 +212,7 @@ function AuthPage() {
       // eslint-disable-next-line no-console
       console.info("[oauth] popup flow completed — session set");
       toast.success("Signed in with Google");
-      navigate({ to: "/dashboard" });
+      setWelcomeFor("");
     } catch (err) {
       const raw = err instanceof Error ? err.message : String(err);
       // eslint-disable-next-line no-console
@@ -226,8 +228,18 @@ function AuthPage() {
 
 
 
+  if (welcomeFor !== null) {
+    return (
+      <WelcomeTransition
+        name={welcomeFor || undefined}
+        onDone={() => navigate({ to: "/dashboard" })}
+      />
+    );
+  }
+
   return (
     <div className="relative min-h-dvh bg-background text-foreground">
+
       <div className="pointer-events-none absolute inset-0 -z-10" style={{ background: "var(--gradient-mesh)" }} />
       <div className="pointer-events-none absolute inset-0 -z-10 grid-pattern opacity-[0.15]" />
       <Link
