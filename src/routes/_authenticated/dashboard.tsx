@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { BillingDialog } from "@/components/BillingDialog";
-import { NotificationsBell } from "@/components/NotificationsBell";
+import { AnimatedNumber } from "@/components/AnimatedNumber";
 import { toast } from "sonner";
 import {
   BarChart3,
@@ -313,90 +313,32 @@ function Dashboard() {
     await supabase.from("dining_tables").update({ status: next }).eq("id", t.id);
   }
 
-  async function signOut() {
-    const { signOutEverywhere } = await import("@/hooks/use-auth");
-    await signOutEverywhere();
-    navigate({ to: "/auth" });
-  }
+
 
   const availableCount = items.filter((i) => i.is_available).length;
   const seatedCount = tables.filter((t) => t.status === "seated").length;
 
   return (
-    <div className="relative min-h-dvh bg-background text-foreground">
+    <div className="relative min-h-dvh w-full bg-background text-foreground">
       <div className="pointer-events-none absolute inset-0 -z-10" style={{ background: "var(--gradient-mesh)" }} />
 
-      <header className="sticky top-0 z-20 border-b border-white/10 bg-background/70 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-4 sm:px-6 xl:flex-row xl:items-center xl:justify-between">
-          <Link to="/" className="flex min-w-0 items-center gap-2">
-            <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary/15 text-primary">
-              <ChefHat className="h-4 w-4" />
-            </div>
-            <div className="min-w-0">
-              <div className="truncate text-sm font-semibold leading-none">Occupancy</div>
-              <div className="mt-0.5 text-[11px] text-muted-foreground">Live floor</div>
-            </div>
-          </Link>
-          <div className="flex min-w-0 max-w-full items-center gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden xl:flex-wrap xl:justify-end xl:overflow-visible xl:pb-0">
-            <Badge variant="secondary" className="shrink-0 gap-1.5">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
-              </span>
-              Realtime
-            </Badge>
-            <span className="hidden text-xs text-muted-foreground sm:inline">{email}</span>
-            <NotificationsBell restaurantId={restaurantId} />
-            <Button asChild variant="outline" size="sm" className="shrink-0">
-              <Link to="/autopilot"><Cpu className="mr-1.5 h-4 w-4" /> Autopilot</Link>
-            </Button>
-            <Button asChild variant="outline" size="sm" className="shrink-0">
-              <Link to="/intel"><Brain className="mr-1.5 h-4 w-4" /> Intel</Link>
-            </Button>
-            <Button asChild variant="outline" size="sm" className="shrink-0">
-              <Link to="/ops"><Sparkles className="mr-1.5 h-4 w-4" /> Copilot</Link>
-            </Button>
-            <Button asChild variant="outline" size="sm" className="shrink-0">
-              <Link to="/insights"><BarChart3 className="mr-1.5 h-4 w-4" /> Insights</Link>
-            </Button>
-
-            <Button asChild variant="outline" size="sm" className="shrink-0">
-              <Link to="/host"><Users className="mr-1.5 h-4 w-4" /> Host</Link>
-            </Button>
-            <Button asChild variant="outline" size="sm" className="shrink-0">
-              <Link to="/tables"><QrCode className="mr-1.5 h-4 w-4" /> QR</Link>
-            </Button>
-            <Button asChild variant="outline" size="sm" className="shrink-0">
-              <Link to="/menu"><Utensils className="mr-1.5 h-4 w-4" /> Menu</Link>
-            </Button>
-            <Button asChild variant="outline" size="sm" className="shrink-0">
-              <Link to="/reports"><FileText className="mr-1.5 h-4 w-4" /> Reports</Link>
-            </Button>
-            <Button asChild variant="outline" size="sm" className="shrink-0">
-              <Link to="/billing"><Receipt className="mr-1.5 h-4 w-4" /> Billing</Link>
-            </Button>
-
-
-
-            <Button asChild variant="outline" size="sm" className="shrink-0">
-              <Link to="/kds"><ChefHat className="mr-1.5 h-4 w-4" /> KDS</Link>
-            </Button>
-
-            <Button variant="ghost" size="sm" className="shrink-0" onClick={signOut}>
-              <LogOut className="mr-1.5 h-4 w-4" /> Sign out
-            </Button>
+      <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6">
+        <div className="mb-6 flex min-w-0 flex-wrap items-center justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="truncate text-xl font-semibold tracking-tight">Live floor</h1>
+            <p className="text-xs text-muted-foreground">{email || "Realtime kitchen-to-table intelligence"}</p>
           </div>
         </div>
-      </header>
 
-      <main className="mx-auto max-w-7xl px-6 py-8">
         {/* KPIs */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Kpi icon={<Utensils className="h-4 w-4" />} label="Menu items live" value={`${availableCount}/${items.length}`} />
-          <Kpi icon={<CircleDot className="h-4 w-4" />} label="Tables seated" value={`${seatedCount}/${tables.length}`} />
-          <Kpi icon={<Activity className="h-4 w-4" />} label="Active orders" value={String(orders.length)} />
-          <Kpi icon={<Sparkles className="h-4 w-4" />} label="Avg prep" value={`${avgPrep(items)} min`} />
+          <Kpi index={0} icon={<Utensils className="h-4 w-4" />} label="Menu items live" value={`${availableCount}/${items.length}`} />
+          <Kpi index={1} icon={<CircleDot className="h-4 w-4" />} label="Tables seated" value={`${seatedCount}/${tables.length}`} />
+          <Kpi index={2} icon={<Activity className="h-4 w-4" />} label="Active orders" value={String(orders.length)} num={orders.length} />
+          <Kpi index={3} icon={<Sparkles className="h-4 w-4" />} label="Avg prep" value={`${avgPrep(items)} min`} num={avgPrep(items)} suffix=" min" />
         </div>
+
+
 
         {/* Kitchen KPIs */}
         <Card className="mt-6 border-white/10 bg-card/70 p-6 backdrop-blur">
@@ -636,13 +578,32 @@ function Dashboard() {
   );
 }
 
-function Kpi({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+function Kpi({
+  icon,
+  label,
+  value,
+  num,
+  suffix,
+  index = 0,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  num?: number;
+  suffix?: string;
+  index?: number;
+}) {
   return (
-    <Card className="border-white/10 bg-card/70 p-5 backdrop-blur">
+    <Card
+      className="hover-lift rise-in border-white/10 bg-card/70 p-5 backdrop-blur"
+      style={{ animationDelay: `${index * 80}ms` }}
+    >
       <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
         <span className="text-primary">{icon}</span> {label}
       </div>
-      <div className="mt-2 text-2xl font-semibold tracking-tight">{value}</div>
+      <div className="mt-2 text-2xl font-semibold tracking-tight">
+        {typeof num === "number" ? <AnimatedNumber value={num} suffix={suffix} /> : value}
+      </div>
     </Card>
   );
 }

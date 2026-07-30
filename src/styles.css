@@ -180,3 +180,92 @@
     linear-gradient(90deg, color-mix(in oklab, var(--border) 60%, transparent) 1px, transparent 1px);
   background-size: 48px 48px;
 }
+
+/* ---------- Motion system (Linear / Vercel style) ---------- */
+
+@keyframes occ-rise-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes occ-drop-in {
+  from { opacity: 0; transform: translateY(-6px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes occ-shimmer {
+  100% { transform: translateX(100%); }
+}
+
+@utility page-enter {
+  animation: occ-rise-in 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@utility rise-in {
+  animation: occ-rise-in 380ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@utility drop-in {
+  animation: occ-drop-in 180ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@utility hover-lift {
+  transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 200ms ease, border-color 200ms ease;
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-elegant);
+    border-color: color-mix(in oklab, var(--primary) 35%, transparent);
+  }
+}
+
+@utility press {
+  transition: transform 140ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 200ms ease;
+  &:hover { transform: translateY(-1px); box-shadow: var(--shadow-elegant); }
+  &:active { transform: scale(0.97); }
+}
+
+@utility row-hover {
+  transition: background-color 180ms ease;
+  &:hover { background-color: color-mix(in oklab, var(--foreground) 5%, transparent); }
+}
+
+@utility skeleton-shine {
+  position: relative;
+  overflow: hidden;
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--foreground) 8%, transparent), transparent);
+    animation: occ-shimmer 1.6s infinite;
+  }
+}
+
+@utility nav-item {
+  position: relative;
+  transition: background-color 200ms ease, color 200ms ease, transform 200ms cubic-bezier(0.22, 1, 0.36, 1), border-color 200ms ease;
+  &:hover {
+    transform: scale(1.04);
+    background-color: color-mix(in oklab, var(--foreground) 6%, transparent);
+  }
+  & svg { transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1); }
+  &:hover svg { transform: translateY(-1px); }
+}
+
+@utility nav-item-active {
+  color: var(--primary);
+  background-color: color-mix(in oklab, var(--primary) 12%, transparent);
+  border-color: color-mix(in oklab, var(--primary) 35%, transparent);
+  box-shadow: 0 0 24px -12px color-mix(in oklab, var(--primary) 80%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

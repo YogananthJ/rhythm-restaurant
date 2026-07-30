@@ -96,6 +96,27 @@ function OpsPage() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, pending]);
 
+  // Restore & persist chat history across visits
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("occ.copilot.history");
+      if (raw) {
+        const parsed = JSON.parse(raw) as Msg[];
+        if (Array.isArray(parsed) && parsed.length) setMessages(parsed);
+      }
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("occ.copilot.history", JSON.stringify(messages.slice(-40)));
+    } catch {
+      /* ignore */
+    }
+  }, [messages]);
+
   async function load() {
     const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
     const [o, i] = await Promise.all([
@@ -139,7 +160,7 @@ function OpsPage() {
     <div className="relative min-h-dvh bg-background text-foreground">
       <div className="pointer-events-none absolute inset-0 -z-10" style={{ background: "var(--gradient-mesh)" }} />
 
-      <header className="sticky top-0 z-20 border-b border-white/10 bg-background/70 backdrop-blur-xl">
+      <header className="relative z-10 border-b border-white/10 bg-background/70 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-6">
           <div className="flex min-w-0 flex-wrap items-center gap-3">
             <Button asChild variant="ghost" size="sm">
@@ -229,7 +250,7 @@ function OpsPage() {
           </div>
           <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto p-5">
             {messages.map((m, i) => (
-              <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+              <div key={i} className={`rise-in flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
                 <div
                   className={`max-w-[80%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-sm ${
                     m.role === "user"
@@ -243,7 +264,8 @@ function OpsPage() {
             ))}
             {pending && (
               <div className="flex justify-start">
-                <div className="rounded-2xl border border-white/10 bg-background/60 px-4 py-2.5 text-sm text-muted-foreground">
+                <div className="rise-in flex items-center gap-2 rounded-2xl border border-white/10 bg-background/60 px-4 py-2.5 text-sm text-muted-foreground">
+                  <span className="animate-pulse">Thinking…</span>
                   <span className="inline-flex items-center gap-1">
                     <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary [animation-delay:-0.3s]" />
                     <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary [animation-delay:-0.15s]" />

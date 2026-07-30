@@ -145,7 +145,7 @@ function InsightsPage() {
 
   return (
     <div className="min-h-dvh bg-background">
-      <header className="sticky top-0 z-30 border-b border-border/60 bg-background/80 backdrop-blur">
+      <header className="relative z-10 border-b border-border/60 bg-background/80 backdrop-blur">
         <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center gap-3 px-4 py-3">
           <Link to="/dashboard" className="flex min-w-0 items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
             <ArrowLeft className="h-4 w-4" /> Dashboard
@@ -207,7 +207,7 @@ function InsightsPage() {
                 </div>
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">Loading revenue…</p>
+              <div className="space-y-3"><div className="skeleton-shine h-4 w-40 rounded bg-muted" /><div className="skeleton-shine h-32 w-full rounded-xl bg-muted" /><div className="skeleton-shine h-4 w-2/3 rounded bg-muted" /></div>
             )}
 
             {revenue && (

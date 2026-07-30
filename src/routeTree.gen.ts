@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedTablesRouteImport } from './routes/_authenticated/tables'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
 import { Route as AuthenticatedOpsRouteImport } from './routes/_authenticated/ops'
 import { Route as AuthenticatedMenuRouteImport } from './routes/_authenticated/menu'
@@ -55,6 +56,11 @@ const IndexRoute = IndexRouteImport.update({
 const AuthenticatedTablesRoute = AuthenticatedTablesRouteImport.update({
   id: '/tables',
   path: '/tables',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
@@ -133,6 +139,7 @@ export interface FileRoutesByFullPath {
   '/menu': typeof AuthenticatedMenuRoute
   '/ops': typeof AuthenticatedOpsRoute
   '/reports': typeof AuthenticatedReportsRoute
+  '/settings': typeof AuthenticatedSettingsRoute
   '/tables': typeof AuthenticatedTablesRoute
   '/t/$token/': typeof TTokenIndexRoute
   '/t/$token/order/$orderId': typeof TTokenOrderOrderIdRoute
@@ -152,6 +159,7 @@ export interface FileRoutesByTo {
   '/menu': typeof AuthenticatedMenuRoute
   '/ops': typeof AuthenticatedOpsRoute
   '/reports': typeof AuthenticatedReportsRoute
+  '/settings': typeof AuthenticatedSettingsRoute
   '/tables': typeof AuthenticatedTablesRoute
   '/t/$token': typeof TTokenIndexRoute
   '/t/$token/order/$orderId': typeof TTokenOrderOrderIdRoute
@@ -173,6 +181,7 @@ export interface FileRoutesById {
   '/_authenticated/menu': typeof AuthenticatedMenuRoute
   '/_authenticated/ops': typeof AuthenticatedOpsRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
+  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/tables': typeof AuthenticatedTablesRoute
   '/t/$token/': typeof TTokenIndexRoute
   '/t/$token/order/$orderId': typeof TTokenOrderOrderIdRoute
@@ -194,6 +203,7 @@ export interface FileRouteTypes {
     | '/menu'
     | '/ops'
     | '/reports'
+    | '/settings'
     | '/tables'
     | '/t/$token/'
     | '/t/$token/order/$orderId'
@@ -213,6 +223,7 @@ export interface FileRouteTypes {
     | '/menu'
     | '/ops'
     | '/reports'
+    | '/settings'
     | '/tables'
     | '/t/$token'
     | '/t/$token/order/$orderId'
@@ -233,6 +244,7 @@ export interface FileRouteTypes {
     | '/_authenticated/menu'
     | '/_authenticated/ops'
     | '/_authenticated/reports'
+    | '/_authenticated/settings'
     | '/_authenticated/tables'
     | '/t/$token/'
     | '/t/$token/order/$orderId'
@@ -290,6 +302,13 @@ declare module '@tanstack/react-router' {
       path: '/tables'
       fullPath: '/tables'
       preLoaderRoute: typeof AuthenticatedTablesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/reports': {
@@ -390,6 +409,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMenuRoute: typeof AuthenticatedMenuRoute
   AuthenticatedOpsRoute: typeof AuthenticatedOpsRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
+  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedTablesRoute: typeof AuthenticatedTablesRoute
 }
 
@@ -404,6 +424,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMenuRoute: AuthenticatedMenuRoute,
   AuthenticatedOpsRoute: AuthenticatedOpsRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
+  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedTablesRoute: AuthenticatedTablesRoute,
 }
 
