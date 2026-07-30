@@ -386,6 +386,8 @@ function GuestMenu() {
                       </button>
                       <Button
                         size="sm"
+                        aria-label={`Add ${item.name} to order`}
+                        title={`Add ${item.name}`}
                         disabled={!item.is_available}
                         onClick={() => addToCart(item)}
                       >
