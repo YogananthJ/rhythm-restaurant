@@ -20,6 +20,7 @@ import { Route as AuthenticatedOpsRouteImport } from './routes/_authenticated/op
 import { Route as AuthenticatedMenuRouteImport } from './routes/_authenticated/menu'
 import { Route as AuthenticatedKdsRouteImport } from './routes/_authenticated/kds'
 import { Route as AuthenticatedIntelRouteImport } from './routes/_authenticated/intel'
+import { Route as AuthenticatedInsightsRouteImport } from './routes/_authenticated/insights'
 import { Route as AuthenticatedHostRouteImport } from './routes/_authenticated/host'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedBillingRouteImport } from './routes/_authenticated/billing'
@@ -81,6 +82,11 @@ const AuthenticatedIntelRoute = AuthenticatedIntelRouteImport.update({
   path: '/intel',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedInsightsRoute = AuthenticatedInsightsRouteImport.update({
+  id: '/insights',
+  path: '/insights',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedHostRoute = AuthenticatedHostRouteImport.update({
   id: '/host',
   path: '/host',
@@ -121,6 +127,7 @@ export interface FileRoutesByFullPath {
   '/billing': typeof AuthenticatedBillingRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/host': typeof AuthenticatedHostRoute
+  '/insights': typeof AuthenticatedInsightsRoute
   '/intel': typeof AuthenticatedIntelRoute
   '/kds': typeof AuthenticatedKdsRoute
   '/menu': typeof AuthenticatedMenuRoute
@@ -139,6 +146,7 @@ export interface FileRoutesByTo {
   '/billing': typeof AuthenticatedBillingRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/host': typeof AuthenticatedHostRoute
+  '/insights': typeof AuthenticatedInsightsRoute
   '/intel': typeof AuthenticatedIntelRoute
   '/kds': typeof AuthenticatedKdsRoute
   '/menu': typeof AuthenticatedMenuRoute
@@ -159,6 +167,7 @@ export interface FileRoutesById {
   '/_authenticated/billing': typeof AuthenticatedBillingRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/host': typeof AuthenticatedHostRoute
+  '/_authenticated/insights': typeof AuthenticatedInsightsRoute
   '/_authenticated/intel': typeof AuthenticatedIntelRoute
   '/_authenticated/kds': typeof AuthenticatedKdsRoute
   '/_authenticated/menu': typeof AuthenticatedMenuRoute
@@ -179,6 +188,7 @@ export interface FileRouteTypes {
     | '/billing'
     | '/dashboard'
     | '/host'
+    | '/insights'
     | '/intel'
     | '/kds'
     | '/menu'
@@ -197,6 +207,7 @@ export interface FileRouteTypes {
     | '/billing'
     | '/dashboard'
     | '/host'
+    | '/insights'
     | '/intel'
     | '/kds'
     | '/menu'
@@ -216,6 +227,7 @@ export interface FileRouteTypes {
     | '/_authenticated/billing'
     | '/_authenticated/dashboard'
     | '/_authenticated/host'
+    | '/_authenticated/insights'
     | '/_authenticated/intel'
     | '/_authenticated/kds'
     | '/_authenticated/menu'
@@ -315,6 +327,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedIntelRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/insights': {
+      id: '/_authenticated/insights'
+      path: '/insights'
+      fullPath: '/insights'
+      preLoaderRoute: typeof AuthenticatedInsightsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/host': {
       id: '/_authenticated/host'
       path: '/host'
@@ -365,6 +384,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedBillingRoute: typeof AuthenticatedBillingRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedHostRoute: typeof AuthenticatedHostRoute
+  AuthenticatedInsightsRoute: typeof AuthenticatedInsightsRoute
   AuthenticatedIntelRoute: typeof AuthenticatedIntelRoute
   AuthenticatedKdsRoute: typeof AuthenticatedKdsRoute
   AuthenticatedMenuRoute: typeof AuthenticatedMenuRoute
@@ -378,6 +398,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedBillingRoute: AuthenticatedBillingRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedHostRoute: AuthenticatedHostRoute,
+  AuthenticatedInsightsRoute: AuthenticatedInsightsRoute,
   AuthenticatedIntelRoute: AuthenticatedIntelRoute,
   AuthenticatedKdsRoute: AuthenticatedKdsRoute,
   AuthenticatedMenuRoute: AuthenticatedMenuRoute,
@@ -401,13 +422,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

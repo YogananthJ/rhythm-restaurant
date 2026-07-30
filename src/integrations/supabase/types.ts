@@ -14,6 +14,65 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_audit_log: {
+        Row: {
+          block_reason: string | null
+          completion_tokens: number | null
+          context: Json
+          created_at: string
+          feature: string
+          id: string
+          latency_ms: number | null
+          model: string | null
+          outcome: string
+          prompt: string
+          prompt_tokens: number | null
+          response: string | null
+          restaurant_id: string
+          user_id: string | null
+        }
+        Insert: {
+          block_reason?: string | null
+          completion_tokens?: number | null
+          context?: Json
+          created_at?: string
+          feature: string
+          id?: string
+          latency_ms?: number | null
+          model?: string | null
+          outcome?: string
+          prompt: string
+          prompt_tokens?: number | null
+          response?: string | null
+          restaurant_id: string
+          user_id?: string | null
+        }
+        Update: {
+          block_reason?: string | null
+          completion_tokens?: number | null
+          context?: Json
+          created_at?: string
+          feature?: string
+          id?: string
+          latency_ms?: number | null
+          model?: string | null
+          outcome?: string
+          prompt?: string
+          prompt_tokens?: number | null
+          response?: string | null
+          restaurant_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_audit_log_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       coupons: {
         Row: {
           active: boolean
