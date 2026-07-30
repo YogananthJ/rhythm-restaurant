@@ -116,7 +116,14 @@ function RewardsHub() {
         balance={state.balance}
         tier={tier.name}
         streak={state.streak}
-        onClaim={() => setSection("store")}
+        onClaim={(id, name, cost) => {
+          if (rewards.redeem(id, name, cost)) {
+            toast.success(`${name} claimed — find it in My Rewards.`);
+            setSection("mine");
+          } else {
+            setSection("store");
+          }
+        }}
         onStore={() => setSection("store")}
       />
 
@@ -176,11 +183,13 @@ function BalanceStrip({
   balance: number;
   tier: string;
   streak: number;
-  onClaim: () => void;
+  onClaim: (id: string, name: string, cost: number) => void;
   onStore: () => void;
 }) {
-  const nextReward = STORE.filter((r) => r.cost > balance).sort((a, b) => a.cost - b.cost)[0];
-  const target = nextReward?.cost ?? STORE[0].cost;
+  // The cheapest reward on the board — claimable now, or the goal to save toward.
+  const nextReward = [...STORE].sort((a, b) => a.cost - b.cost)[0];
+  const target = nextReward.cost;
+  const claimable = balance >= target;
   const pct = Math.min(100, Math.round((balance / target) * 100));
 
   return (
@@ -216,29 +225,29 @@ function BalanceStrip({
             <div className="text-xs uppercase tracking-wider text-muted-foreground">
               Next reward
             </div>
-            {nextReward ? (
-              <>
-                <p className="mt-1 text-sm font-medium">
-                  {target - balance} points → {nextReward.name}
-                </p>
-                <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-muted">
-                  <div
-                    className="h-full rounded-full transition-[width] duration-1000 ease-out"
-                    style={{ width: `${pct}%`, background: "var(--gradient-primary)" }}
-                  />
-                </div>
-              </>
-            ) : (
-              <p className="mt-1 text-sm font-medium">Everything is unlocked — go treat yourself.</p>
-            )}
+            <p className="mt-1 text-sm font-medium">
+              {target.toLocaleString()} Rewards → {nextReward.name}
+            </p>
+            <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-muted">
+              <div
+                className="h-full rounded-full transition-[width] duration-1000 ease-out"
+                style={{ width: `${pct}%`, background: "var(--gradient-primary)" }}
+              />
+            </div>
+            <p className="mt-1.5 text-xs text-muted-foreground">
+              {claimable
+                ? "Ready to claim now"
+                : `${(target - balance).toLocaleString()} points to go`}
+            </p>
           </div>
         </div>
 
         <div className="mt-5 grid grid-cols-2 gap-3 sm:max-w-sm">
           <button
             type="button"
-            onClick={onClaim}
-            className="press inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-glow)]"
+            disabled={!claimable}
+            onClick={() => onClaim(nextReward.id, nextReward.name, nextReward.cost)}
+            className="press inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-glow)] disabled:opacity-40"
           >
             <Gift className="h-4 w-4" aria-hidden="true" />
             Claim
