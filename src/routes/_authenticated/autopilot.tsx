@@ -405,8 +405,8 @@ function AutopilotPage() {
       )}
 
       <header className="sticky top-0 z-20 border-b border-white/10 bg-background/80 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-3">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-6">
+          <div className="flex min-w-0 flex-wrap items-center gap-3">
             <Button asChild variant="ghost" size="sm"><Link to="/dashboard"><ArrowLeft className="mr-1.5 h-4 w-4" /> Floor</Link></Button>
             <div className="flex items-center gap-2">
               <div className="grid h-8 w-8 place-items-center rounded-lg bg-primary/15 text-primary"><Cpu className="h-4 w-4" /></div>
@@ -416,7 +416,7 @@ function AutopilotPage() {
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 flex-wrap items-center gap-3">
             <label className="flex items-center gap-2 text-xs text-muted-foreground">
               <Wand2 className="h-3.5 w-3.5" /> Judge mode
               <Switch checked={judgeMode} onCheckedChange={setJudgeMode} />

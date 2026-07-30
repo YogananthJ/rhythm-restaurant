@@ -56,8 +56,8 @@ function TablesPage() {
       <div className="pointer-events-none absolute inset-0 -z-10" style={{ background: "var(--gradient-mesh)" }} />
 
       <header className="sticky top-0 z-20 border-b border-white/10 bg-background/70 backdrop-blur-xl print:hidden">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-3">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-6">
+          <div className="flex min-w-0 flex-wrap items-center gap-3">
             <Button asChild variant="ghost" size="sm">
               <Link to="/dashboard"><ArrowLeft className="mr-1.5 h-4 w-4" /> Floor</Link>
             </Button>
