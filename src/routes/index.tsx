@@ -935,19 +935,51 @@ function Footer() {
           </p>
         </div>
         {[
-          { title: "Product", items: ["Live floor", "Kitchen", "Analytics", "AI insights"] },
-          { title: "Company", items: ["About", "Careers", "Contact", "Changelog"] },
+          {
+            title: "Product",
+            items: [
+              { label: "Live floor", section: "product" },
+              { label: "Kitchen", section: "kitchen" },
+              { label: "Analytics", section: "analytics" },
+              { label: "AI insights", section: "features" },
+            ],
+          },
+          {
+            title: "Company",
+            items: [
+              { label: "Pricing", section: "pricing" },
+              { label: "Reserve a table", href: "/book" },
+              { label: "Sign in", href: "/auth" },
+              { label: "Create account", href: "/auth?mode=signup" },
+            ],
+          },
         ].map((col) => (
           <div key={col.title}>
             <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               {col.title}
             </div>
-            <ul className="mt-3 space-y-2 text-sm">
+            <ul className="mt-1 text-sm">
               {col.items.map((it) => (
-                <li key={it}>
-                  <a href="#" className="text-foreground/80 hover:text-foreground">
-                    {it}
-                  </a>
+                <li key={it.label}>
+                  {"section" in it && it.section ? (
+                    <a
+                      href={`#${it.section}`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        scrollToSection(it.section as string);
+                      }}
+                      className="flex min-h-11 items-center text-foreground/80 hover:text-foreground"
+                    >
+                      {it.label}
+                    </a>
+                  ) : (
+                    <a
+                      href={(it as { href: string }).href}
+                      className="flex min-h-11 items-center text-foreground/80 hover:text-foreground"
+                    >
+                      {it.label}
+                    </a>
+                  )}
                 </li>
               ))}
             </ul>
@@ -957,14 +989,12 @@ function Footer() {
       <div className="border-t border-border/60">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-6 py-4 text-xs text-muted-foreground">
           <div>© 2026 Occupancy · Made for VibeAthon 6.0</div>
-          <a
-            href="#"
-            className="inline-flex items-center gap-1.5 hover:text-foreground"
-          >
-            <Github className="h-3.5 w-3.5" /> View on GitHub
-          </a>
+          <div className="inline-flex items-center gap-1.5">
+            <Github className="h-3.5 w-3.5" /> Built for VibeAthon 6.0
+          </div>
         </div>
       </div>
     </footer>
   );
 }
+
