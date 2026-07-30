@@ -91,9 +91,26 @@ function tierFor(lifetime: number) {
 
 function RewardsHub() {
   const [section, setSection] = useState<SectionId>("dashboard");
+  const [claim, setClaim] = useState<ClaimResult | null>(null);
   const rewards = useRewards();
   const { state } = rewards;
   const tier = tierFor(state.lifetime);
+
+  const celebrate = (result: ClaimResult) => {
+    setClaim(result);
+    toast.success(`${result.name} claimed`, {
+      description: `Code ${result.code} · ${result.balanceAfter} points left`,
+      className: "glass-panel",
+      duration: 5000,
+    });
+  };
+
+  const claimById = (id: string, name: string, cost: number) => {
+    const result = rewards.redeem(id, name, cost);
+    if (result) celebrate(result);
+    else setSection("store");
+  };
+
 
   return (
     <div className="relative min-h-dvh bg-background text-foreground page-enter">
