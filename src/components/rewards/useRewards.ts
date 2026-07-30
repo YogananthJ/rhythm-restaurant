@@ -74,11 +74,15 @@ export function useRewards() {
       ].slice(0, 50),
     }));
 
-  const redeem = (rewardId: string, name: string, cost: number) => {
-    let ok = false;
+  /** Redeems a reward. Returns the created voucher (plus the new balance) or null. */
+  const redeem = (
+    rewardId: string,
+    name: string,
+    cost: number,
+  ): (Voucher & { balanceAfter: number }) | null => {
+    let created: (Voucher & { balanceAfter: number }) | null = null;
     setState((s) => {
       if (s.balance < cost) return s;
-      ok = true;
       const expires = new Date();
       expires.setDate(expires.getDate() + 30);
       const voucher: Voucher = {
@@ -91,6 +95,7 @@ export function useRewards() {
         expiresAt: expires.toISOString(),
         used: false,
       };
+      created = { ...voucher, balanceAfter: s.balance - cost };
       return {
         ...s,
         balance: s.balance - cost,
@@ -107,8 +112,9 @@ export function useRewards() {
         ].slice(0, 50),
       };
     });
-    return ok;
+    return created;
   };
+
 
   const markUsed = (voucherId: string) =>
     setState((s) => ({
