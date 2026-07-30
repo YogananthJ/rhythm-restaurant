@@ -7,6 +7,8 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { BillingDialog } from "@/components/BillingDialog";
 import { AnimatedNumber } from "@/components/AnimatedNumber";
+import { ReviewsWidget } from "@/components/reviews/ReviewsWidget";
+
 import { toast } from "sonner";
 import {
   BarChart3,
