@@ -56,6 +56,7 @@ export const NAV_GROUPS: Group[] = [
     icon: Utensils,
     items: [
       { to: "/host", label: "Host", icon: Users },
+      { to: "/book", label: "Reserve a Table", icon: CalendarPlus },
       { to: "/tables", label: "QR Ordering", icon: QrCode },
       { to: "/menu", label: "Menu", icon: Utensils },
       { to: "/kds", label: "Kitchen Display", icon: ChefHat },

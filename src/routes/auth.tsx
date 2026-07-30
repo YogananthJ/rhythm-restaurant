@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { ChefHat, Loader2, Sparkles, MailCheck } from "lucide-react";
+import { ArrowLeft, ChefHat, Loader2, Sparkles, MailCheck } from "lucide-react";
 
 
 export const Route = createFileRoute("/auth")({
