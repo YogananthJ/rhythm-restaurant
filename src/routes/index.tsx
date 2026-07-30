@@ -202,7 +202,7 @@ function Nav({ signedIn }: { signedIn: boolean }) {
               </button>
               <Link
                 to="/dashboard"
-                className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-1.5 text-sm font-medium text-primary-foreground shadow-glow transition-all hover:brightness-110"
+                className="inline-flex min-h-11 items-center gap-1.5 rounded-lg bg-primary px-3.5 py-1.5 text-sm font-medium text-primary-foreground shadow-glow transition-all hover:brightness-110 md:min-h-0"
               >
                 Open dashboard
                 <ArrowRight className="h-3.5 w-3.5" />
@@ -218,18 +218,92 @@ function Nav({ signedIn }: { signedIn: boolean }) {
               </a>
               <a
                 href="/auth?mode=signup"
-                className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-1.5 text-sm font-medium text-primary-foreground shadow-glow transition-all hover:brightness-110"
+                className="inline-flex min-h-11 items-center gap-1.5 rounded-lg bg-primary px-3.5 py-1.5 text-sm font-medium text-primary-foreground shadow-glow transition-all hover:brightness-110 md:min-h-0"
               >
                 Get started
                 <ArrowRight className="h-3.5 w-3.5" />
               </a>
             </>
           )}
+          <button
+            type="button"
+            aria-label={menuOpen ? "Close navigation menu" : "Open navigation menu"}
+            aria-expanded={menuOpen}
+            aria-controls="mobile-nav"
+            onClick={() => setMenuOpen((v) => !v)}
+            className="grid h-11 w-11 place-items-center rounded-lg border border-border/70 text-foreground md:hidden"
+          >
+            {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
         </div>
       </div>
+
+      {menuOpen && (
+        <nav
+          id="mobile-nav"
+          className="border-t border-border/60 bg-background/95 px-6 py-3 backdrop-blur md:hidden"
+        >
+          <ul className="space-y-1">
+            {NAV_ITEMS.map((item) => (
+              <li key={item.id}>
+                <a
+                  href={`#${item.id}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setMenuOpen(false);
+                    scrollToSection(item.id);
+                  }}
+                  aria-current={active === item.id ? "true" : undefined}
+                  className={`flex min-h-11 items-center rounded-lg px-2 text-sm ${
+                    active === item.id
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground"
+                  }`}
+                >
+                  {item.label}
+                </a>
+              </li>
+            ))}
+            <li>
+              <Link
+                to="/book"
+                onClick={() => setMenuOpen(false)}
+                className="flex min-h-11 items-center rounded-lg px-2 text-sm text-muted-foreground"
+              >
+                Reserve a table
+              </Link>
+            </li>
+            {!signedIn && (
+              <li>
+                <a
+                  href="/auth"
+                  className="flex min-h-11 items-center rounded-lg px-2 text-sm text-muted-foreground"
+                >
+                  Sign in
+                </a>
+              </li>
+            )}
+            {signedIn && (
+              <li>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    void signOutEverywhere();
+                  }}
+                  className="flex min-h-11 w-full items-center rounded-lg px-2 text-left text-sm text-muted-foreground"
+                >
+                  Sign out
+                </button>
+              </li>
+            )}
+          </ul>
+        </nav>
+      )}
     </header>
   );
 }
+
 
 function Logo() {
   return (
