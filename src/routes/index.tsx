@@ -122,7 +122,7 @@ function Landing() {
         <MenuShowcase />
         <ProductPreview />
         <AISection />
-        <Testimonials />
+        <Testimonials signedIn={signedIn} />
         <Pricing />
         <CTA />
 
@@ -976,6 +976,7 @@ function Footer() {
             title: "Company",
             items: [
               { label: "Pricing", section: "pricing" },
+              { label: "Guest reviews", href: "/reviews" },
               { label: "Reserve a table", href: "/book" },
               { label: "Sign in", href: "/auth" },
               { label: "Create account", href: "/auth?mode=signup" },

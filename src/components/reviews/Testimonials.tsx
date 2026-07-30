@@ -17,7 +17,7 @@ const FLOATERS = [
   { Icon: Leaf, top: "45%", left: "50%", delay: "1.7s", size: "h-8 w-8" },
 ];
 
-export function Testimonials() {
+export function Testimonials({ signedIn = false }: { signedIn?: boolean }) {
   const lightbox = useLightbox();
   const [photos, setPhotos] = useState<string[]>([]);
 
@@ -25,6 +25,41 @@ export function Testimonials() {
     setPhotos(set);
     lightbox.setIndex(i);
   };
+
+  // Signed-in operators already live in the product — show a compact trust strip
+  // instead of the full marketing carousel.
+  if (signedIn) {
+    return (
+      <section
+        id="testimonials"
+        aria-labelledby="testimonials-heading"
+        className="mx-auto max-w-7xl px-6 py-10"
+      >
+        <div className="glass-panel hover-lift flex flex-col items-start justify-between gap-4 rounded-2xl p-5 sm:flex-row sm:items-center">
+          <div>
+            <h2 id="testimonials-heading" className="font-display text-lg font-semibold">
+              Guest reviews
+            </h2>
+            <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
+              <Stars rating={5} className="h-3.5 w-3.5" />
+              <span className="font-semibold text-foreground">{REVIEW_STATS.average}</span>
+              · {REVIEW_STATS.total.toLocaleString()} reviews
+            </div>
+            <p className="mt-2 max-w-md text-sm text-muted-foreground">
+              “{REVIEWS[0].body.slice(0, 90)}…”
+            </p>
+          </div>
+          <Link
+            to="/reviews"
+            className="press inline-flex min-h-11 items-center gap-2 rounded-xl border border-border/60 px-4 text-sm font-semibold hover:border-primary/50"
+          >
+            View all reviews
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section
