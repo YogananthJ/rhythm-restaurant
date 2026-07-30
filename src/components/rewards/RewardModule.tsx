@@ -12,6 +12,37 @@ export type ModuleStat = {
   accent?: boolean;
 };
 
+/** Glassy skeleton placeholder shown while rewards state hydrates. */
+export function RewardModuleSkeleton({ index = 0 }: { index?: number }) {
+  return (
+    <section
+      aria-hidden="true"
+      className="rw-module p-5 sm:p-7"
+      style={{ animationDelay: `${Math.min(index * 60, 300)}ms` }}
+    >
+      <div className="grid gap-5 sm:grid-cols-[minmax(0,1fr)_minmax(0,0.85fr)] sm:items-center">
+        <div className="order-2 min-w-0 sm:order-1">
+          <div className="skeleton-shine h-3 w-28 rounded-full bg-muted" />
+          <div className="skeleton-shine mt-3 h-6 w-2/3 rounded-lg bg-muted" />
+          <div className="skeleton-shine mt-2 h-3.5 w-full rounded-full bg-muted" />
+          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="rounded-2xl border border-border/70 bg-surface/40 p-3">
+                <div className="skeleton-shine h-2.5 w-14 rounded-full bg-muted" />
+                <div className="skeleton-shine mt-2 h-4 w-12 rounded-md bg-muted" />
+              </div>
+            ))}
+          </div>
+          <div className="skeleton-shine mt-5 h-11 w-40 rounded-xl bg-muted" />
+        </div>
+        <div className="order-1 sm:order-2">
+          <div className="skeleton-shine mx-auto aspect-[6/5] w-full max-w-[22rem] rounded-3xl bg-muted" />
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export function RewardModule({
   eyebrow,
   title,
@@ -25,6 +56,7 @@ export function RewardModule({
   ctaIcon: CtaIcon,
   onCta,
   index = 0,
+  empty,
   children,
 }: {
   eyebrow: string;
@@ -39,9 +71,12 @@ export function RewardModule({
   ctaIcon?: LucideIcon;
   onCta: () => void;
   index?: number;
+  /** When set, replaces the stats grid with a friendly empty state. */
+  empty?: { title: string; message: string };
   children?: ReactNode;
 }) {
   const reduce = useReducedMotion();
+
 
   const toneClass =
     statusTone === "gold"
