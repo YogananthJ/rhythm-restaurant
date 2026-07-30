@@ -6,6 +6,7 @@ against them and fail loudly when pixels drift beyond the tolerance.
 """
 
 import asyncio
+import shutil
 import sys
 from pathlib import Path
 
@@ -29,7 +30,7 @@ TOLERANCE = 0.005  # 0.5% of pixels may differ (font AA / live data)
 def compare(name: str, current: Path) -> str | None:
     baseline = SHOTS / f"{name}.png"
     if not baseline.exists():
-        current.replace(baseline)
+        shutil.move(str(current), str(baseline))
         return None
     a = Image.open(baseline).convert("RGB")
     b = Image.open(current).convert("RGB")
