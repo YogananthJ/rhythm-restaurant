@@ -560,6 +560,15 @@ function Dashboard({ rewards, onGo }: { rewards: RewardsApi; onGo: (s: SectionId
             { label: "Coupons", value: activeVouchers.filter((v) => v.name.toLowerCase().includes("off")).length },
             { label: "Membership", value: tier.name.split(" ")[0], animate: false, accent: true },
           ]}
+          empty={
+            state.vouchers.length === 0
+              ? {
+                  title: "Your wallet is empty",
+                  message: "Redeem a reward from the store and the voucher lands here instantly.",
+                }
+              : undefined
+          }
+
           cta="Open wallet"
           ctaIcon={Wallet}
           onCta={() => onGo("mine")}
