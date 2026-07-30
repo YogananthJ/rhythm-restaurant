@@ -737,8 +737,15 @@ const CATS = [
   { id: "experience", label: "Experiences" },
 ] as const;
 
-function RewardsStore({ rewards }: { rewards: RewardsApi }) {
+function RewardsStore({
+  rewards,
+  onClaimed,
+}: {
+  rewards: RewardsApi;
+  onClaimed: (result: ClaimResult) => void;
+}) {
   const { state, redeem } = rewards;
+
   const [cat, setCat] = useState<string>("all");
   const list = useMemo(
     () => STORE.filter((r) => cat === "all" || r.category === cat).sort((a, b) => a.cost - b.cost),
