@@ -67,13 +67,24 @@ export function MenuShowcase() {
 
   const { trending, recommended, specials } = useMemo(() => {
     const list = items ?? [];
+    const used = new Set<string>();
+    const take = (sorted: Item[], n: number) => {
+      const out: Item[] = [];
+      for (const it of sorted) {
+        if (used.has(it.id)) continue;
+        used.add(it.id);
+        out.push(it);
+        if (out.length === n) break;
+      }
+      return out;
+    };
     const byPop = [...list].sort((a, b) => (b.popularity_score ?? 0) - (a.popularity_score ?? 0));
     const byFast = [...list].sort((a, b) => (a.prep_minutes ?? 99) - (b.prep_minutes ?? 99));
     const byValue = [...list].sort((a, b) => a.price_cents - b.price_cents);
     return {
-      trending: byPop.slice(0, 3),
-      recommended: byFast.slice(0, 3),
-      specials: byValue.slice(0, 3),
+      trending: take(byPop, 3),
+      recommended: take(byFast, 3),
+      specials: take(byValue, 3),
     };
   }, [items]);
 
