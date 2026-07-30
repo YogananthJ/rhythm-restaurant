@@ -432,7 +432,7 @@ function GuestMenu() {
                 <div className="font-semibold">Your order</div>
                 <div className="text-xs text-muted-foreground">Table {table?.label}</div>
               </div>
-              <Button variant="ghost" size="icon" onClick={() => setShowCart(false)}>
+              <Button variant="ghost" size="icon" aria-label="Close order sheet" onClick={() => setShowCart(false)}>
                 <X className="h-4 w-4" />
               </Button>
             </div>
@@ -447,15 +447,16 @@ function GuestMenu() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Button size="icon" variant="outline" onClick={() => updateQty(l.item.id, -1)}>
+                      <Button size="icon" variant="outline" aria-label={`Decrease ${l.item.name} quantity`} onClick={() => updateQty(l.item.id, -1)}>
                         <Minus className="h-3 w-3" />
                       </Button>
                       <span className="w-6 text-center text-sm font-medium">{l.qty}</span>
-                      <Button size="icon" variant="outline" onClick={() => updateQty(l.item.id, 1)}>
+                      <Button size="icon" variant="outline" aria-label={`Increase ${l.item.name} quantity`} onClick={() => updateQty(l.item.id, 1)}>
                         <Plus className="h-3 w-3" />
                       </Button>
                     </div>
                   </div>
+
                   <Textarea
                     placeholder="Notes (allergies, no onion…)"
                     value={l.notes ?? ""}

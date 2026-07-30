@@ -40,12 +40,15 @@ function friendlyOAuthError(code: string, description?: string | null): string {
 
 function AuthPage() {
   const navigate = useNavigate();
-  const initialMode: "signin" | "signup" =
-    typeof window !== "undefined" &&
-    new URLSearchParams(window.location.search).get("mode") === "signup"
-      ? "signup"
-      : "signin";
-  const [mode, setMode] = useState<"signin" | "signup">(initialMode);
+  // NOTE: must not read window during render — that desyncs SSR/client markup
+  // and triggers a hydration mismatch. Resolve ?mode=signup after mount.
+  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("mode") === "signup") {
+      setMode("signup");
+    }
+  }, []);
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");

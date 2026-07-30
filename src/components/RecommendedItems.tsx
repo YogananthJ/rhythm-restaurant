@@ -146,9 +146,16 @@ export function RecommendedItems({
                     fill={favorites.has(r.menu_item_id) ? "currentColor" : "none"}
                   />
                 </button>
-                <Button size="sm" onClick={() => onAdd(r)} className="h-7 px-2">
+                <Button
+                  size="sm"
+                  aria-label={`Add ${r.name} to order`}
+                  title={`Add ${r.name}`}
+                  onClick={() => onAdd(r)}
+                  className="h-7 px-2"
+                >
                   <Plus className="h-3.5 w-3.5" />
                 </Button>
+
               </div>
             </div>
           </Card>
