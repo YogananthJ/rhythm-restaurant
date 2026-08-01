@@ -116,14 +116,14 @@ function BookPage() {
     const { error } = await supabase.rpc("create_public_reservation", {
       p_restaurant_id: restaurant.id,
       p_guest_name: form.guest_name.trim(),
-      p_phone: form.phone.trim() || null,
-      p_email: form.email.trim() || null,
+      p_phone: form.phone.trim(),
+      p_email: form.email.trim(),
       p_party_size: form.party_size,
       p_requested_at: when.toISOString(),
       p_notes:
         [form.seating !== "any" ? `Seating: ${form.seating}` : null, form.notes.trim() || null]
           .filter(Boolean)
-          .join(" · ") || null,
+          .join(" · "),
     });
     setBusy(false);
     if (error) {
