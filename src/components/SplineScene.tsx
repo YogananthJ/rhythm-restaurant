@@ -38,6 +38,13 @@ export function SplineScene({ scene, className = "", label }: Props) {
     io.observe(el);
     return () => io.disconnect();
   }, []);
+  // Some GPU-less/headless environments never fire Spline's onLoad; reveal anyway.
+  useEffect(() => {
+    if (!show || ready) return;
+    const t = setTimeout(() => setReady(true), 4000);
+    return () => clearTimeout(t);
+  }, [show, ready]);
+
 
   return (
     <div
