@@ -877,6 +877,18 @@ export type Database = {
         }
         Returns: Json
       }
+      create_public_reservation: {
+        Args: {
+          p_email: string
+          p_guest_name: string
+          p_notes: string
+          p_party_size: number
+          p_phone: string
+          p_requested_at: string
+          p_restaurant_id: string
+        }
+        Returns: Json
+      }
       get_guest_feedback: {
         Args: { p_access_token: string; p_order_id: string }
         Returns: {
