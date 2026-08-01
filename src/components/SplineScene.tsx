@@ -1,7 +1,4 @@
-import { Suspense, lazy, useEffect, useRef, useState } from "react";
-
-// Runtime is heavy (~1MB) — only pulled once the section scrolls near the viewport.
-const Spline = lazy(() => import("@splinetool/react-spline"));
+import { useEffect, useRef, useState } from "react";
 
 type Props = {
   scene: string;
@@ -12,39 +9,54 @@ type Props = {
 
 /**
  * Client-only, viewport-gated Spline embed.
- * - Never renders during SSR (the runtime touches window/WebGL).
+ * - The ~1MB runtime is dynamically imported only once the section nears the viewport.
  * - Skipped entirely for reduced-motion users; a static glow placeholder stays.
- * - Pointer events are disabled so the canvas can never swallow scroll or clicks.
+ * - Canvas is pointer-events:none so it can never swallow scroll, clicks or focus.
  */
 export function SplineScene({ scene, className = "", label }: Props) {
   const hostRef = useRef<HTMLDivElement | null>(null);
-  const [show, setShow] = useState(false);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const el = hostRef.current;
-    if (!el) return;
+    const host = hostRef.current;
+    const canvas = canvasRef.current;
+    if (!host || !canvas) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    let disposed = false;
+    let app: { dispose?: () => void } | null = null;
+
+    const start = async () => {
+      try {
+        const { Application } = await import("@splinetool/runtime");
+        if (disposed) return;
+        const instance = new Application(canvas);
+        app = instance as unknown as { dispose?: () => void };
+        await instance.load(scene);
+        if (!disposed) setReady(true);
+      } catch {
+        // Silent: the gradient placeholder remains as the visual fallback.
+      }
+    };
 
     const io = new IntersectionObserver(
       (entries) => {
         if (entries.some((e) => e.isIntersecting)) {
-          setShow(true);
           io.disconnect();
+          void start();
         }
       },
       { rootMargin: "300px" },
     );
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
-  // Some GPU-less/headless environments never fire Spline's onLoad; reveal anyway.
-  useEffect(() => {
-    if (!show || ready) return;
-    const t = setTimeout(() => setReady(true), 4000);
-    return () => clearTimeout(t);
-  }, [show, ready]);
+    io.observe(host);
 
+    return () => {
+      disposed = true;
+      io.disconnect();
+      app?.dispose?.();
+    };
+  }, [scene]);
 
   return (
     <div
@@ -64,22 +76,13 @@ export function SplineScene({ scene, className = "", label }: Props) {
             "radial-gradient(60% 60% at 50% 45%, color-mix(in oklab, var(--primary) 22%, transparent), transparent 70%)",
         }}
       />
-      {show && (
-        <Suspense fallback={null}>
-          <div
-            className={`h-full w-full transition-opacity duration-700 ${
-              ready ? "opacity-100" : "opacity-0"
-            }`}
-            style={{ touchAction: "pan-y" }}
-          >
-            <Spline
-              scene={scene}
-              onLoad={() => setReady(true)}
-              style={{ width: "100%", height: "100%" }}
-            />
-          </div>
-        </Suspense>
-      )}
+      <canvas
+        ref={canvasRef}
+        aria-hidden="true"
+        className={`pointer-events-none relative h-full w-full transition-opacity duration-700 ${
+          ready ? "opacity-100" : "opacity-0"
+        }`}
+      />
     </div>
   );
 }
