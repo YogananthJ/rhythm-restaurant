@@ -11,30 +11,37 @@ type Props = {
  * Client-only, viewport-gated Spline embed.
  * - The ~1MB runtime is dynamically imported only once the section nears the viewport.
  * - Skipped entirely for reduced-motion users; a static glow placeholder stays.
- * - Canvas is pointer-events:none so it can never swallow scroll, clicks or focus.
+ * - The canvas is created imperatively (outside React's tree) because the Spline
+ *   runtime mutates/owns the node, which conflicts with React reconciliation.
+ * - pointer-events:none so it can never swallow scroll, clicks or focus.
  */
 export function SplineScene({ scene, className = "", label }: Props) {
   const hostRef = useRef<HTMLDivElement | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
     const host = hostRef.current;
-    const canvas = canvasRef.current;
-    if (!host || !canvas) return;
+    if (!host) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     let disposed = false;
     let app: { dispose?: () => void } | null = null;
+    const canvas = document.createElement("canvas");
+    canvas.setAttribute("aria-hidden", "true");
+    canvas.style.cssText =
+      "position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:0;transition:opacity .7s ease";
 
     const start = async () => {
       try {
+        host.appendChild(canvas);
         const { Application } = await import("@splinetool/runtime");
         if (disposed) return;
         const instance = new Application(canvas);
         app = instance as unknown as { dispose?: () => void };
         await instance.load(scene);
-        if (!disposed) setReady(true);
+        if (disposed) return;
+        canvas.style.opacity = "1";
+        setReady(true);
       } catch {
         // Silent: the gradient placeholder remains as the visual fallback.
       }
@@ -55,6 +62,7 @@ export function SplineScene({ scene, className = "", label }: Props) {
       disposed = true;
       io.disconnect();
       app?.dispose?.();
+      canvas.remove();
     };
   }, [scene]);
 
@@ -75,13 +83,6 @@ export function SplineScene({ scene, className = "", label }: Props) {
           background:
             "radial-gradient(60% 60% at 50% 45%, color-mix(in oklab, var(--primary) 22%, transparent), transparent 70%)",
         }}
-      />
-      <canvas
-        ref={canvasRef}
-        aria-hidden="true"
-        className={`pointer-events-none relative h-full w-full transition-opacity duration-700 ${
-          ready ? "opacity-100" : "opacity-0"
-        }`}
       />
     </div>
   );
