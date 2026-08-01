@@ -113,20 +113,18 @@ function BookPage() {
       );
     }
 
-    const { error } = await supabase
-      .from("reservations")
-      .insert({
-        restaurant_id: restaurant.id,
-        guest_name: form.guest_name.trim(),
-        phone: form.phone.trim() || null,
-        email: form.email.trim() || null,
-        party_size: form.party_size,
-        requested_at: when.toISOString(),
-        notes: [form.seating !== "any" ? `Seating: ${form.seating}` : null, form.notes.trim() || null]
+    const { error } = await supabase.rpc("create_public_reservation", {
+      p_restaurant_id: restaurant.id,
+      p_guest_name: form.guest_name.trim(),
+      p_phone: form.phone.trim() || null,
+      p_email: form.email.trim() || null,
+      p_party_size: form.party_size,
+      p_requested_at: when.toISOString(),
+      p_notes:
+        [form.seating !== "any" ? `Seating: ${form.seating}` : null, form.notes.trim() || null]
           .filter(Boolean)
           .join(" · ") || null,
-        status: "pending",
-      });
+    });
     setBusy(false);
     if (error) {
       toast.error(error.message);
