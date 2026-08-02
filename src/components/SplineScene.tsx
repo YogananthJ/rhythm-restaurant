@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
+const RUNTIME_URL = "https://esm.sh/@splinetool/runtime@1.12.98";
+
 type Props = {
   scene: string;
   className?: string;
@@ -34,7 +36,12 @@ export function SplineScene({ scene, className = "", label }: Props) {
     const start = async () => {
       try {
         host.appendChild(canvas);
-        const { Application } = await import("@splinetool/runtime");
+        // Loaded from CDN at runtime (not bundled): the Spline runtime calls
+        // `new Function(...)` at module init, which the edge SSR runtime forbids
+        // ("Code generation from strings disallowed"), taking down every page.
+        const { Application } = (await import(
+          /* @vite-ignore */ RUNTIME_URL
+        )) as typeof import("@splinetool/runtime");
         if (disposed) return;
         const instance = new Application(canvas);
         app = instance as unknown as { dispose?: () => void };
