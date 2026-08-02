@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
+const RUNTIME_URL = "https://esm.sh/@splinetool/runtime@1.12.98";
+
 type Props = {
   scene: string;
   className?: string;
