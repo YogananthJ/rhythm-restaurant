@@ -705,7 +705,7 @@ function AISection() {
           <SplineScene
             scene="https://prod.spline.design/zRA8HGnFLAj5zWd5/scene.splinecode"
             label="Animated 3D illustration of the Occupancy AI assistant"
-            className="mx-auto h-[260px] w-full max-w-md rounded-2xl sm:h-[340px] lg:h-[420px] lg:max-w-none"
+            className="mx-auto h-[380px] w-full max-w-md rounded-2xl sm:h-[480px] lg:h-[600px] lg:max-w-none"
           />
 
           <div className="mx-auto w-full max-w-2xl overflow-hidden rounded-xl border border-border/70 bg-background/60 shadow-elegant">

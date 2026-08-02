@@ -1,6 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 
-const RUNTIME_URL = "https://esm.sh/@splinetool/runtime@1.9.28";
+/**
+ * Loaded from a CDN at runtime — never bundled. The Spline runtime calls
+ * `new Function(...)` at module init, which the edge SSR runtime forbids
+ * ("Code generation from strings disallowed"), which 500s every page.
+ */
+const RUNTIME_URL = "https://esm.sh/@splinetool/runtime@1.12.98";
 
 type Props = {
   scene: string;
@@ -13,8 +18,6 @@ type Props = {
 
 /**
  * Client-only Spline embed.
- * - The runtime is loaded from a CDN at runtime (never bundled): it calls
- *   `new Function(...)` at module init, which the edge SSR runtime forbids.
  * - The canvas lives in JSX but is owned by the Spline runtime after load.
  * - pointer-events:none so it can never swallow scroll, clicks or focus.
  */
@@ -65,7 +68,7 @@ export function SplineScene({ scene, className = "", label, lazy = true }: Props
           void start();
         }
       },
-      { rootMargin: "400px" },
+      { rootMargin: "600px" },
     );
     io.observe(host);
 
