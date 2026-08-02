@@ -27,6 +27,7 @@ export function SplineScene({ scene, className = "", label, lazy = true }: Props
     const host = hostRef.current;
     const canvas = canvasRef.current;
     if (!host || !canvas) return;
+    console.log("[SplineScene] effect ran", { lazy });
 
     let disposed = false;
     let app: { dispose?: () => void } | null = null;
