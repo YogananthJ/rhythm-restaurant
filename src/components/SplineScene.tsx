@@ -1,58 +1,62 @@
 import { useEffect, useRef, useState } from "react";
 
-const RUNTIME_URL = "https://esm.sh/@splinetool/runtime@1.12.98";
+const RUNTIME_URL = "https://esm.sh/@splinetool/runtime@1.9.28";
 
 type Props = {
   scene: string;
   className?: string;
   /** Accessible description of what the scene shows */
   label: string;
+  /** Wait until the section nears the viewport before pulling the runtime. */
+  lazy?: boolean;
 };
 
 /**
- * Client-only, viewport-gated Spline embed.
- * - The ~1MB runtime is dynamically imported only once the section nears the viewport.
- * - Skipped entirely for reduced-motion users; a static glow placeholder stays.
- * - The canvas is created imperatively (outside React's tree) because the Spline
- *   runtime mutates/owns the node, which conflicts with React reconciliation.
+ * Client-only Spline embed.
+ * - The runtime is loaded from a CDN at runtime (never bundled): it calls
+ *   `new Function(...)` at module init, which the edge SSR runtime forbids.
+ * - The canvas lives in JSX but is owned by the Spline runtime after load.
  * - pointer-events:none so it can never swallow scroll, clicks or focus.
  */
-export function SplineScene({ scene, className = "", label }: Props) {
+export function SplineScene({ scene, className = "", label, lazy = true }: Props) {
   const hostRef = useRef<HTMLDivElement | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
     const host = hostRef.current;
-    if (!host) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const canvas = canvasRef.current;
+    if (!host || !canvas) return;
 
     let disposed = false;
     let app: { dispose?: () => void } | null = null;
-    const canvas = document.createElement("canvas");
-    canvas.setAttribute("aria-hidden", "true");
-    canvas.style.cssText =
-      "position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:0;transition:opacity .7s ease";
 
     const start = async () => {
       try {
-        host.appendChild(canvas);
-        // Loaded from CDN at runtime (not bundled): the Spline runtime calls
-        // `new Function(...)` at module init, which the edge SSR runtime forbids
-        // ("Code generation from strings disallowed"), taking down every page.
-        const { Application } = (await import(
-          /* @vite-ignore */ RUNTIME_URL
-        )) as typeof import("@splinetool/runtime");
+        const mod = (await import(/* @vite-ignore */ RUNTIME_URL)) as {
+          Application: new (c: HTMLCanvasElement) => {
+            load: (url: string) => Promise<void>;
+            dispose?: () => void;
+          };
+        };
         if (disposed) return;
-        const instance = new Application(canvas);
-        app = instance as unknown as { dispose?: () => void };
+        const instance = new mod.Application(canvas);
+        app = instance;
         await instance.load(scene);
         if (disposed) return;
-        canvas.style.opacity = "1";
         setReady(true);
-      } catch {
-        // Silent: the gradient placeholder remains as the visual fallback.
+      } catch (err) {
+        console.error("[SplineScene] failed to load scene", err);
       }
     };
+
+    if (!lazy) {
+      void start();
+      return () => {
+        disposed = true;
+        app?.dispose?.();
+      };
+    }
 
     const io = new IntersectionObserver(
       (entries) => {
@@ -61,7 +65,7 @@ export function SplineScene({ scene, className = "", label }: Props) {
           void start();
         }
       },
-      { rootMargin: "300px" },
+      { rootMargin: "400px" },
     );
     io.observe(host);
 
@@ -69,9 +73,8 @@ export function SplineScene({ scene, className = "", label }: Props) {
       disposed = true;
       io.disconnect();
       app?.dispose?.();
-      canvas.remove();
     };
-  }, [scene]);
+  }, [scene, lazy]);
 
   return (
     <div
@@ -80,16 +83,22 @@ export function SplineScene({ scene, className = "", label }: Props) {
       aria-label={label}
       className={`relative overflow-hidden ${className}`}
     >
-      {/* Ambient placeholder — also the reduced-motion / pre-load state */}
+      {/* Ambient placeholder — also the pre-load state */}
       <div
         aria-hidden="true"
         className={`pointer-events-none absolute inset-0 transition-opacity duration-700 ${
-          ready ? "opacity-40" : "opacity-100"
+          ready ? "opacity-0" : "opacity-100"
         }`}
         style={{
           background:
             "radial-gradient(60% 60% at 50% 45%, color-mix(in oklab, var(--primary) 22%, transparent), transparent 70%)",
         }}
+      />
+      <canvas
+        ref={canvasRef}
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 h-full w-full transition-opacity duration-700"
+        style={{ opacity: ready ? 1 : 0 }}
       />
     </div>
   );
