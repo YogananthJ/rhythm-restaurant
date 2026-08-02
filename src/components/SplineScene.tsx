@@ -61,6 +61,7 @@ export function SplineScene({ scene, className = "", label, lazy = true }: Props
 
     const io = new IntersectionObserver(
       (entries) => {
+        console.log("[SplineScene] io", entries.map((e) => e.isIntersecting));
         if (entries.some((e) => e.isIntersecting)) {
           io.disconnect();
           void start();
