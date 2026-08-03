@@ -201,7 +201,7 @@ function OpsPage() {
               scene="https://prod.spline.design/zRA8HGnFLAj5zWd5/scene.splinecode"
               label="Animated 3D illustration of the Occupancy AI copilot"
               lazy={false}
-              className="mx-auto h-[220px] w-full rounded-xl sm:h-[260px] lg:h-[280px] animate-[float_6s_ease-in-out_infinite]"
+              className="mx-auto h-[220px] w-full rounded-xl sm:h-[260px] lg:h-[280px] animate-[occ-float_6s_ease-in-out_infinite]"
             />
             <div className="mt-2 text-center text-[11px] uppercase tracking-wider text-muted-foreground">
               Copilot online
