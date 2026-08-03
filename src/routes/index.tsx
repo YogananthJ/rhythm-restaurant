@@ -7,7 +7,6 @@ import { Testimonials } from "@/components/reviews/Testimonials";
 import { FeaturedCategories, WhyChoose, GalleryStrip } from "@/components/guest/GuestSections";
 
 import { Illustration } from "@/components/Illustration";
-import { SplineScene } from "@/components/SplineScene";
 
 import heroIllustration from "@/assets/illus-hero.jpg";
 import {
