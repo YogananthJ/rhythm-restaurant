@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { askOpsAssistant, generateShiftSummary } from "@/lib/ai-ops.functions";
 import { Card } from "@/components/ui/card";
 import { Illustration } from "@/components/Illustration";
+import { SplineScene } from "@/components/SplineScene";
+
 import aiIllustration from "@/assets/illus-ai.jpg";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
