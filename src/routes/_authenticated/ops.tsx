@@ -254,7 +254,16 @@ function OpsPage() {
             <h2 className="text-lg font-semibold">Ask your restaurant</h2>
             <p className="text-xs text-muted-foreground">The copilot reads live tables, menu availability, and open tickets.</p>
           </div>
-          <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto p-5">
+          <div ref={scrollRef} className="relative flex-1 space-y-4 overflow-y-auto p-5">
+            {messages.length <= 1 && (
+              <SplineScene
+                scene="https://prod.spline.design/zRA8HGnFLAj5zWd5/scene.splinecode"
+                label="Animated 3D illustration of the Occupancy AI copilot"
+                lazy={false}
+                className="pointer-events-none mx-auto h-[280px] w-full max-w-lg rounded-2xl sm:h-[380px]"
+              />
+            )}
+
             {messages.map((m, i) => (
               <div key={i} className={`rise-in flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
                 <div
