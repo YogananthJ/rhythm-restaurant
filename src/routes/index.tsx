@@ -7,7 +7,6 @@ import { Testimonials } from "@/components/reviews/Testimonials";
 import { FeaturedCategories, WhyChoose, GalleryStrip } from "@/components/guest/GuestSections";
 
 import { Illustration } from "@/components/Illustration";
-import { SplineScene } from "@/components/SplineScene";
 
 import heroIllustration from "@/assets/illus-hero.jpg";
 import {
@@ -701,14 +700,9 @@ function AISection() {
           </p>
         </div>
 
-        <div className="mt-10 grid items-center gap-8 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1fr)]">
-          <SplineScene
-            scene="https://prod.spline.design/zRA8HGnFLAj5zWd5/scene.splinecode"
-            label="Animated 3D illustration of the Occupancy AI assistant"
-            className="mx-auto h-[380px] w-full max-w-md rounded-2xl sm:h-[480px] lg:h-[600px] lg:max-w-none"
-          />
-
+        <div className="mt-10">
           <div className="mx-auto w-full max-w-2xl overflow-hidden rounded-xl border border-border/70 bg-background/60 shadow-elegant">
+
 
           <div className="flex items-center gap-2 border-b border-border/60 px-4 py-2.5">
             <div className="h-2 w-2 rounded-full bg-destructive/70" />
